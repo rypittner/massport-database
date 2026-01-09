@@ -16,7 +16,6 @@
             --stamp-red: #C65265; --inner-padding: 18px; 
         }
 
-        /* THE STYLING YOU PROVIDED */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             margin: 0; font-family: 'Inter', sans-serif; 
@@ -26,8 +25,8 @@
 
         .header { max-width: var(--grid-max); margin: 0 auto; padding: 40px var(--grid-pad) 20px; text-align: center; position: relative; z-index: 10; }
         .header h1 { font-family: 'Yrsa', serif; font-size: 42px; margin: 0; }
+        .header p { opacity: 0.7; font-size: 14px; margin-top: 5px; }
 
-        /* MAIN GRID */
         #main-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
             gap: 30px 20px; max-width: var(--grid-max); 
@@ -40,6 +39,7 @@
             aspect-ratio: 7 / 9; padding: var(--r); background: var(--btn-bg);
             cursor: pointer; position: relative; transition: transform 0.4s var(--ease-smooth);
             mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
+            -webkit-mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
             filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
         }
         .stamp:hover { transform: translateY(-8px) scale(1.05); filter: drop-shadow(5px 5px 12px rgba(0,0,0,0.2)); }
@@ -47,39 +47,40 @@
         .stamp-image { 
             position: absolute; inset: var(--inner-padding); 
             overflow: hidden; border: 4pt solid var(--accent); background: #eee;
+            display: flex; flex-direction: column; justify-content: flex-end;
         }
-        .stamp-image img { width: 100%; height: 100%; object-fit: cover; }
+        .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 
         .stamp-title-overlay { 
             position: absolute; bottom: 0; left: 0; width: 100%; 
-            padding: 12px 10px; background: var(--accent); color: white; 
+            padding: 12px 10px; background: var(--accent); color: white; z-index: 5;
         }
-        .stamp-name { font-family: 'Yrsa', serif; font-size: 16px; font-weight: 600; }
+        .stamp-name { font-family: 'Yrsa', serif; font-size: 16px; font-weight: 600; line-height: 1.1; }
 
-        /* APP OVERLAYS */
+        /* UI ELEMENTS */
         .hidden { display: none !important; }
         .auth-card, .modal-content { 
             background: white; padding: 30px; border-radius: 12px; 
             max-width: 400px; width: 90%; margin: 50px auto; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
         }
-        #modal-overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-            display: flex; align-items: center; z-index: 10000; 
-        }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; }
-        .primary-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; z-index: 10000; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+        .primary-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .primary-btn:hover { opacity: 0.9; }
         
-        #search-results { border: 1px solid #ddd; background: white; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; }
-        .res-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
-        .res-item:hover { background: #f0f0f0; }
+        #search-results { border: 1px solid #ddd; background: white; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .res-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
+        .res-item:hover { background: #f0f7ff; }
 
         .collector-nav-container {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            background: white; padding: 10px 20px; border-radius: 50px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; gap: 15px; z-index: 9999;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; z-index: 9999;
         }
-        
+
+        @media (max-width: 900px) { #main-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 600px) { #main-grid { grid-template-columns: repeat(2, 1fr); padding: 20px; } }
     </style>
 </head>
@@ -87,44 +88,49 @@
 
     <div class="header">
         <h1 id="view-title">MassPort Database</h1>
-        <p id="view-subtitle">Explore the collection</p>
+        <p id="view-subtitle">Your Personal Travel Archive</p>
+        <button id="back-home" class="hidden" onclick="window.location.hash=''; location.reload();" style="margin-top:10px; background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 15px; border-radius:20px; cursor:pointer;">← Back to My Collection</button>
     </div>
 
     <div id="auth-container" class="auth-card hidden">
-        <h2 style="text-align:center">Join MassPort</h2>
-        <input type="text" id="username" placeholder="Choose Unique Username (e.g. rypittner)">
+        <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px;">Welcome</h2>
+        <input type="text" id="username" placeholder="Unique Username (no spaces)">
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password (min 6 chars)">
         <button class="primary-btn" onclick="handleSignUp()">Create Account</button>
-        <button class="primary-btn" style="background:#ddd; color:#333; margin-top:8px;" onclick="handleLogin()">Login</button>
-        <p onclick="handleResetPassword()" style="text-align:center; font-size:12px; cursor:pointer; color:var(--accent)">Forgot Password?</p>
+        <button class="primary-btn" style="background:#eee; color:#333; margin-top:10px;" onclick="handleLogin()">Login</button>
+        <p onclick="handleResetPassword()" style="text-align:center; font-size:12px; cursor:pointer; color:var(--accent); margin-top:15px;">Forgot Password?</p>
     </div>
 
     <div id="main-grid"></div>
 
     <div id="nav-bar" class="collector-nav-container hidden">
         <div style="font-size:12px; font-weight:bold; color:var(--accent)" id="user-display"></div>
-        <button class="primary-btn" style="width:auto; padding:5px 15px" onclick="openModal()">+ Add Stamp</button>
-        <button class="primary-btn" style="width:auto; padding:5px 15px; background:#ef4444" onclick="supabaseClient.auth.signOut()">Logout</button>
+        <button class="primary-btn" style="width:auto; padding:8px 18px" onclick="openModal()">+ Add</button>
+        <button class="primary-btn" style="width:auto; padding:8px 18px; background:#f1f5f9; color:#444;" onclick="shareProfile()">Share</button>
+        <button class="primary-btn" style="width:auto; padding:8px 18px; background:#fee2e2; color:#ef4444" onclick="supabaseClient.auth.signOut()">Logout</button>
     </div>
 
     <div id="modal-overlay" class="hidden">
         <div class="modal-content">
-            <h3 id="modal-title">New Stamp</h3>
+            <h3 id="modal-title" style="margin-top:0; font-family:'Yrsa'">New Stamp</h3>
             <div style="position:relative">
-                <input type="text" id="s-search" placeholder="Search Location Name..." oninput="debounceSearch(this.value)">
+                <input type="text" id="s-search" placeholder="Search Location..." oninput="debounceSearch(this.value)">
                 <div id="search-results" class="hidden"></div>
             </div>
-            <input type="text" id="s-name" placeholder="Name">
-            <input type="text" id="s-address" placeholder="Address">
-            <textarea id="s-notes" placeholder="Story/Notes"></textarea>
+            <input type="text" id="s-name" placeholder="Stamp Name">
+            <input type="text" id="s-address" placeholder="Full Address">
+            <textarea id="s-notes" placeholder="Notes or memories..."></textarea>
+            <label style="font-size:11px; color:#666;">Upload Image</label>
             <input type="file" id="s-image" accept="image/*">
+            
             <input type="hidden" id="edit-id">
             <input type="hidden" id="s-city">
             <input type="hidden" id="s-lat">
             <input type="hidden" id="s-lng">
+            
             <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save Stamp</button>
-            <button class="primary-btn" style="background:#eee; color:#333; margin-top:8px;" onclick="closeModal()">Cancel</button>
+            <button class="primary-btn" style="background:none; color:#94a3b8; margin-top:8px;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
@@ -138,30 +144,41 @@
         let currentUser = null;
         let publicUsername = null;
 
-        // --- PUBLIC ROUTING LOGIC ---
+        // --- HASH ROUTING ---
         function checkRoute() {
-            const path = window.location.pathname.split('/');
-            // Expecting .../massport-database/username
-            // Note: On local testing it might be path[1], on GitHub Pages it might be path[2]
-            const userPart = path[path.length - 1]; 
-            if (userPart && userPart !== "" && userPart !== "index.html") {
-                publicUsername = userPart;
-                fetchPublicStamps(publicUsername);
+            const hash = window.location.hash.replace('#', '').trim();
+            if (hash && hash !== "") {
+                publicUsername = hash;
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('back-home').classList.remove('hidden');
+                fetchPublicStamps(hash);
+            } else {
+                publicUsername = null;
+                document.getElementById('back-home').classList.add('hidden');
+                initAuth();
             }
         }
 
         // --- AUTH ---
+        function initAuth() {
+            supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                handleAuthState(session);
+            });
+        }
+
         async function handleSignUp() {
-            const userNm = document.getElementById('username').value.toLowerCase();
+            const userNm = document.getElementById('username').value.toLowerCase().replace(/\s/g, '');
+            if (!userNm) return alert("Please choose a username");
+
             const { data, error } = await supabaseClient.auth.signUp({ 
                 email: email.value, 
-                password: password.value,
-                options: { data: { username: userNm } }
+                password: password.value 
             });
             if (error) return alert(error.message);
-            // Create profile entry
-            await supabaseClient.from('profiles').insert([{ id: data.user.id, username: userNm }]);
-            alert("Account created! Check email.");
+
+            const { error: pError } = await supabaseClient.from('profiles').insert([{ id: data.user.id, username: userNm }]);
+            if (pError) alert("Username might be taken!");
+            else alert("Success! Check your email to confirm.");
         }
 
         async function handleLogin() {
@@ -170,22 +187,29 @@
         }
 
         async function handleResetPassword() {
-            const mail = prompt("Enter email for reset link:");
+            const mail = prompt("Enter your email for reset link:");
             if (mail) await supabaseClient.auth.resetPasswordForEmail(mail);
         }
 
-        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        function handleAuthState(session) {
             currentUser = session?.user || null;
-            if (session && !publicUsername) {
+            if (currentUser && !publicUsername) {
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('nav-bar').classList.remove('hidden');
-                const { data } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
-                document.getElementById('user-display').innerText = `@${data?.username || 'user'}`;
+                supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single()
+                    .then(({data}) => {
+                        document.getElementById('user-display').innerText = `@${data?.username || 'user'}`;
+                        currentUser.username = data?.username;
+                    });
                 fetchMyStamps();
-            } else if (!session && !publicUsername) {
+            } else if (!currentUser && !publicUsername) {
                 document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('nav-bar').classList.add('hidden');
+                document.getElementById('main-grid').innerHTML = '';
             }
-        });
+        }
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
 
         // --- SEARCH ---
         let timer;
@@ -196,44 +220,54 @@
 
         async function runSearch(query) {
             if (query.length < 3) return;
-            const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
-            const data = await res.json();
-            const box = document.getElementById('search-results');
-            box.innerHTML = '';
-            box.classList.remove('hidden');
-            data.forEach(p => {
-                const d = document.createElement('div');
-                d.className = 'res-item';
-                d.innerText = p.display_name;
-                d.onclick = () => {
-                    document.getElementById('s-name').value = p.display_name.split(',')[0];
-                    document.getElementById('s-address').value = p.display_name;
-                    document.getElementById('s-lat').value = p.lat;
-                    document.getElementById('s-lng').value = p.lon;
-                    document.getElementById('s-city').value = p.address.city || p.address.town || "";
-                    box.classList.add('hidden');
-                };
-                box.appendChild(d);
-            });
+            try {
+                const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
+                const data = await res.json();
+                const box = document.getElementById('search-results');
+                box.innerHTML = '';
+                if (data.error) return box.classList.add('hidden');
+                box.classList.remove('hidden');
+                data.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = 'res-item';
+                    d.innerText = p.display_name;
+                    d.onclick = () => {
+                        document.getElementById('s-name').value = p.display_name.split(',')[0];
+                        document.getElementById('s-address').value = p.display_name;
+                        document.getElementById('s-lat').value = p.lat;
+                        document.getElementById('s-lng').value = p.lon;
+                        document.getElementById('s-city').value = p.address.city || p.address.town || p.address.village || "";
+                        box.classList.add('hidden');
+                        document.getElementById('s-search').value = '';
+                    };
+                    box.appendChild(d);
+                });
+            } catch(e) {}
         }
 
-        // --- STAMP LOGIC ---
+        // --- CRUD ---
         function openModal(editData = null) {
+            if (!currentUser) return;
             document.getElementById('edit-id').value = editData ? editData.id : '';
+            document.getElementById('modal-title').innerText = editData ? 'Edit Stamp' : 'New Stamp';
             document.getElementById('s-name').value = editData ? editData.name : '';
             document.getElementById('s-address').value = editData ? editData.address : '';
             document.getElementById('s-notes').value = editData ? editData.notes : '';
             document.getElementById('s-city').value = editData ? editData.city : '';
             document.getElementById('s-lat').value = editData ? editData.lat : '';
             document.getElementById('s-lng').value = editData ? editData.lng : '';
+            document.getElementById('s-image').value = '';
             document.getElementById('modal-overlay').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
         async function saveStamp() {
+            const btn = document.getElementById('save-btn');
+            btn.innerText = "Saving...";
             const file = document.getElementById('s-image').files[0];
             let imgUrl = "";
+
             if (file) {
                 const fd = new FormData(); fd.append('image', file);
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
@@ -246,47 +280,62 @@
                 address: document.getElementById('s-address').value,
                 notes: document.getElementById('s-notes').value,
                 city: document.getElementById('s-city').value,
-                lat: parseFloat(document.getElementById('s-lat').value),
-                lng: parseFloat(document.getElementById('s-lng').value),
+                lat: parseFloat(document.getElementById('s-lat').value) || null,
+                lng: parseFloat(document.getElementById('s-lng').value) || null,
                 user_id: currentUser.id
             };
             if (imgUrl) payload.img_url = imgUrl;
 
             const editId = document.getElementById('edit-id').value;
-            if (editId) await supabaseClient.from('stamps').update(payload).eq('id', editId);
-            else await supabaseClient.from('stamps').insert([payload]);
+            let error;
+            if (editId) {
+                const res = await supabaseClient.from('stamps').update(payload).eq('id', editId);
+                error = res.error;
+            } else {
+                const res = await supabaseClient.from('stamps').insert([payload]);
+                error = res.error;
+            }
 
-            closeModal();
-            fetchMyStamps();
+            if (error) alert(error.message);
+            else { closeModal(); fetchMyStamps(); }
+            btn.innerText = "Save Stamp";
         }
 
+        // --- DATA FETCHING ---
         async function fetchMyStamps() {
-            const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id);
+            const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false});
             renderStamps(data, true);
         }
 
         async function fetchPublicStamps(username) {
-            document.getElementById('view-title').innerText = `@${username}'s Collection`;
+            document.getElementById('view-title').innerText = `@${username}`;
+            document.getElementById('view-subtitle').innerText = "Public Collection";
             const { data: profile } = await supabaseClient.from('profiles').select('id').eq('username', username).single();
             if (profile) {
-                const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id);
+                const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: false});
                 renderStamps(data, false);
+            } else {
+                document.getElementById('main-grid').innerHTML = '<p style="grid-column:1/-1; text-align:center;">User not found.</p>';
             }
         }
 
         function renderStamps(stamps, isOwner) {
             const grid = document.getElementById('main-grid');
             grid.innerHTML = '';
-            stamps?.forEach(s => {
+            if (!stamps || stamps.length === 0) {
+                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">Empty collection.</p>';
+                return;
+            }
+            stamps.forEach(s => {
                 const wrap = document.createElement('div');
                 wrap.className = 'stamp-wrapper';
                 wrap.innerHTML = `
-                    <div class="stamp" onclick="${isOwner ? `openModal(${JSON.stringify(s)})` : ''}">
+                    <div class="stamp" ${isOwner ? `onclick='openModal(${JSON.stringify(s)})'` : ''}>
                         <div class="stamp-image">
-                            <img src="${s.img_url || 'https://via.placeholder.com/300'}" />
+                            <img src="${s.img_url || 'https://via.placeholder.com/300'}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                             <div class="stamp-title-overlay">
                                 <div class="stamp-name">${s.name}</div>
-                                <div style="font-size:10px; opacity:0.8">${s.city || ''}</div>
+                                <div style="font-size:10px; opacity:0.8; margin-top:2px;">${s.city || 'Unknown Location'}</div>
                             </div>
                         </div>
                     </div>
@@ -295,6 +344,14 @@
             });
         }
 
+        function shareProfile() {
+            if (!currentUser?.username) return alert("Username not found!");
+            const url = `${window.location.origin}${window.location.pathname}#${currentUser.username}`;
+            navigator.clipboard.writeText(url);
+            alert("Share link copied to clipboard!");
+        }
+
+        window.addEventListener('hashchange', checkRoute);
         checkRoute();
     </script>
 </body>
