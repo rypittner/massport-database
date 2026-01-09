@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MassPort DATABASEEEEE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Special+Elite&family=Yrsa:wght@400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MassPort Database</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --bg: #FCF1E7; --grid-max: 1100px; --grid-pad: 20px; 
@@ -21,116 +24,129 @@
             margin: 0; font-family: 'Inter', sans-serif; 
             background: var(--bg) url("https://i.ibb.co/RpsfLzc4/88f6ca36fda8.jpg") repeat; 
             color: #333; overflow-x: hidden; min-height: 100vh;
+            display: flex; flex-direction: column;
         }
 
         .header { max-width: var(--grid-max); margin: 0 auto; padding: 40px var(--grid-pad) 20px; text-align: center; position: relative; z-index: 10; }
         .header h1 { font-family: 'Yrsa', serif; font-size: 42px; margin: 0; }
-        .header p { opacity: 0.7; font-size: 14px; margin-top: 5px; }
 
+        /* ---------- NAVIGATION ---------- */
+        .collector-nav-container {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
+            padding: 6px; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex; align-items: center; z-index: 16000;
+            max-width: 95vw; width: max-content;
+        }
+        .collector-nav { display: flex; gap: 6px; padding: 4px 10px; overflow-x: auto; scrollbar-width: none; }
+        .nav-tag { font-family: 'Inter'; font-size: 11px; color: #444; cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; transition: 0.3s; }
+        .nav-tag.active { background: var(--accent); color: white; }
+        .action-btn { background: #f1f5f9; font-weight: bold; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 11px; margin-left: 5px; }
+
+        /* ---------- GRID ---------- */
         #main-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
             gap: 30px 20px; max-width: var(--grid-max); 
             margin: 0 auto; padding: 20px 40px 140px; width: 100%;
         }
 
-        /* STAMP VISUALS */
-        .stamp-wrapper { position: relative; }
+        @media (max-width: 600px) {
+            .header { display: none; }
+            #main-grid { 
+                display: flex; flex-wrap: nowrap; overflow-x: auto; 
+                scroll-snap-type: x mandatory; height: 100vh; align-items: center; 
+                padding: 0 10vw 80px; gap: 12px;
+            }
+            .stamp-wrapper { flex: 0 0 80vw; scroll-snap-align: center; }
+        }
+
+        /* ---------- STAMP DESIGN ---------- */
+        .stamp-wrapper { position: relative; filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15)); transition: 0.4s var(--ease-smooth); }
         .stamp {
-            aspect-ratio: 7 / 9; padding: var(--r); background: var(--btn-bg);
-            cursor: pointer; position: relative; transition: transform 0.4s var(--ease-smooth);
+            aspect-ratio: 7 / 9; padding: var(--r); background: #fff;
+            cursor: pointer; position: relative; transform: rotate(var(--r_deg, 0deg));
             mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
             -webkit-mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
-            filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
         }
-        .stamp:hover { transform: translateY(-8px) scale(1.05); filter: drop-shadow(5px 5px 12px rgba(0,0,0,0.2)); }
-        
         .stamp-image { 
             position: absolute; inset: var(--inner-padding); 
-            overflow: hidden; border: 4pt solid var(--accent); background: #eee;
+            overflow: hidden; border: 4pt solid var(--theme-color); background: var(--theme-color);
             display: flex; flex-direction: column; justify-content: flex-end;
         }
         .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 
-        .stamp-title-overlay { 
-            position: absolute; bottom: 0; left: 0; width: 100%; 
-            padding: 12px 10px; background: var(--accent); color: white; z-index: 5;
-        }
-        .stamp-name { font-family: 'Yrsa', serif; font-size: 16px; font-weight: 600; line-height: 1.1; }
-
-        /* UI ELEMENTS */
-        .hidden { display: none !important; }
-        .auth-card, .modal-content { 
-            background: white; padding: 30px; border-radius: 12px; 
-            max-width: 400px; width: 90%; margin: 50px auto; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
-        }
-        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; z-index: 10000; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
-        .primary-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .primary-btn:hover { opacity: 0.9; }
+        .placeholder { position: absolute; inset: -1px; --light: rgba(255,255,255,0.4); }
+        .pattern-1 { background-image: repeating-linear-gradient(45deg, var(--light), var(--light) 14px, var(--theme-color) 14px, var(--theme-color) 18px); }
         
-        #search-results { border: 1px solid #ddd; background: white; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .res-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
-        .res-item:hover { background: #f0f7ff; }
+        .stamp-title-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px 10px; background: var(--theme-color); color: white; }
+        .stamp-name { font-family: 'Yrsa', serif; font-size: 18px; font-weight: 600; }
+        .stamp-note { font-size: 11px; opacity: 0.9; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .collector-nav-container {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; z-index: 9999;
+        /* POSTMARK */
+        .postmark-seal {
+            position: absolute; top: -10px; right: -20px; width: 110px; height: 110px;
+            border: 4px solid var(--stamp-red); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Special Elite'; font-size: 12px; color: var(--stamp-red);
+            background: rgba(255,255,255,0.95); z-index: 2000;
+            transform: scale(0.8) rotate(var(--seal-rot, 15deg)); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        @media (max-width: 900px) { #main-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 600px) { #main-grid { grid-template-columns: repeat(2, 1fr); padding: 20px; } }
+        /* INK STAMP */
+        .ink-stamp { 
+            aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.7;
+            font-family: 'Special Elite'; color: var(--ink-color); text-align: center;
+        }
+        .ink-stamp-inner { border: 6px double var(--ink-color); height: 85%; margin: 7.5%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* AUTH & MODAL */
+        .hidden { display: none !important; }
+        .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 90%; margin: 50px auto; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; z-index: 20000; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; }
+        .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 id="view-title">MassPort Database</h1>
-        <p id="view-subtitle">Your Personal Travel Archive</p>
-        <button id="back-home" class="hidden" onclick="window.location.hash=''; location.reload();" style="margin-top:10px; background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 15px; border-radius:20px; cursor:pointer;">← Back to My Collection</button>
+    <div class="header" id="header-text">
+        <h1 id="view-title">MassPort</h1>
+        <p id="view-subtitle" style="font-size:12px; opacity:0.6;">Your Personal Travel Archive</p>
     </div>
 
     <div id="auth-container" class="auth-card hidden">
         <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px;">Welcome</h2>
-        <input type="text" id="username" placeholder="Unique Username (no spaces)">
+        <input type="text" id="username" placeholder="Username (no spaces)">
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password (min 6 chars)">
+        <input type="password" id="password" placeholder="Password">
         <button class="primary-btn" onclick="handleSignUp()">Create Account</button>
         <button class="primary-btn" style="background:#eee; color:#333; margin-top:10px;" onclick="handleLogin()">Login</button>
-        <p onclick="handleResetPassword()" style="text-align:center; font-size:12px; cursor:pointer; color:var(--accent); margin-top:15px;">Forgot Password?</p>
     </div>
 
     <div id="main-grid"></div>
 
     <div id="nav-bar" class="collector-nav-container hidden">
-        <div style="font-size:12px; font-weight:bold; color:var(--accent)" id="user-display"></div>
-        <button class="primary-btn" style="width:auto; padding:8px 18px" onclick="openModal()">+ Add</button>
-        <button class="primary-btn" style="width:auto; padding:8px 18px; background:#f1f5f9; color:#444;" onclick="shareProfile()">Share</button>
-        <button class="primary-btn" style="width:auto; padding:8px 18px; background:#fee2e2; color:#ef4444" onclick="supabaseClient.auth.signOut()">Logout</button>
+        <div class="collector-nav" id="filter-nav"></div>
+        <button class="action-btn" style="background:var(--accent); color:white;" onclick="openModal()">+ Add</button>
+        <button class="action-btn" onclick="shareProfile()">Share</button>
+        <button class="action-btn" style="color:#ef4444" onclick="supabaseClient.auth.signOut()">Exit</button>
     </div>
 
     <div id="modal-overlay" class="hidden">
         <div class="modal-content">
-            <h3 id="modal-title" style="margin-top:0; font-family:'Yrsa'">New Stamp</h3>
-            <div style="position:relative">
-                <input type="text" id="s-search" placeholder="Search Location..." oninput="debounceSearch(this.value)">
-                <div id="search-results" class="hidden"></div>
-            </div>
-            <input type="text" id="s-name" placeholder="Stamp Name">
-            <input type="text" id="s-address" placeholder="Full Address">
+            <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'">New Stamp</h3>
+            <input type="text" id="s-search" placeholder="Search Location (City, State)..." oninput="debounceSearch(this.value)">
+            <input type="text" id="s-name" placeholder="Stamp Title (e.g. Best Coffee)">
             <textarea id="s-notes" placeholder="Notes or memories..."></textarea>
-            <label style="font-size:11px; color:#666;">Upload Image</label>
             <input type="file" id="s-image" accept="image/*">
             
             <input type="hidden" id="edit-id">
             <input type="hidden" id="s-city">
-            <input type="hidden" id="s-lat">
-            <input type="hidden" id="s-lng">
+            <input type="hidden" id="s-state-abbr">
             
-            <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save Stamp</button>
-            <button class="primary-btn" style="background:none; color:#94a3b8; margin-top:8px;" onclick="closeModal()">Cancel</button>
+            <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save to Collection</button>
+            <button class="primary-btn" style="background:none; color:#999; margin-top:5px;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
@@ -139,27 +155,27 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M';
         const LOCATIONIQ_KEY = 'pk.7fb90bfc2abb6e9b7ac921233aa0d0ce';
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
+        
+        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
+        const inkPalette = ['#1B4F72', '#78281F', '#186A3B', '#7E5109', '#512E5F'];
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUser = null;
         let publicUsername = null;
 
-        // --- HASH ROUTING ---
+        // --- AUTH & ROUTING ---
         function checkRoute() {
             const hash = window.location.hash.replace('#', '').trim();
-            if (hash && hash !== "") {
+            if (hash) {
                 publicUsername = hash;
                 document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('back-home').classList.remove('hidden');
                 fetchPublicStamps(hash);
             } else {
                 publicUsername = null;
-                document.getElementById('back-home').classList.add('hidden');
                 initAuth();
             }
         }
 
-        // --- AUTH ---
         function initAuth() {
             supabaseClient.auth.getSession().then(({ data: { session } }) => {
                 handleAuthState(session);
@@ -167,18 +183,11 @@
         }
 
         async function handleSignUp() {
-            const userNm = document.getElementById('username').value.toLowerCase().replace(/\s/g, '');
-            if (!userNm) return alert("Please choose a username");
-
-            const { data, error } = await supabaseClient.auth.signUp({ 
-                email: email.value, 
-                password: password.value 
-            });
+            const userNm = document.getElementById('username').value.toLowerCase().trim();
+            const { data, error } = await supabaseClient.auth.signUp({ email: email.value, password: password.value });
             if (error) return alert(error.message);
-
-            const { error: pError } = await supabaseClient.from('profiles').insert([{ id: data.user.id, username: userNm }]);
-            if (pError) alert("Username might be taken!");
-            else alert("Success! Check your email to confirm.");
+            await supabaseClient.from('profiles').insert([{ id: data.user.id, username: userNm }]);
+            alert("Check email to confirm!");
         }
 
         async function handleLogin() {
@@ -186,85 +195,121 @@
             if (error) alert(error.message);
         }
 
-        async function handleResetPassword() {
-            const mail = prompt("Enter your email for reset link:");
-            if (mail) await supabaseClient.auth.resetPasswordForEmail(mail);
-        }
-
         function handleAuthState(session) {
             currentUser = session?.user || null;
             if (currentUser && !publicUsername) {
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('nav-bar').classList.remove('hidden');
-                supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single()
-                    .then(({data}) => {
-                        document.getElementById('user-display').innerText = `@${data?.username || 'user'}`;
-                        currentUser.username = data?.username;
-                    });
                 fetchMyStamps();
             } else if (!currentUser && !publicUsername) {
                 document.getElementById('auth-container').classList.remove('hidden');
                 document.getElementById('nav-bar').classList.add('hidden');
-                document.getElementById('main-grid').innerHTML = '';
             }
         }
 
         supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
 
-        // --- SEARCH ---
+        // --- LOCATION SEARCH ---
         let timer;
-        function debounceSearch(q) {
-            clearTimeout(timer);
-            timer = setTimeout(() => runSearch(q), 400);
-        }
-
+        function debounceSearch(q) { clearTimeout(timer); timer = setTimeout(() => runSearch(q), 500); }
         async function runSearch(query) {
             if (query.length < 3) return;
-            try {
-                const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
-                const data = await res.json();
-                const box = document.getElementById('search-results');
-                box.innerHTML = '';
-                if (data.error) return box.classList.add('hidden');
-                box.classList.remove('hidden');
-                data.forEach(p => {
-                    const d = document.createElement('div');
-                    d.className = 'res-item';
-                    d.innerText = p.display_name;
-                    d.onclick = () => {
-                        document.getElementById('s-name').value = p.display_name.split(',')[0];
-                        document.getElementById('s-address').value = p.display_name;
-                        document.getElementById('s-lat').value = p.lat;
-                        document.getElementById('s-lng').value = p.lon;
-                        document.getElementById('s-city').value = p.address.city || p.address.town || p.address.village || "";
-                        box.classList.add('hidden');
-                        document.getElementById('s-search').value = '';
-                    };
-                    box.appendChild(d);
-                });
-            } catch(e) {}
+            const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
+            const data = await res.json();
+            if (data[0]) {
+                const p = data[0];
+                document.getElementById('s-city').value = p.address.city || p.address.town || "";
+                document.getElementById('s-state-abbr').value = (p.address.state_code || p.address.state || "XX").toUpperCase().substring(0,2);
+            }
         }
 
-        // --- CRUD ---
+        // --- DATA ---
+        async function fetchMyStamps() {
+            const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: true});
+            processAndRender(data, true);
+        }
+
+        async function fetchPublicStamps(username) {
+            document.getElementById('view-title').innerText = `@${username}`;
+            const { data: profile } = await supabaseClient.from('profiles').select('id').eq('username', username).single();
+            if (profile) {
+                const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: true});
+                processAndRender(data, false);
+            }
+        }
+
+        function processAndRender(rawStamps, isOwner) {
+            let processed = [];
+            let lastState = null;
+            let inkIdx = 0;
+
+            // Group by state to insert ink stamps
+            rawStamps.forEach(s => {
+                const state = s.state_abbr || 'XX';
+                if (state !== lastState) {
+                    processed.push({ type: 'ink', state: state, color: inkPalette[inkIdx % inkPalette.length] });
+                    lastState = state;
+                    inkIdx++;
+                }
+                processed.push({ ...s, type: 'paper' });
+            });
+
+            renderGrid(processed, isOwner);
+        }
+
+        function renderGrid(items, isOwner) {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            
+            items.forEach((item, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'stamp-wrapper';
+                const rot = (Math.random() * 6 - 3).toFixed(1);
+                const sealRot = (Math.random() * 40 - 20).toFixed(1);
+
+                if (item.type === 'ink') {
+                    wrap.innerHTML = `
+                        <div class="ink-stamp" style="--ink-color: ${item.color}">
+                            <div class="ink-stamp-inner">
+                                <div style="font-size:40px">${item.state}</div>
+                                <div style="font-size:10px; border-top:1px solid; margin-top:5px; padding-top:5px">AUTHENTIC ARCHIVE</div>
+                            </div>
+                        </div>`;
+                } else {
+                    const theme = themes[i % themes.length];
+                    wrap.innerHTML = `
+                        <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg" onclick="${isOwner ? `openModal(${JSON.stringify(item)})` : ''}">
+                            <div class="stamp-image">
+                                ${item.img_url ? `<img src="${item.img_url}">` : `<div class="placeholder pattern-1" style="--theme-color: ${theme}"></div>`}
+                                <div class="stamp-title-overlay">
+                                    <div class="stamp-name">${item.name}</div>
+                                    <div class="stamp-note">${item.notes || ''}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg">
+                            <div style="text-align:center">
+                                <div style="font-size:8px">CITY OF</div>
+                                <div style="font-weight:bold">${(item.city || 'TRAVEL').toUpperCase()}</div>
+                            </div>
+                        </div>`;
+                }
+                grid.appendChild(wrap);
+            });
+        }
+
+        // --- MODAL & SAVE ---
         function openModal(editData = null) {
-            if (!currentUser) return;
             document.getElementById('edit-id').value = editData ? editData.id : '';
-            document.getElementById('modal-title').innerText = editData ? 'Edit Stamp' : 'New Stamp';
             document.getElementById('s-name').value = editData ? editData.name : '';
-            document.getElementById('s-address').value = editData ? editData.address : '';
             document.getElementById('s-notes').value = editData ? editData.notes : '';
-            document.getElementById('s-city').value = editData ? editData.city : '';
-            document.getElementById('s-lat').value = editData ? editData.lat : '';
-            document.getElementById('s-lng').value = editData ? editData.lng : '';
-            document.getElementById('s-image').value = '';
             document.getElementById('modal-overlay').classList.remove('hidden');
         }
-
         function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
-            btn.innerText = "Saving...";
+            btn.innerText = "Processing...";
             const file = document.getElementById('s-image').files[0];
             let imgUrl = "";
 
@@ -277,78 +322,26 @@
 
             const payload = {
                 name: document.getElementById('s-name').value,
-                address: document.getElementById('s-address').value,
                 notes: document.getElementById('s-notes').value,
                 city: document.getElementById('s-city').value,
-                lat: parseFloat(document.getElementById('s-lat').value) || null,
-                lng: parseFloat(document.getElementById('s-lng').value) || null,
+                state_abbr: document.getElementById('s-state-abbr').value,
                 user_id: currentUser.id
             };
             if (imgUrl) payload.img_url = imgUrl;
 
             const editId = document.getElementById('edit-id').value;
-            let error;
-            if (editId) {
-                const res = await supabaseClient.from('stamps').update(payload).eq('id', editId);
-                error = res.error;
-            } else {
-                const res = await supabaseClient.from('stamps').insert([payload]);
-                error = res.error;
-            }
+            if (editId) await supabaseClient.from('stamps').update(payload).eq('id', editId);
+            else await supabaseClient.from('stamps').insert([payload]);
 
-            if (error) alert(error.message);
-            else { closeModal(); fetchMyStamps(); }
-            btn.innerText = "Save Stamp";
-        }
-
-        // --- DATA FETCHING ---
-        async function fetchMyStamps() {
-            const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false});
-            renderStamps(data, true);
-        }
-
-        async function fetchPublicStamps(username) {
-            document.getElementById('view-title').innerText = `@${username}`;
-            document.getElementById('view-subtitle').innerText = "Public Collection";
-            const { data: profile } = await supabaseClient.from('profiles').select('id').eq('username', username).single();
-            if (profile) {
-                const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: false});
-                renderStamps(data, false);
-            } else {
-                document.getElementById('main-grid').innerHTML = '<p style="grid-column:1/-1; text-align:center;">User not found.</p>';
-            }
-        }
-
-        function renderStamps(stamps, isOwner) {
-            const grid = document.getElementById('main-grid');
-            grid.innerHTML = '';
-            if (!stamps || stamps.length === 0) {
-                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">Empty collection.</p>';
-                return;
-            }
-            stamps.forEach(s => {
-                const wrap = document.createElement('div');
-                wrap.className = 'stamp-wrapper';
-                wrap.innerHTML = `
-                    <div class="stamp" ${isOwner ? `onclick='openModal(${JSON.stringify(s)})'` : ''}>
-                        <div class="stamp-image">
-                            <img src="${s.img_url || 'https://via.placeholder.com/300'}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
-                            <div class="stamp-title-overlay">
-                                <div class="stamp-name">${s.name}</div>
-                                <div style="font-size:10px; opacity:0.8; margin-top:2px;">${s.city || 'Unknown Location'}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(wrap);
-            });
+            closeModal();
+            fetchMyStamps();
+            btn.innerText = "Save to Collection";
         }
 
         function shareProfile() {
-            if (!currentUser?.username) return alert("Username not found!");
             const url = `${window.location.origin}${window.location.pathname}#${currentUser.username}`;
             navigator.clipboard.writeText(url);
-            alert("Share link copied to clipboard!");
+            alert("Share link copied!");
         }
 
         window.addEventListener('hashchange', checkRoute);
