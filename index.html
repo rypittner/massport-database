@@ -3,58 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MASSPORTTTTTT</title>
+    <title>MASSport</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #3b82f6; --bg: #f8fafc; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .hidden { display: none !important; }
-        #auth-container, #app-container { max-width: 500px; margin: 40px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-        .plus-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 24px; cursor: pointer; transition: 0.2s; }
+        #auth-container, #app-container { max-width: 500px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .plus-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 24px; cursor: pointer; }
         input, textarea { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button.action-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .stamp-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        button.action-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        /* Dropdown Search Results */
+        #search-results { border: 1px solid #ddd; background: white; position: absolute; width: 100%; z-index: 1000; max-height: 200px; overflow-y: auto; border-radius: 0 0 6px 6px; margin-top: -10px; }
+        .result-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; }
+        .result-item:hover { background: #f0f7ff; }
+
+        /* Stamp Cards */
+        .stamp-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 15px; position: relative; }
         .stamp-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; }
+        .edit-btn { position: absolute; top: 10px; right: 10px; background: #f1f5f9; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; position: relative; }
     </style>
 </head>
 <body>
 
     <div id="auth-container">
-        <h2 style="text-align: center;">Welcome to MassPort</h2>
+        <h2 style="text-align: center;">MassPort Login</h2>
         <input type="email" id="email" placeholder="Email Address">
         <input type="password" id="password" placeholder="Password">
         <button class="action-btn" onclick="handleLogin()">Login</button>
         <button class="action-btn" style="background: #10b981;" onclick="handleSignUp()">Create Account</button>
+        <button onclick="handleResetPassword()" style="background:none; border:none; color:var(--primary); cursor:pointer; width:100%; margin-top:10px;">Forgot Password?</button>
     </div>
 
     <div id="app-container" class="hidden">
         <div class="header">
-            <h3>My Stamp Collection</h3>
-            <button class="plus-btn" onclick="toggleModal(true)">+</button>
+            <h3>My Stamps</h3>
+            <button class="plus-btn" onclick="openModal()">+</button>
         </div>
         <div id="stamp-list"></div>
-        <button onclick="handleSignOut()" style="background:none; border:none; color:#ef4444; cursor:pointer; width:100%; margin-top:20px;">Sign Out</button>
+        <button onclick="supabaseClient.auth.signOut()" style="background:none; border:none; color:#ef4444; cursor:pointer; width:100%; margin-top:20px;">Sign Out</button>
     </div>
 
     <div id="modal-overlay" class="hidden">
         <div class="modal-content">
-            <h3>New Stamp</h3>
+            <h3 id="modal-title">New Stamp</h3>
+            <div style="position: relative;">
+                <input type="text" id="s-search" placeholder="Search for a location name..." oninput="searchLocations(this.value)">
+                <div id="search-results" class="hidden"></div>
+            </div>
             <input type="text" id="s-name" placeholder="Stamp Name">
-            <input type="text" id="s-address" placeholder="Address">
+            <input type="text" id="s-address" placeholder="Address (Auto-filled)">
             <textarea id="s-notes" placeholder="Notes (optional)"></textarea>
             <input type="file" id="s-image" accept="image/*">
+            <input type="hidden" id="edit-id">
+            <input type="hidden" id="s-city">
+            <input type="hidden" id="s-lat">
+            <input type="hidden" id="s-lng">
+            
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button onclick="toggleModal(false)" style="flex:1;">Cancel</button>
-                <button onclick="saveStamp()" id="save-btn" style="flex:2; background:var(--primary); color:white; border-radius:6px;">Save</button>
+                <button onclick="closeModal()" style="flex:1;">Cancel</button>
+                <button onclick="saveStamp()" id="save-btn" style="flex:2; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer;">Save Stamp</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. SETTINGS
         const SUPABASE_URL = 'https://ujyoxnrfchzyduhtcpaz.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M';
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
@@ -62,91 +81,136 @@
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 2. AUTH FUNCTIONS
+        // --- AUTH ---
         async function handleSignUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) alert(error.message); 
-            else alert("Account created! Check your email to confirm.");
+            const { error } = await supabaseClient.auth.signUp({ email: email.value, password: password.value });
+            if (error) alert(error.message); else alert("Check email for link!");
         }
 
         async function handleLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: email.value, password: password.value });
             if (error) alert(error.message);
         }
 
-        async function handleSignOut() {
-            await supabaseClient.auth.signOut();
+        async function handleResetPassword() {
+            const mail = document.getElementById('email').value;
+            if (!mail) return alert("Enter your email first");
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(mail);
+            if (error) alert(error.message); else alert("Password reset email sent!");
         }
 
-        // 3. AUTH LISTENER
         supabaseClient.auth.onAuthStateChange((event, session) => {
-            const authDiv = document.getElementById('auth-container');
-            const appDiv = document.getElementById('app-container');
-            if (session) {
-                authDiv.classList.add('hidden');
-                appDiv.classList.remove('hidden');
-                fetchStamps();
-            } else {
-                authDiv.classList.remove('hidden');
-                appDiv.classList.add('hidden');
-            }
+            document.getElementById('auth-container').classList.toggle('hidden', !!session);
+            document.getElementById('app-container').classList.toggle('hidden', !session);
+            if (session) fetchStamps();
         });
 
-        // 4. APP FUNCTIONS
-        function toggleModal(show) {
-            document.getElementById('modal-overlay').classList.toggle('hidden', !show);
+        // --- LOCATION SEARCH ---
+        let searchTimeout;
+        async function searchLocations(query) {
+            if (query.length < 3) return;
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
+                const data = await res.json();
+                const container = document.getElementById('search-results');
+                container.innerHTML = '';
+                if (data.error) return;
+                container.classList.remove('hidden');
+                data.forEach(place => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.innerText = place.display_name;
+                    div.onclick = () => selectLocation(place);
+                    container.appendChild(div);
+                });
+            }, 300);
         }
 
-        async function fetchStamps() {
-            const { data, error } = await supabaseClient.from('stamps').select('*').order('created_at', { ascending: false });
-            const list = document.getElementById('stamp-list');
-            list.innerHTML = data && data.length ? '' : '<p>No stamps yet.</p>';
-            if (data) {
-                data.forEach(s => {
-                    const card = document.createElement('div');
-                    card.className = 'stamp-card';
-                    card.innerHTML = `${s.image_url ? `<img src="${s.image_url}">` : ''}<h4>${s.name}</h4><p>${s.city || ''}</p><small>${s.notes || ''}</small>`;
-                    list.appendChild(card);
-                });
-            }
+        function selectLocation(place) {
+            document.getElementById('s-name').value = place.display_name.split(',')[0];
+            document.getElementById('s-address').value = place.display_name;
+            document.getElementById('s-lat').value = place.lat;
+            document.getElementById('s-lng').value = place.lon;
+            
+            const addr = place.address;
+            const cityName = addr.city || addr.town || addr.village;
+            const countryCode = addr.country_code?.toUpperCase();
+            document.getElementById('s-city').value = (countryCode === "US") ? `${cityName}, ${addr.state}` : `${cityName}, ${addr.country}`;
+            
+            document.getElementById('search-results').classList.add('hidden');
+            document.getElementById('s-search').value = '';
         }
+
+        // --- CRUD OPS ---
+        function openModal(editData = null) {
+            // Reset fields so old data isn't there
+            document.getElementById('edit-id').value = editData ? editData.id : '';
+            document.getElementById('modal-title').innerText = editData ? 'Edit Stamp' : 'New Stamp';
+            document.getElementById('s-name').value = editData ? editData.name : '';
+            document.getElementById('s-address').value = editData ? editData.address : '';
+            document.getElementById('s-notes').value = editData ? editData.notes : '';
+            document.getElementById('s-city').value = editData ? editData.city : '';
+            document.getElementById('s-lat').value = editData ? editData.lat : '';
+            document.getElementById('s-lng').value = editData ? editData.lng : '';
+            document.getElementById('s-image').value = ''; 
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
         async function saveStamp() {
-            const name = document.getElementById('s-name').value;
-            const addr = document.getElementById('s-address').value;
-            const notes = document.getElementById('s-notes').value;
-            const file = document.getElementById('s-image').files[0];
             const btn = document.getElementById('save-btn');
+            const editId = document.getElementById('edit-id').value;
+            const file = document.getElementById('s-image').files[0];
+            btn.innerText = "Processing...";
 
-            if(!name || !addr) return alert("Fill in name and address!");
-            btn.innerText = "Saving...";
-            
-            let imgUrl = "";
+            let image_url = "";
             if (file) {
                 const fd = new FormData(); fd.append('image', file);
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
                 const json = await res.json();
-                imgUrl = json.data.url;
+                image_url = json.data.url;
             }
 
-            const geoRes = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(addr)}&format=json&addressdetails=1`);
-            const geoData = await geoRes.json();
-            const g = geoData[0] || {};
-            const city = g.address ? (g.address.city || g.address.town || g.address.country) : "";
-
-            const { error } = await supabaseClient.from('stamps').insert([{
-                name, address: addr, notes, image_url: imgUrl, city, 
-                lat: g.lat ? parseFloat(g.lat) : null, 
-                lng: g.lon ? parseFloat(g.lon) : null,
+            const stampData = {
+                name: document.getElementById('s-name').value,
+                address: document.getElementById('s-address').value,
+                notes: document.getElementById('s-notes').value,
+                city: document.getElementById('s-city').value,
+                lat: parseFloat(document.getElementById('s-lat').value),
+                lng: parseFloat(document.getElementById('s-lng').value),
                 user_id: (await supabaseClient.auth.getUser()).data.user.id
-            }]);
+            };
+            if (image_url) stampData.image_url = image_url; // Match your DB 'img_url'
 
-            btn.innerText = "Save";
-            if (error) alert(error.message); else { toggleModal(false); fetchStamps(); }
+            let error;
+            if (editId) {
+                const res = await supabaseClient.from('stamps').update(stampData).eq('id', editId);
+                error = res.error;
+            } else {
+                const res = await supabaseClient.from('stamps').insert([stampData]);
+                error = res.error;
+            }
+
+            btn.innerText = "Save Stamp";
+            if (error) alert(error.message); else { closeModal(); fetchStamps(); }
+        }
+
+        async function fetchStamps() {
+            const { data } = await supabaseClient.from('stamps').select('*').order('created_at', { ascending: false });
+            const list = document.getElementById('stamp-list');
+            list.innerHTML = '';
+            data?.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'stamp-card';
+                card.innerHTML = `
+                    <button class="edit-btn" onclick='openModal(${JSON.stringify(s)})'>Edit</button>
+                    ${s.img_url ? `<img src="${s.img_url}">` : ''}
+                    <h4>${s.name}</h4><p>${s.city || ''}</p>
+                `;
+                list.appendChild(card);
+            });
         }
     </script>
 </body>
