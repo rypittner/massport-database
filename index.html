@@ -30,6 +30,12 @@
         .header { max-width: var(--grid-max); margin: 0 auto; padding: 40px var(--grid-pad) 20px; text-align: center; position: relative; z-index: 10; }
         .header h1 { font-family: 'Yrsa', serif; font-size: 42px; margin: 0; }
 
+        /* ---------- MOBILE TAP ZONES ---------- */
+        .tap-zone { position: fixed; top: 0; bottom: 100px; width: 15%; z-index: 999; cursor: pointer; display: none; }
+        @media (max-width: 600px) { .tap-zone { display: block; } }
+        .tap-zone.left { left: 0; }
+        .tap-zone.right { right: 0; }
+
         /* ---------- NAVIGATION ---------- */
         .collector-nav-container {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
@@ -39,33 +45,41 @@
             display: flex; align-items: center; z-index: 16000;
             max-width: 95vw; width: max-content;
         }
-        .collector-nav { display: flex; gap: 6px; padding: 4px 10px; overflow-x: auto; scrollbar-width: none; }
-        .nav-tag { font-family: 'Inter'; font-size: 11px; color: #444; cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; transition: 0.3s; }
+        .collector-nav { display: flex; gap: 4px; padding: 4px 8px; overflow-x: auto; scrollbar-width: none; }
+        .nav-tag { font-family: 'Inter'; font-size: 11px; color: #444; cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; transition: 0.3s var(--ease-smooth); }
         .nav-tag.active { background: var(--accent); color: white; }
-        .action-btn { background: #f1f5f9; font-weight: bold; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 11px; margin-left: 5px; }
+        .action-btn { background: #f1f5f9; font-weight: 700; border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; font-size: 11px; margin-left: 5px; color: var(--accent); }
 
         /* ---------- GRID ---------- */
         #main-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 30px 20px; max-width: var(--grid-max); 
+            gap: 40px 25px; max-width: var(--grid-max); 
             margin: 0 auto; padding: 20px 40px 140px; width: 100%;
         }
 
-        @media (max-width: 600px) {
-            .header { display: none; }
-            #main-grid { 
-                display: flex; flex-wrap: nowrap; overflow-x: auto; 
-                scroll-snap-type: x mandatory; height: 100vh; align-items: center; 
-                padding: 0 10vw 80px; gap: 12px;
-            }
-            .stamp-wrapper { flex: 0 0 80vw; scroll-snap-align: center; }
+        /* ---------- STAMP VISUALS (With Hover Effects) ---------- */
+        .stamp-wrapper { 
+            position: relative; 
+            transition: transform 0.4s var(--ease-smooth), filter 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
+            filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
         }
 
-        /* ---------- STAMP DESIGN ---------- */
-        .stamp-wrapper { position: relative; filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15)); transition: 0.4s var(--ease-smooth); }
+        /* Desktop Hover */
+        @media (min-width: 601px) {
+            .stamp-wrapper:not(.state-ink-wrapper):hover {
+                transform: translateY(-8px) scale(1.05);
+                filter: drop-shadow(5px 5px 12px rgba(0,0,0,0.2));
+                z-index: 1000;
+            }
+            .stamp-wrapper:hover .stamp { transform: rotate(var(--r_deg, 0deg)); }
+            .stamp-wrapper:hover .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot, 15deg)); pointer-events: auto; }
+            .stamp-wrapper:hover .stamp-note { opacity: 1; }
+        }
+
         .stamp {
             aspect-ratio: 7 / 9; padding: var(--r); background: #fff;
             cursor: pointer; position: relative; transform: rotate(var(--r_deg, 0deg));
+            transition: transform 0.4s var(--ease-smooth);
             mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
             -webkit-mask: radial-gradient(50% 50%,#0000 66%,#000 67%) round var(--r) var(--r)/calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
         }
@@ -74,61 +88,90 @@
             overflow: hidden; border: 4pt solid var(--theme-color); background: var(--theme-color);
             display: flex; flex-direction: column; justify-content: flex-end;
         }
-        .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-
-        .placeholder { position: absolute; inset: -1px; --light: rgba(255,255,255,0.4); }
-        .pattern-1 { background-image: repeating-linear-gradient(45deg, var(--light), var(--light) 14px, var(--theme-color) 14px, var(--theme-color) 18px); }
+        .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease-smooth); }
         
-        .stamp-title-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px 10px; background: var(--theme-color); color: white; }
-        .stamp-name { font-family: 'Yrsa', serif; font-size: 18px; font-weight: 600; }
-        .stamp-note { font-size: 11px; opacity: 0.9; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        /* Placeholders */
+        .placeholder { position: absolute; inset: -1px; --light: rgba(255,255,255,0.3); }
+        .pattern-1 { background-image: repeating-linear-gradient(45deg, var(--light), var(--light) 14px, transparent 14px, transparent 18px); }
+        .pattern-2 { background-image: repeating-linear-gradient(135deg, transparent, transparent 14px, var(--light) 14px, var(--light) 18px); }
+
+        .stamp-title-overlay { 
+            position: absolute; bottom: -1px; left: -1px; width: calc(100% + 2px); 
+            padding: 14px 12px; background: var(--theme-color); color: white; z-index: 5;
+            transition: all 0.6s var(--ease-smooth);
+        }
+        .stamp-name { font-family: 'Yrsa', serif; font-size: 19px; font-weight: 600; line-height: 1.1; }
+        .stamp-note { font-size: 11px; opacity: 0; margin-top: 6px; line-height: 1.4; transition: opacity 0.4s ease 0.1s; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
         /* POSTMARK */
         .postmark-seal {
-            position: absolute; top: -10px; right: -20px; width: 110px; height: 110px;
+            position: absolute; top: -15px; right: -25px; width: 115px; height: 115px;
             border: 4px solid var(--stamp-red); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-family: 'Special Elite'; font-size: 12px; color: var(--stamp-red);
             background: rgba(255,255,255,0.95); z-index: 2000;
-            transform: scale(0.8) rotate(var(--seal-rot, 15deg)); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transform: scale(0.5) rotate(var(--seal-rot, 15deg)); 
+            opacity: 0; transition: transform 0.3s var(--ease-out-quint), opacity 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12); pointer-events: none; cursor: pointer;
         }
+        .postmark-seal::after { content: ''; position: absolute; inset: 4px; border: 1px solid var(--stamp-red); border-radius: 50%; pointer-events: none; }
 
         /* INK STAMP */
         .ink-stamp { 
-            aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.7;
+            aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.6;
             font-family: 'Special Elite'; color: var(--ink-color); text-align: center;
+            display: flex; align-items: center; justify-content: center;
         }
-        .ink-stamp-inner { border: 6px double var(--ink-color); height: 85%; margin: 7.5%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .ink-stamp-inner { border: 6px double var(--ink-color); width: 85%; height: 85%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .ink-abbr { font-size: 62px; line-height: 0.8; margin: 10px 0 0; font-weight: 900; }
+        .ink-full { font-size: 14px; margin-top: 15px; border-top: 2.5px solid; padding-top: 10px; letter-spacing: 2px; width: 100%; text-transform: uppercase;}
 
-        /* AUTH & MODAL */
+        /* MOBILE SCROLL VIEW */
+        @media (max-width: 600px) {
+            .header { display: none; }
+            #main-grid { 
+                display: flex; flex-wrap: nowrap; overflow-x: auto; 
+                scroll-snap-type: x mandatory; height: 100vh; align-items: center; 
+                padding: 0 10vw 80px; gap: 15px; scrollbar-width: none;
+            }
+            .stamp-wrapper { flex: 0 0 80vw; scroll-snap-align: center; }
+            
+            /* Mobile "Focused" State mimics hover */
+            .is-centered .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot)); pointer-events: auto; }
+            .is-centered .stamp-note { opacity: 1; }
+        }
+
+        /* UTILS */
         .hidden { display: none !important; }
-        .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 90%; margin: 50px auto; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; z-index: 20000; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; }
-        .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 90%; margin: 50px auto; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; }
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; z-index: 20000; justify-content: center; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; font-family: 'Inter'; }
+        .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header" id="header-text">
         <h1 id="view-title">MassPort</h1>
-        <p id="view-subtitle" style="font-size:12px; opacity:0.6;">Your Personal Travel Archive</p>
+        <p style="font-size:12px; opacity:0.6;">Your Personal Travel Archive</p>
     </div>
+
+    <div class="tap-zone left" onclick="scrollGrid(-1)"></div>
+    <div class="tap-zone right" onclick="scrollGrid(1)"></div>
 
     <div id="auth-container" class="auth-card hidden">
         <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px;">Welcome</h2>
-        <input type="text" id="username" placeholder="Username (no spaces)">
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
-        <button class="primary-btn" onclick="handleSignUp()">Create Account</button>
-        <button class="primary-btn" style="background:#eee; color:#333; margin-top:10px;" onclick="handleLogin()">Login</button>
+        <button class="primary-btn" onclick="handleLogin()">Login</button>
+        <button class="primary-btn" style="background:#eee; color:#333;" onclick="handleSignUp()">Sign Up</button>
     </div>
 
     <div id="main-grid"></div>
 
     <div id="nav-bar" class="collector-nav-container hidden">
         <div class="collector-nav" id="filter-nav"></div>
-        <button class="action-btn" style="background:var(--accent); color:white;" onclick="openModal()">+ Add</button>
+        <button class="action-btn" style="background:var(--accent); color:white;" onclick="openAddModal()">+ Add</button>
         <button class="action-btn" onclick="shareProfile()">Share</button>
         <button class="action-btn" style="color:#ef4444" onclick="supabaseClient.auth.signOut()">Exit</button>
     </div>
@@ -136,18 +179,29 @@
     <div id="modal-overlay" class="hidden">
         <div class="modal-content">
             <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'">New Stamp</h3>
-            <input type="text" id="s-search" placeholder="Search Location (City, State)..." oninput="debounceSearch(this.value)">
-            <input type="text" id="s-name" placeholder="Stamp Title (e.g. Best Coffee)">
-            <textarea id="s-notes" placeholder="Notes or memories..."></textarea>
+            
+            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Title</label>
+            <input type="text" id="s-name" placeholder="e.g. Best Coffee Shop">
+            
+            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Address (Search)</label>
+            <input type="text" id="s-address" placeholder="e.g. 123 Main St, Tucson, AZ">
+            
+            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Notes (Optional)</label>
+            <textarea id="s-notes" placeholder="Memories..." rows="3"></textarea>
+            
+            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Image (Optional)</label>
             <input type="file" id="s-image" accept="image/*">
             
             <input type="hidden" id="edit-id">
-            <input type="hidden" id="s-city">
-            <input type="hidden" id="s-state-abbr">
-            
             <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save to Collection</button>
-            <button class="primary-btn" style="background:none; color:#999; margin-top:5px;" onclick="closeModal()">Cancel</button>
+            <button class="primary-btn" style="background:none; color:#999; margin-top:0;" onclick="closeModal()">Cancel</button>
         </div>
+    </div>
+
+    <div id="img-modal" class="hidden" style="position:fixed; inset:0; z-index:21000; background:rgba(0,0,0,0.85); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:30px; cursor:pointer;" onclick="document.getElementById('img-modal').classList.add('hidden')">&times;</div>
+        <img id="modal-img" style="max-width:90%; max-height:80vh; border:10px solid white; box-shadow:0 0 50px black;">
+        <h2 id="modal-caption" style="color:white; font-family:'Yrsa'; margin-top:20px;"></h2>
     </div>
 
     <script>
@@ -158,12 +212,14 @@
         
         const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
         const inkPalette = ['#1B4F72', '#78281F', '#186A3B', '#7E5109', '#512E5F'];
+        const abbrToState = { "AL": "ALABAMA", "AK": "ALASKA", "AZ": "ARIZONA", "AR": "ARKANSAS", "CA": "CALIFORNIA", "CO": "COLORADO", "CT": "CONNECTICUT", "DE": "DELAWARE", "FL": "FLORIDA", "GA": "GEORGIA", "HI": "HAWAII", "ID": "IDAHO", "IL": "ILLINOIS", "IN": "INDIANA", "IA": "IOWA", "KS": "KANSAS", "KY": "KENTUCKY", "LA": "LOUISIANA", "ME": "MAINE", "MD": "MARYLAND", "MA": "MASSACHUSETTS", "MI": "MICHIGAN", "MN": "MINNESOTA", "MS": "MISSISSIPPI", "MO": "MISSOURI", "MT": "MONTANA", "NE": "NEBRASKA", "NV": "NEVADA", "NH": "NEW HAMPSHIRE", "NJ": "NEW JERSEY", "NM": "NEW MEXICO", "NY": "NEW YORK", "NC": "NORTH CAROLINA", "ND": "NORTH DAKOTA", "OH": "OHIO", "OK": "OKLAHOMA", "OR": "OREGON", "PA": "PENNSYLVANIA", "RI": "RHODE ISLAND", "SC": "SOUTH CAROLINA", "SD": "SOUTH DAKOTA", "TN": "TENNESSEE", "TX": "TEXAS", "UT": "UTAH", "VT": "VERMONT", "VA": "VIRGINIA", "WA": "WASHINGTON", "WV": "WEST VIRGINIA", "WI": "WISCONSIN", "WY": "WYOMING", "EU": "EUROPE" };
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUser = null;
         let publicUsername = null;
+        let globalStamps = [];
 
-        // --- AUTH & ROUTING ---
+        // --- AUTH ---
         function checkRoute() {
             const hash = window.location.hash.replace('#', '').trim();
             if (hash) {
@@ -177,21 +233,21 @@
         }
 
         function initAuth() {
-            supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                handleAuthState(session);
-            });
+            supabaseClient.auth.getSession().then(({ data: { session } }) => handleAuthState(session));
         }
 
         async function handleSignUp() {
-            const userNm = document.getElementById('username').value.toLowerCase().trim();
-            const { data, error } = await supabaseClient.auth.signUp({ email: email.value, password: password.value });
-            if (error) return alert(error.message);
-            await supabaseClient.from('profiles').insert([{ id: data.user.id, username: userNm }]);
-            alert("Check email to confirm!");
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) alert(error.message);
+            else alert("Check your email!");
         }
 
         async function handleLogin() {
-            const { error } = await supabaseClient.auth.signInWithPassword({ email: email.value, password: password.value });
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) alert(error.message);
         }
 
@@ -206,27 +262,12 @@
                 document.getElementById('nav-bar').classList.add('hidden');
             }
         }
+        supabaseClient.auth.onAuthStateChange((_e, session) => handleAuthState(session));
 
-        supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
-
-        // --- LOCATION SEARCH ---
-        let timer;
-        function debounceSearch(q) { clearTimeout(timer); timer = setTimeout(() => runSearch(q), 500); }
-        async function runSearch(query) {
-            if (query.length < 3) return;
-            const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&addressdetails=1`);
-            const data = await res.json();
-            if (data[0]) {
-                const p = data[0];
-                document.getElementById('s-city').value = p.address.city || p.address.town || "";
-                document.getElementById('s-state-abbr').value = (p.address.state_code || p.address.state || "XX").toUpperCase().substring(0,2);
-            }
-        }
-
-        // --- DATA ---
+        // --- FETCH & PROCESS ---
         async function fetchMyStamps() {
             const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: true});
-            processAndRender(data, true);
+            processStamps(data, true);
         }
 
         async function fetchPublicStamps(username) {
@@ -234,85 +275,191 @@
             const { data: profile } = await supabaseClient.from('profiles').select('id').eq('username', username).single();
             if (profile) {
                 const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: true});
-                processAndRender(data, false);
+                processStamps(data, false);
             }
         }
 
-        function processAndRender(rawStamps, isOwner) {
-            let processed = [];
-            let lastState = null;
+        function processStamps(data, isOwner) {
+            globalStamps = [];
+            let lastStateCode = null;
             let inkIdx = 0;
+            const stateCounts = {};
 
-            // Group by state to insert ink stamps
-            rawStamps.forEach(s => {
-                const state = s.state_abbr || 'XX';
-                if (state !== lastState) {
-                    processed.push({ type: 'ink', state: state, color: inkPalette[inkIdx % inkPalette.length] });
-                    lastState = state;
-                    inkIdx++;
-                }
-                processed.push({ ...s, type: 'paper' });
+            // Sort by state code (extracted from city string)
+            data.sort((a,b) => {
+                const stateA = a.city.split(',').pop().trim().toUpperCase();
+                const stateB = b.city.split(',').pop().trim().toUpperCase();
+                return stateA.localeCompare(stateB);
             });
 
-            renderGrid(processed, isOwner);
+            data.forEach(s => {
+                // Parse "City, ST"
+                const parts = s.city.split(',');
+                let stateCode = parts.length > 1 ? parts[parts.length - 1].trim().toUpperCase() : 'EU';
+                // If 2 chars, assume US state. If longer (e.g. Italy), use full name or map to EU/INTL if desired. 
+                // For simplicity, if not in our dictionary, we treat it as valid if it's 2 chars, otherwise we keep as is.
+                
+                if (stateCode !== lastStateCode) {
+                    globalStamps.push({ type: 'ink', code: stateCode, color: inkPalette[inkIdx % inkPalette.length] });
+                    lastStateCode = stateCode;
+                    inkIdx++;
+                }
+                
+                stateCounts[stateCode] = (stateCounts[stateCode] || 0) + 1;
+                globalStamps.push({ ...s, type: 'paper', parsedState: stateCode });
+            });
+
+            renderGrid(globalStamps, isOwner);
+            renderNav(stateCounts);
         }
 
+        // --- RENDER ---
         function renderGrid(items, isOwner) {
             const grid = document.getElementById('main-grid');
             grid.innerHTML = '';
-            
+
             items.forEach((item, i) => {
                 const wrap = document.createElement('div');
                 wrap.className = 'stamp-wrapper';
-                const rot = (Math.random() * 6 - 3).toFixed(1);
-                const sealRot = (Math.random() * 40 - 20).toFixed(1);
-
+                
                 if (item.type === 'ink') {
+                    wrap.classList.add('state-ink-wrapper');
+                    const fullName = abbrToState[item.code] || item.code;
                     wrap.innerHTML = `
                         <div class="ink-stamp" style="--ink-color: ${item.color}">
                             <div class="ink-stamp-inner">
-                                <div style="font-size:40px">${item.state}</div>
-                                <div style="font-size:10px; border-top:1px solid; margin-top:5px; padding-top:5px">AUTHENTIC ARCHIVE</div>
+                                <span class="material-symbols-rounded" style="font-size:40px; margin-bottom:10px;">verified</span>
+                                <div class="ink-abbr">${item.code.substring(0,2)}</div>
+                                <div class="ink-full">${fullName}</div>
                             </div>
                         </div>`;
                 } else {
+                    const rot = (Math.random() * 6 - 3).toFixed(1);
+                    const sealRot = (Math.random() * 40 - 20).toFixed(1);
                     const theme = themes[i % themes.length];
+                    const cityName = item.city.split(',')[0].trim();
+                    const stateCode = item.parsedState;
+
                     wrap.innerHTML = `
-                        <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg" onclick="${isOwner ? `openModal(${JSON.stringify(item)})` : ''}">
+                        <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg" onclick="viewStamp(${i})">
                             <div class="stamp-image">
-                                ${item.img_url ? `<img src="${item.img_url}">` : `<div class="placeholder pattern-1" style="--theme-color: ${theme}"></div>`}
+                                ${item.img_url ? `<img src="${item.img_url}">` : `<div class="placeholder pattern-${(i%2)+1}" style="--theme-color: ${theme}"></div>`}
                                 <div class="stamp-title-overlay">
                                     <div class="stamp-name">${item.name}</div>
                                     <div class="stamp-note">${item.notes || ''}</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg">
-                            <div style="text-align:center">
-                                <div style="font-size:8px">CITY OF</div>
-                                <div style="font-weight:bold">${(item.city || 'TRAVEL').toUpperCase()}</div>
+                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg" onclick="openMap('${item.city}')">
+                            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1.2;">
+                                <div style="font-size:9px">POSTMARK</div>
+                                <div style="font-weight:bold; font-size:14px; text-transform:uppercase;">${cityName}</div>
+                                <div style="font-size:10px; font-weight:bold;">${stateCode}</div>
                             </div>
                         </div>`;
                 }
                 grid.appendChild(wrap);
             });
+            setupMobileScroll();
         }
 
-        // --- MODAL & SAVE ---
-        function openModal(editData = null) {
-            document.getElementById('edit-id').value = editData ? editData.id : '';
-            document.getElementById('s-name').value = editData ? editData.name : '';
-            document.getElementById('s-notes').value = editData ? editData.notes : '';
+        function renderNav(counts) {
+            const nav = document.getElementById('filter-nav');
+            nav.innerHTML = '';
+            
+            // Sort keys: US states first, then others
+            const keys = Object.keys(counts).sort((a,b) => {
+                const aIsUS = !!abbrToState[a];
+                const bIsUS = !!abbrToState[b];
+                if(aIsUS && !bIsUS) return -1;
+                if(!aIsUS && bIsUS) return 1;
+                return a.localeCompare(b);
+            });
+
+            keys.forEach(k => {
+                const btn = document.createElement('div');
+                btn.className = 'nav-tag';
+                const label = abbrToState[k] || k;
+                btn.innerText = `${label} (${counts[k]})`;
+                btn.onclick = () => {
+                    const target = Array.from(document.querySelectorAll('.ink-abbr')).find(el => el.innerText === k.substring(0,2));
+                    if(target) target.closest('.stamp-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    
+                    document.querySelectorAll('.nav-tag').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                nav.appendChild(btn);
+            });
+        }
+
+        // --- INTERACTIONS ---
+        function openMap(query) {
+            // Prevent event bubbling if necessary, though structure handles it
+            window.open(`https://maps.google.com/?q=${encodeURIComponent(query)}`, '_blank');
+        }
+
+        function viewStamp(idx) {
+            const item = globalStamps[idx];
+            if(item.img_url) {
+                document.getElementById('modal-img').src = item.img_url;
+                document.getElementById('modal-caption').innerText = item.name;
+                document.getElementById('img-modal').classList.remove('hidden');
+            } else {
+                openAddModal(item); // If no image, maybe open edit mode? Or just do nothing. Let's open edit for owner.
+            }
+        }
+
+        // --- ADD/SAVE STAMP ---
+        function openAddModal(existing = null) {
             document.getElementById('modal-overlay').classList.remove('hidden');
+            if(existing) {
+                document.getElementById('edit-id').value = existing.id;
+                document.getElementById('s-name').value = existing.name;
+                document.getElementById('s-address').value = existing.city; // Showing stored city in address field for now
+                document.getElementById('s-notes').value = existing.notes;
+            } else {
+                document.getElementById('edit-id').value = '';
+                document.getElementById('s-name').value = '';
+                document.getElementById('s-address').value = '';
+                document.getElementById('s-notes').value = '';
+                document.getElementById('s-image').value = '';
+            }
         }
         function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
-            btn.innerText = "Processing...";
+            const addressInput = document.getElementById('s-address').value;
+            if(!addressInput) return alert("Address is required!");
+
+            btn.innerText = "Locating...";
+            
+            // 1. Geocode via LocationIQ to get clean "City, ST"
+            let finalCityString = addressInput;
+            try {
+                const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(addressInput)}&format=json&addressdetails=1`);
+                const data = await res.json();
+                if(data && data[0]) {
+                    const addr = data[0].address;
+                    // Prefer City > Town > Village
+                    const city = addr.city || addr.town || addr.village || addr.county || "Unknown";
+                    // Prefer State Code (US) or Country (Intl)
+                    let region = addr.state_code ? addr.state_code.toUpperCase() : (addr.country || "XX");
+                    
+                    // If region is a full state name (rare in state_code but possible), try to map it
+                    // The LocationIQ 'state_code' is usually 2 digits for US.
+                    
+                    finalCityString = `${city}, ${region}`;
+                }
+            } catch(e) {
+                console.log("Geocoding error, using raw input", e);
+            }
+
+            btn.innerText = "Uploading...";
+            
+            // 2. Image Upload
             const file = document.getElementById('s-image').files[0];
             let imgUrl = "";
-
             if (file) {
                 const fd = new FormData(); fd.append('image', file);
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
@@ -320,11 +467,11 @@
                 imgUrl = json.data.url;
             }
 
+            // 3. Save to Supabase
             const payload = {
                 name: document.getElementById('s-name').value,
+                city: finalCityString, // Stored as "Tucson, AZ"
                 notes: document.getElementById('s-notes').value,
-                city: document.getElementById('s-city').value,
-                state_abbr: document.getElementById('s-state-abbr').value,
                 user_id: currentUser.id
             };
             if (imgUrl) payload.img_url = imgUrl;
@@ -342,6 +489,34 @@
             const url = `${window.location.origin}${window.location.pathname}#${currentUser.username}`;
             navigator.clipboard.writeText(url);
             alert("Share link copied!");
+        }
+
+        // --- MOBILE SCROLL ---
+        function setupMobileScroll() {
+            if(window.innerWidth > 600) return;
+            const grid = document.getElementById('main-grid');
+            grid.addEventListener('scroll', () => {
+                const center = window.innerWidth / 2;
+                document.querySelectorAll('.stamp-wrapper').forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const cardCenter = rect.left + rect.width/2;
+                    const dist = Math.abs(center - cardCenter);
+                    if(dist < 150) {
+                        card.classList.add('is-centered');
+                        // Optional: Scale effect
+                        card.style.transform = `scale(${1.1 - (dist/1000)})`;
+                    } else {
+                        card.classList.remove('is-centered');
+                        card.style.transform = 'scale(0.9)';
+                    }
+                });
+            });
+        }
+        
+        function scrollGrid(dir) {
+            const grid = document.getElementById('main-grid');
+            const itemW = window.innerWidth * 0.8; 
+            grid.scrollBy({ left: dir * itemW, behavior: 'smooth' });
         }
 
         window.addEventListener('hashchange', checkRoute);
