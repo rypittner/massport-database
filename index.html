@@ -1177,8 +1177,19 @@ function openAddModal(existing = null) {
     }
 }
 
-function closeModal() { 
-    document.getElementById('modal-overlay').classList.add('hidden'); 
+function closeModal() {
+    // 1. Hide the modal
+    document.getElementById('modal-overlay').classList.add('hidden');
+
+    // 2. CLEAR THE IMAGE (The Fix)
+    const preview = document.getElementById('img-preview');
+    preview.src = ""; // This empties the image
+    
+    // 3. Clear the hidden input value so the same file can be re-selected
+    document.getElementById('s-image-input').value = "";
+
+    // 4. (Optional) Make sure the "Add Photo" text is visible again
+    document.querySelector('.upload-placeholder').style.display = 'block';
 }
 
 function previewImage() {
