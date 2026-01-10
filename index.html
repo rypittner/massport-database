@@ -1021,40 +1021,95 @@ async function handleLogout() {
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
             const addressInput = document.getElementById('s-address').value;
-            if(!addressInput) return alert("Location is required!");
-            btn.innerText = "Processing...";
+            if (!addressInput) return alert("Location is required!");
             
+            btn.innerText = "Processing...";
+        
             let finalCity = addressInput;
             let finalStateCode = null;
             let finalStateName = null;
             let finalCountry = 'US';
-
+        
+            // 1. GEOCODING LOGIC (With City Priority Fix)
             try {
                 const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(addressInput)}&format=json&addressdetails=1`);
                 const data = await res.json();
-                if(data && data[0]) {
+                if (data && data[0]) {
                     const addr = data[0].address;
-                    finalCity = addr.city || addr.town || addr.village || addr.county || addressInput.split(',')[0];
+                    
+                    // Prioritize City -> Town -> Village over Neighborhood/Suburb
+                    finalCity = addr.city || addr.town || addr.village || addr.suburb || addr.city_district || addressInput.split(',')[0];
+                    
                     finalCountry = addr.country_code ? addr.country_code.toUpperCase() : 'INTL';
-                    if(finalCountry === 'US' || finalCountry === 'USA') {
+                    if (finalCountry === 'US' || finalCountry === 'USA') {
                         finalStateCode = addr.state_code ? addr.state_code.toUpperCase() : null;
                         finalStateName = addr.state ? addr.state.toUpperCase() : null;
                     }
-                    if(finalStateCode) finalCity = `${finalCity}, ${finalStateCode}`;
+                    if (finalStateCode) finalCity = `${finalCity}, ${finalStateCode}`;
                     else finalCity = `${finalCity}, ${addr.country || finalCountry}`;
                 }
-            } catch(e) { console.log("Geocode fail", e); }
-
+            } catch (e) { console.log("Geocode fail", e); }
+        
+            // 2. IMAGE HANDLING (With Compression Logic)
             let imgUrl = document.getElementById('current-img-url').value;
             const file = document.getElementById('s-image-input').files[0];
+        
             if (file) {
-                btn.innerText = "Uploading Image...";
-                const fd = new FormData(); fd.append('image', file);
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
-                const json = await res.json();
-                imgUrl = json.data.url;
+                btn.innerText = "Compressing...";
+                
+                // Internal helper to shrink the image
+                const compressImage = (imgFile) => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(imgFile);
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.src = event.target.result;
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_WIDTH = 1200; // Optimal size for stamps
+                                let width = img.width;
+                                let height = img.height;
+        
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+        
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+                                
+                                // Convert to blob at 70% quality
+                                canvas.toBlob((blob) => {
+                                    resolve(blob);
+                                }, 'image/jpeg', 0.7); 
+                            };
+                        };
+                    });
+                };
+        
+                try {
+                    const compressedBlob = await compressImage(file);
+                    btn.innerText = "Uploading...";
+                    
+                    const fd = new FormData();
+                    fd.append('image', compressedBlob, "upload.jpg");
+                    
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { 
+                        method: 'POST', 
+                        body: fd 
+                    });
+                    const json = await res.json();
+                    if (json.data) imgUrl = json.data.url;
+                } catch (e) {
+                    console.error("Image processing/upload failed", e);
+                    alert("Image upload failed, but saving text data...");
+                }
             }
-
+        
+            // 3. SUPABASE SAVE LOGIC
             const payload = {
                 name: document.getElementById('s-name').value,
                 city: finalCity,
@@ -1065,9 +1120,14 @@ async function handleLogout() {
                 user_id: currentUser.id,
                 img_url: imgUrl
             };
+        
             const editId = document.getElementById('edit-id').value;
-            if (editId) await supabaseClient.from('stamps').update(payload).eq('id', editId);
-            else await supabaseClient.from('stamps').insert([payload]);
+            if (editId) {
+                await supabaseClient.from('stamps').update(payload).eq('id', editId);
+            } else {
+                await supabaseClient.from('stamps').insert([payload]);
+            }
+        
             closeModal();
             fetchMyStamps();
         }
