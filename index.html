@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MassPort</title>
+    <title>MassPort App</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places"></script>
 
     <style>
         :root {
@@ -468,25 +469,43 @@
         </div>
     </div>
 
-    <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-overlay" class="hidden">
         <div class="modal-content">
-            <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'; font-size:24px;">New Stamp</h3>
-            <label style="font-size:11px; font-weight:700; color:#555;">TITLE</label>
-            <input type="text" id="s-name" placeholder="e.g. The Louvre">
-            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">LOCATION (Search)</label>
-            <input type="text" id="s-address" placeholder="City, Country...">
-            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">NOTES</label>
-            <textarea id="s-notes" placeholder="Memories..." rows="3"></textarea>
-            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">IMAGE</label>
-            <input type="file" id="s-image-input" accept="image/*" onchange="previewImage()">
-            <div id="preview-box" class="image-preview-container">
-                <div class="remove-img-btn" onclick="clearImage()">×</div>
-                <img id="img-preview" style="width:100%; height:120px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
-            </div>
+            <div id="map-preview" style="width: 100%; height: 200px; border-radius: 12px; margin-bottom: 15px; background: #eee;"></div>
+    
             <input type="hidden" id="edit-id">
             <input type="hidden" id="current-img-url">
-            <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save Stamp</button>
-            <button class="primary-btn secondary-btn" style="margin-top:0;" onclick="closeModal()">Cancel</button>
+            <input type="hidden" id="s-lat">
+            <input type="hidden" id="s-lng">
+    
+            <div class="input-group">
+                <label>Search Location</label>
+                <input type="text" id="s-search" placeholder="Search for a place, park, or city...">
+            </div>
+    
+            <div class="input-group">
+                <label>Church Name</label>
+                <input type="text" id="s-name" placeholder="e.g. Grand Canyon Adventure">
+            </div>
+    
+            <div class="input-group">
+                <label>Notes (optional)</label>
+                <textarea id="s-notes" rows="2"></textarea>
+            </div>
+    
+            <div id="preview-box" class="image-upload-box" onclick="document.getElementById('s-image-input').click()">
+                <img id="img-preview" src="">
+                <div class="upload-placeholder">
+                    <span class="material-symbols-rounded">add_a_photo</span>
+                    <p>Add Photo (optional)</p>
+                </div>
+                <input type="file" id="s-image-input" hidden accept="image/*" onchange="previewImage()">
+            </div>
+    
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="cancel-btn">Cancel</button>
+                <button id="save-btn" onclick="saveStamp()">Save Stamp</button>
+            </div>
         </div>
     </div>
 
@@ -987,16 +1006,70 @@ async function handleLogout() {
             }
         }
 
-        // --- ADD/EDIT LOGIC ---
+  // --- GOOGLE MAPS & STAMP LOGIC ---
+        let autocomplete;
+        let map;
+        let marker;
+
+        // Initialize Map & Autocomplete - Call this once when the app starts
+        function initGoogleMaps() {
+            const defaultLocation = { lat: 39.8283, lng: -98.5795 }; 
+            map = new google.maps.Map(document.getElementById("map-preview"), {
+                center: defaultLocation,
+                zoom: 4,
+                disableDefaultUI: true,
+                styles: [{ "featureType": "poi", "elementType": "labels", "stylers": [{ "visibility": "off" }] }]
+            });
+            marker = new google.maps.Marker({ map: map });
+
+            const input = document.getElementById("s-address");
+            autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo("bounds", map);
+
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
+
+                // Update Map Preview
+                if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
+                else {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(17);
+                }
+                marker.setPosition(place.geometry.location);
+
+                // Auto-fill the "Name" field with the Place Name
+                document.getElementById('s-name').value = place.name;
+                
+                // Set hidden Lat/Lng
+                document.getElementById('s-lat').value = place.geometry.location.lat();
+                document.getElementById('s-lng').value = place.geometry.location.lng();
+            });
+        }
+
         function openAddModal(existing = null) {
             document.getElementById('modal-overlay').classList.remove('hidden');
             clearImage();
+            
+            // Fix for Google Maps rendering in a hidden div
+            setTimeout(() => { google.maps.event.trigger(map, "resize"); }, 100);
+
             if(existing) {
                 document.getElementById('edit-id').value = existing.id;
                 document.getElementById('s-name').value = existing.name;
                 document.getElementById('s-address').value = existing.city; 
                 document.getElementById('s-notes').value = existing.notes;
+                document.getElementById('s-lat').value = existing.lat || '';
+                document.getElementById('s-lng').value = existing.lng || '';
                 document.getElementById('current-img-url').value = existing.img_url || '';
+                
+                if (existing.lat && existing.lng) {
+                    const pos = { lat: parseFloat(existing.lat), lng: parseFloat(existing.lng) };
+                    map.setCenter(pos);
+                    marker.setPosition(pos);
+                    map.setZoom(15);
+                }
+
                 if(existing.img_url) {
                     document.getElementById('img-preview').src = existing.img_url;
                     document.getElementById('preview-box').classList.add('has-image');
@@ -1007,158 +1080,126 @@ async function handleLogout() {
                 document.getElementById('s-name').value = '';
                 document.getElementById('s-address').value = '';
                 document.getElementById('s-notes').value = '';
+                document.getElementById('s-lat').value = '';
+                document.getElementById('s-lng').value = '';
+                marker.setPosition(null);
+                map.setZoom(4);
                 document.getElementById('save-btn').innerText = "Save Stamp";
             }
         }
+
         function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
         function previewImage() {
             const file = document.getElementById('s-image-input').files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     document.getElementById('img-preview').src = e.target.result;
                     document.getElementById('preview-box').classList.add('has-image');
-                }
+                };
                 reader.readAsDataURL(file);
             }
         }
+
         function clearImage() {
             document.getElementById('s-image-input').value = '';
             document.getElementById('preview-box').classList.remove('has-image');
             document.getElementById('img-preview').src = '';
         }
+
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
             const addressInput = document.getElementById('s-address').value;
-            if (!addressInput) return alert("Location is required!");
+            const nameInput = document.getElementById('s-name').value;
+            
+            if (!addressInput || !nameInput) return alert("Location and Name are required!");
             
             btn.innerText = "Processing...";
-        
+
+            // 1. EXTRACT DATA FROM GOOGLE PLACE
             let finalCity = addressInput;
             let finalStateCode = null;
             let finalStateName = null;
             let finalCountry = 'US';
-        
-            // 1. GEOCODING LOGIC (With City Priority Fix)
-            try {
-                const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(addressInput)}&format=json&addressdetails=1`);
-                const data = await res.json();
-                if (data && data[0]) {
-                    const addr = data[0].address;
-                    
-                    // Prioritize City -> Town -> Village over Neighborhood/Suburb
-                    finalCity = addr.city || addr.town || addr.village || addr.suburb || addr.city_district || addressInput.split(',')[0];
-                    
-                    finalCountry = addr.country_code ? addr.country_code.toUpperCase() : 'INTL';
-                    if (finalCountry === 'US' || finalCountry === 'USA') {
-                        finalStateCode = addr.state_code ? addr.state_code.toUpperCase() : null;
-                        finalStateName = addr.state ? addr.state.toUpperCase() : null;
-                    }
-                    if (finalStateCode) finalCity = `${finalCity}, ${finalStateCode}`;
-                    else finalCity = `${finalCity}, ${addr.country || finalCountry}`;
-                }
-            } catch (e) { console.log("Geocode fail", e); }
-        
-            // 2. IMAGE HANDLING (With Compression Logic)
-            let imgUrl = document.getElementById('current-img-url').value;
-            const file = document.getElementById('s-image-input').files[0];
-        
-            if (file) {
-                btn.innerText = "Compressing...";
+            
+            const place = autocomplete.getPlace();
+            
+            // If the user selected a result from the dropdown
+            if (place && place.address_components) {
+                const components = place.address_components;
+                const getComp = (type, prop) => components.find(c => c.types.includes(type))?.[prop];
                 
-                // Internal helper to shrink the image
-                const compressImage = (imgFile) => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(imgFile);
-                        reader.onload = (event) => {
-                            const img = new Image();
-                            img.src = event.target.result;
-                            img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 1200; // Optimal size for stamps
-                                let width = img.width;
-                                let height = img.height;
-        
-                                if (width > MAX_WIDTH) {
-                                    height *= MAX_WIDTH / width;
-                                    width = MAX_WIDTH;
-                                }
-        
-                                canvas.width = width;
-                                canvas.height = height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                
-                                // Convert to blob at 70% quality
-                                canvas.toBlob((blob) => {
-                                    resolve(blob);
-                                }, 'image/jpeg', 0.7); 
-                            };
-                        };
-                    });
-                };
-        
-                try {
-                    const compressedBlob = await compressImage(file);
-                    btn.innerText = "Uploading...";
-                    
-                    const fd = new FormData();
-                    fd.append('image', compressedBlob, "upload.jpg");
-                    
-                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { 
-                        method: 'POST', 
-                        body: fd 
-                    });
-                    const json = await res.json();
-                    if (json.data) imgUrl = json.data.url;
-                } catch (e) {
-                    console.error("Image processing/upload failed", e);
-                    alert("Image upload failed, but saving text data...");
+                const city = getComp('locality', 'long_name') || getComp('sublocality', 'long_name') || getComp('postal_town', 'long_name');
+                finalStateCode = getComp('administrative_area_level_1', 'short_name');
+                finalStateName = getComp('administrative_area_level_1', 'long_name');
+                finalCountry = getComp('country', 'short_name');
+                
+                if (city) {
+                    finalCity = finalStateCode ? `${city}, ${finalStateCode}` : `${city}, ${finalCountry}`;
                 }
             }
-        
-            // 3. SUPABASE SAVE LOGIC
+
+            // 2. IMAGE COMPRESSION & UPLOAD
+            let imgUrl = document.getElementById('current-img-url').value;
+            const file = document.getElementById('s-image-input').files[0];
+
+            if (file) {
+                btn.innerText = "Compressing...";
+                const compressedBlob = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 1200;
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            canvas.width = width; canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
+                        };
+                    };
+                });
+
+                try {
+                    btn.innerText = "Uploading...";
+                    const fd = new FormData();
+                    fd.append('image', compressedBlob, "upload.jpg");
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
+                    const json = await res.json();
+                    if (json.data) imgUrl = json.data.url;
+                } catch (e) { console.error("Upload failed", e); }
+            }
+
+            // 3. SUPABASE SAVE
             const payload = {
-                name: document.getElementById('s-name').value,
+                name: nameInput,
                 city: finalCity,
                 country_code: finalCountry,
                 state_code: finalStateCode,
                 full_state_name: finalStateName,
                 notes: document.getElementById('s-notes').value,
+                lat: document.getElementById('s-lat').value,
+                lng: document.getElementById('s-lng').value,
                 user_id: currentUser.id,
                 img_url: imgUrl
             };
-        
-            const editId = document.getElementById('edit-id').value;
-            if (editId) {
-                await supabaseClient.from('stamps').update(payload).eq('id', editId);
-            } else {
-                await supabaseClient.from('stamps').insert([payload]);
-            }
-        
-            closeModal();
-            fetchMyStamps();
-        }
 
-        function setupMobileScroll() {
-            if(window.innerWidth > 600) return;
-            const grid = document.getElementById('main-grid');
-            grid.addEventListener('scroll', () => {
-                const center = window.innerWidth / 2;
-                document.querySelectorAll('.stamp-wrapper').forEach(card => {
-                    const rect = card.getBoundingClientRect();
-                    const cardCenter = rect.left + rect.width/2;
-                    const dist = Math.abs(center - cardCenter);
-                    if(dist < 120) {
-                        card.classList.add('is-centered');
-                        card.style.transform = `scale(1)`;
-                    } else {
-                        card.classList.remove('is-centered');
-                        card.style.transform = 'scale(0.9)';
-                    }
-                });
-            });
+            const editId = document.getElementById('edit-id').value;
+            const { error } = editId 
+                ? await supabaseClient.from('stamps').update(payload).eq('id', editId)
+                : await supabaseClient.from('stamps').insert([payload]);
+
+            if (error) alert(error.message);
+            else {
+                closeModal();
+                fetchMyStamps();
+            }
         }
     </script>
 </body>
