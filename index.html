@@ -23,6 +23,11 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .add-label{
+            text-transform:uppercase;
+            font-size:10pt;
+        }
         
         html, body {
             margin: 0; padding: 0;
@@ -516,25 +521,24 @@
          <input type="hidden" id="geo-state-name">
         <input type="hidden" id="geo-country">
         <div class="modal-content">
-            <div id="map-preview" style="height: 180px; width: 100%; border-radius: 12px; margin-bottom: 15px; background: #eee;"></div>
+            <div id="map-preview" style="height: 100px; width: 100%; border-radius: 12px; margin-bottom: 15px; background: #eee;"></div>
             
             <div class="modal-header">
-                <h2 id="modal-title">New Stamp</h2>
                 <button onclick="closeModal()" class="close-btn">&times;</button>
             </div>
     
             <div class="form-group">
-                <label>Search Location</label>
+                <label class="add-label">Search for a MassPort Location</label>
                 <input id="s-address" type="text" placeholder="Search for a city, park, or landmark...">
             </div>
     
             <div class="form-group">
-                <label>Stamp Name (Auto-filled)</label>
+                <label class="add-label">Church Name</label>
                 <input id="s-name" type="text" placeholder="e.g. Central Park">
             </div>
     
             <div class="form-group">
-                <label>Notes</label>
+                <label class="add-label">Notes (Optional)</label>
                 <textarea id="s-notes" rows="2" placeholder="What was special about this spot?"></textarea>
             </div>
     
@@ -549,8 +553,7 @@
                 <div id="preview-box" onclick="document.getElementById('s-image-input').click()">
                     <img id="img-preview" src="">
                     <div class="upload-placeholder">
-                        <span class="material-symbols-rounded">add_a_photo</span>
-                        <p>Add Photo</p>
+                        <span class="material-symbols-rounded">add_a_photo</span>Add Photo
                     </div>
                 </div>
                 <input type="file" id="s-image-input" hidden accept="image/*" onchange="previewImage()">
