@@ -1,9 +1,42 @@
+Here is the updated code with all the requested changes implemented.
+
+### Key Changes Summary
+
+1. **Mobile Header:** Replaced the full header with a floating "User Pill" at the top center. Clicking it opens the Profile/Edit modal.
+2. **Mobile Layout:** Moved the share button and nav bar lower and adjusted margins so stamps are fully visible without being cut off.
+3. **Stamp Visuals:**
+* Replaced the CSS scalloped border with the **SVG background** from your repository.
+* Adjusted the inset of the image to fit perfectly inside the SVG.
+* **Notes Logic:** Used a `max-height` transition for buttery smooth animations. The title now sits flush at the bottom. On hover, the note expands up.
+* **Desktop Animations:** Fixed the "snap" glitch by standardizing the `transform` transitions.
+
+
+4. **Ink Stamps:**
+* Default color is now **Gray** (`#5e666e`). Darkens to black/charcoal on hover.
+* Increased padding between the icon and the abbreviation.
+* Decreased letter spacing on the full state name.
+
+
+5. **Navigation:**
+* State tags now get random **accent colors** from the theme palette.
+* Share button moved to **Top Left** on desktop.
+
+
+6. **City Sticker:**
+* The entire sticker is now clickable (opens Google Maps).
+* Removed the underline on hover.
+
+
+
+### Full Updated Code
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MassPort App</title>
+    <title>MassPort</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -15,7 +48,10 @@
             --btn-bg: #FFFFFF; --accent: #4478A2; --r: 12px; 
             --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
             --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
-            --stamp-red: #C65265; --inner-padding: 16px; 
+            --stamp-red: #C65265; 
+            /* Gray for ink stamps */
+            --ink-gray: #5e666e;
+            --ink-hover: #2c333a;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -25,21 +61,20 @@
             font-family: 'Inter', sans-serif; 
             background: var(--bg) url("https://www.transparenttextures.com/patterns/cardboard-flat.png"); 
             color: #333; 
-            height: 100%;
-            width: 100%;
+            height: 100%; width: 100%;
         }
 
-        /* Prevent vertical scroll bounce on mobile, allow internal scrolling */
         body { 
             overflow-x: hidden; 
             overflow-y: auto;
             display: flex; flex-direction: column;
         }
 
-        /* ---------- GLOBAL LAYOUT ---------- */
+        /* ---------- DESKTOP CONTROLS ---------- */
         .top-controls {
             position: fixed; top: 0; left: 0; right: 0; padding: 20px;
-            display: flex; justify-content: flex-end; align-items: center;
+            display: flex; justify-content: space-between; /* Spread content left/right */
+            align-items: center;
             pointer-events: none; z-index: 15000;
         }
 
@@ -56,35 +91,34 @@
         .control-btn.profile-pic-btn { padding: 4px; padding-right: 12px; }
         .profile-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd; }
 
-        /* Mobile Header */
+        /* ---------- MOBILE HEADER (THE PILL) ---------- */
         .header-info-mobile { display: none; }
         
         @media (max-width: 600px) {
             body { position: fixed; overflow: hidden; } /* Lock Body on Mobile */
+            .top-controls { display: none; }
             
-            .top-controls { display: none; } /* Hide top controls on mobile */
-            
+            /* Floating Pill Centered */
             .header-info-mobile {
-                display: flex; justify-content: space-between; width: 100%; align-items: center; 
-                pointer-events: auto; position: fixed; top: 0; left: 0; z-index: 14000;
-                padding: 15px 20px;
-                /* Removed gradient overlay */
+                display: flex; justify-content: center; width: 100%;
+                pointer-events: none; position: fixed; top: 15px; left: 0; z-index: 14000;
             }
             .user-pill {
-                background: rgba(255,255,255,0.9); backdrop-filter: blur(5px);
-                padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
-                color: var(--accent); border: 1px solid rgba(0,0,0,0.1);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                pointer-events: auto; cursor: pointer;
+                background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+                padding: 8px 16px; border-radius: 30px; 
+                font-family: 'Yrsa', serif; font-size: 16px; font-weight: 700;
+                color: #333; border: 1px solid rgba(0,0,0,0.1);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                display: flex; align-items: center; gap: 6px;
+                transition: transform 0.2s ease;
             }
-            .display-name-mobile {
-                font-family: 'Yrsa', serif; font-size: 20px; font-weight: 600; color: #333;
-            }
+            .user-pill:active { transform: scale(0.95); }
             .header { display: none !important; }
         }
 
         @media (min-width: 601px) {
             .header-info-mobile { display: none; }
-            /* Desktop Share Button handled in top-controls */
             #mobile-share-btn { display: none; } 
         }
 
@@ -93,15 +127,14 @@
 
         /* ---------- NAVIGATION (BOTTOM) ---------- */
         .bottom-ui-container {
-            position: fixed; bottom: 25px; left: 0; right: 0;
+            position: fixed; bottom: 35px; left: 0; right: 0; /* Moved down slightly */
             display: flex; justify-content: center; align-items: center; gap: 10px;
             z-index: 16000; pointer-events: none;
         }
 
-        /* Share button on mobile sits to the left of nav */
         .mobile-share-trigger {
             pointer-events: auto;
-            background: white; width: 36px; height: 36px; border-radius: 50%;
+            background: white; width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); color: #333;
             cursor: pointer;
@@ -117,7 +150,7 @@
         }
         .collector-nav { 
             display: flex; gap: 4px; padding: 4px 8px; overflow-x: auto; 
-            scrollbar-width: none; max-width: 60vw; 
+            scrollbar-width: none; max-width: 65vw; 
         }
         .collector-nav::-webkit-scrollbar { display: none; }
         
@@ -125,8 +158,10 @@
             font-family: 'Inter'; font-size: 11px; font-weight: 700; color: #666; 
             cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; 
             transition: 0.3s var(--ease-smooth); background: #f4f4f4;
+            display: flex; align-items: center; gap: 4px;
         }
-        .nav-tag.active { background: var(--accent); color: white; }
+        /* Active state color is handled inline via JS now */
+        .nav-tag.active { color: white !important; }
         
         .add-btn { 
             background: var(--accent); color: white; border: none; 
@@ -134,92 +169,65 @@
             cursor: pointer; font-size: 20px; margin-left: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(68, 120, 162, 0.3);
         }
 
-        /* ---------- GRID & ANIMATIONS ---------- */
+        /* ---------- GRID ---------- */
         #main-grid { 
             display: grid; 
             max-width: var(--grid-max); 
             margin: 0 auto; padding: 20px 40px 140px; width: 100%;
         }
 
-        /* Desktop: 4 Columns */
         @media (min-width: 901px) {
             #main-grid { grid-template-columns: repeat(4, 1fr); gap: 40px 30px; }
         }
-
-        /* Tablet: 3 Columns */
         @media (min-width: 601px) and (max-width: 900px) {
             #main-grid { grid-template-columns: repeat(3, 1fr); gap: 30px 20px; }
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .stagger-in { opacity: 0; animation: fadeInUp 0.6s var(--ease-out-quint) forwards; }
 
         /* ---------- STAMP VISUALS ---------- */
         .stamp-wrapper { 
             position: relative; 
-            transition: transform 0.4s var(--ease-smooth);
-            filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.1));
-            /* Ensure wrapper has size for layout */
+            transition: transform 0.4s var(--ease-smooth); /* Unified transition */
             min-height: 100px; 
+            /* Fix chopiness by ensuring z-index doesn't flicker */
+            z-index: 1;
         }
 
-        /* Desktop Hover Effects */
         @media (min-width: 601px) {
             .stamp-wrapper:hover {
-                transform: translateY(-8px) scale(1.1); z-index: 1000;
+                /* Scale transform only, avoiding layout thrashing */
+                transform: translateY(-8px) scale(1.1); 
+                z-index: 100;
                 filter: drop-shadow(5px 10px 20px rgba(0,0,0,0.15));
             }
             .stamp-wrapper:hover .stamp { transform: rotate(var(--r_deg, 0deg)); }
             .stamp-wrapper:hover .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot, 15deg)); }
-            
-            /* Logic for revealing notes on hover */
-            .stamp-wrapper:hover .stamp-image.has-notes .stamp-title-overlay { 
-                transform: translateY(0); 
-            }
-            .stamp-wrapper:hover .stamp-image.has-notes .stamp-name {
-                /* No margin change to prevent jump, just allow content below to be seen */
-            }
-        }
-
-        /* Ink Stamp Hover (Desktop) */
-        @media (min-width: 601px) {
-            .state-ink-wrapper:hover {
-                transform: translateY(-5px) scale(1.05) !important;
-                filter: none !important; /* No shadow request */
-            }
+            .stamp-wrapper:hover .stamp-note { max-height: 100px; opacity: 1; margin-top: 5px; }
         }
 
         .stamp {
             aspect-ratio: 7 / 9; 
-            padding: var(--r); 
-            background: #fff;
+            /* SVG Background from Repo */
+            background-image: url('https://raw.githubusercontent.com/rypittner/massport-database/main/stamp_bg.svg');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            
             cursor: pointer; 
             position: relative; 
             transform: rotate(var(--r_deg, 0deg));
             transition: transform 0.4s var(--ease-smooth);
-
-            mask: 
-                radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)), 
-                conic-gradient(#000 0 0) content-box;
-
-            -webkit-mask-image: 
-                radial-gradient(50% 50%, #0000 66%, #000 67%), 
-                conic-gradient(#000 0 0);
-            -webkit-mask-position: var(--r) var(--r), 0 0;
-            -webkit-mask-size: calc(2*var(--r)) calc(2*var(--r)), auto;
-            -webkit-mask-repeat: round, no-repeat;
-            -webkit-mask-origin: border-box, content-box;
-            -webkit-mask-composite: source-over; 
-            mask-composite: add;
+            filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.1));
         }
 
         .stamp-image { 
-            position: absolute; inset: var(--inner-padding); 
-            overflow: hidden; border: 4pt solid var(--theme-color); background: var(--theme-color);
-            display: flex; flex-direction: column; justify-content: flex-end;
+            position: absolute; 
+            /* Inset to fit inside the SVG scalloped edge */
+            inset: 13%; 
+            overflow: hidden; 
+            background: var(--theme-color);
         }
         .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
@@ -227,42 +235,35 @@
         .pattern-1 { background-image: repeating-linear-gradient(45deg, var(--light), var(--light) 14px, transparent 14px, transparent 18px); }
         .pattern-2 { background-image: repeating-linear-gradient(135deg, transparent, transparent 14px, var(--light) 14px, var(--light) 18px); }
 
-        /* Smoother Animation & Positioning */
+        /* OVERLAY / NOTES */
         .stamp-title-overlay { 
-            position: absolute; bottom: 0; left: -1px; width: calc(100% + 2px); 
-            padding: 12px 10px; background: var(--theme-color); color: white; z-index: 5;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            /* Default state: showing title, hiding notes */
-            transform: translateY(var(--slide-dist, 0px));
-            max-height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: flex-end;
-        }
-        
-        /* If no notes, force it to stay at bottom (0 translation) */
-        .stamp-image:not(.has-notes) .stamp-title-overlay {
-            transform: translateY(0) !important;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 10px; background: var(--theme-color); color: white; z-index: 5;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            /* No transformation needed on the container itself now */
         }
 
         .stamp-name { 
             font-family: 'Yrsa', serif; font-size: 18px; font-weight: 600; line-height: 1.1; 
-            margin-bottom: 4px; flex-shrink: 0;
+            margin: 0; /* Remove margin to sit flush at bottom */
+            flex-shrink: 0;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
+
         .stamp-note { 
             font-size: 10px; line-height: 1.3; 
-            opacity: 0.8; 
-            /* Notes take up remaining space when revealed */
-            display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
-            margin-top: 5px;
+            opacity: 0; 
+            max-height: 0; /* Animate Height for smoothness */
+            overflow: hidden;
+            transition: max-height 0.4s var(--ease-smooth), opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
         }
         
-        /* ---------- REVISED POSTMARK ---------- */
+        /* ---------- POSTMARK / CITY STICKER ---------- */
+        /* Make the whole seal clickable */
         .postmark-seal {
             position: absolute; top: -15px; right: -25px; width: 110px; height: 110px;
-            /* Thicker outer stroke */
-            border: 4px solid var(--stamp-red); 
-            border-radius: 50%;
+            border: 4px solid var(--stamp-red); border-radius: 50%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-family: 'Special Elite'; color: var(--stamp-red);
             background: rgba(255,255,255,0.95); z-index: 2000;
@@ -270,69 +271,82 @@
             opacity: 0; transition: transform 0.4s var(--ease-out-quint), opacity 0.2s ease;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
             padding: 10px; text-align: center;
+            cursor: pointer; text-decoration: none !important;
         }
-        /* Thicker inner stroke (matches outer now) */
         .postmark-seal::after {
             content: ""; position: absolute; inset: 4px; 
-            border: 2px solid var(--stamp-red); /* Thicker inner stroke */
-            border-radius: 50%; pointer-events: none;
+            border: 2px solid var(--stamp-red); border-radius: 50%; pointer-events: none;
         }
+        .postmark-seal:hover { background: #fff; } /* Slight highlight */
 
-        /* Thinner lines */
-        .pm-line { width: 80%; height: 1px; background: var(--stamp-red); margin: 4px 0; }
+        .pm-line { width: 80%; height: 1px; background: var(--stamp-red); margin: 4px 0; pointer-events: none; }
         
         .pm-city { 
             font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; 
-            color: var(--stamp-red); text-decoration: none; pointer-events: auto; z-index: 2001;
+            color: var(--stamp-red); pointer-events: none; /* Let parent handle click */
         }
-        .pm-city:hover { text-decoration: underline; }
 
-        /* ---------- INK STAMP (SEPARATOR) ---------- */
-        .state-ink-wrapper { 
-            z-index: 5; scroll-margin-left: 20px; scroll-margin-top: 100px;
-            filter: none !important; /* No shadow */
+        /* ---------- INK STAMP ---------- */
+        .state-ink-wrapper { z-index: 5; scroll-margin-left: 20px; scroll-margin-top: 100px; }
+        
+        .state-ink-wrapper:hover .ink-stamp { 
+            /* Darken on hover */
+            color: var(--ink-hover) !important;
+            border-color: var(--ink-hover) !important;
         }
+        
+        /* Force color override here since inline styles set var */
+        .state-ink-wrapper:hover .ink-stamp-inner { border-color: var(--ink-hover) !important; }
+
         .ink-stamp { 
             aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.8;
-            font-family: 'Special Elite'; color: var(--ink-color); text-align: center;
+            font-family: 'Special Elite'; 
+            /* Fixed Gray Color */
+            color: var(--ink-gray) !important; 
+            text-align: center;
             display: flex; align-items: center; justify-content: center;
             transform: rotate(var(--ink-rot));
+            transition: color 0.3s ease;
         }
         .ink-stamp-inner { 
             width: 85%; height: 85%; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; padding: 20px;
-            border-width: 4px; border-color: var(--ink-color);
-            /* Border style and radius set dynamically via inline style */
+            border-width: 4px; 
+            border-color: var(--ink-gray) !important;
+            transition: border-color 0.3s ease;
         }
-        .ink-abbr { font-size: 68px; line-height: 0.85; margin: 10px 0 5px; font-weight: 900; letter-spacing: -3px; }
+        /* More padding between icon and abbr */
+        .material-symbols-rounded.ink-icon { margin-bottom: 12px; }
         
-        /* Dashed separator look using text */
+        .ink-abbr { font-size: 68px; line-height: 0.85; margin: 5px 0 5px; font-weight: 900; letter-spacing: -3px; }
         .ink-sep { font-size: 16px; letter-spacing: -2px; font-weight: bold; margin: 5px 0; line-height: 10px; overflow: hidden; white-space: nowrap; max-width: 100%;}
         
-        .ink-full { font-size: 14px; margin-top: 5px; letter-spacing: 2px; width: 100%; text-transform: uppercase; line-height: 1.1;}
+        /* Less letter spacing in full name */
+        .ink-full { font-size: 14px; margin-top: 5px; letter-spacing: 0px; width: 100%; text-transform: uppercase; line-height: 1.1;}
 
         /* ---------- MOBILE SCROLL VIEW ---------- */
         @media (max-width: 600px) {
             #main-grid { 
                 display: flex; flex-wrap: nowrap; overflow-x: auto; 
-                /* Lock vertical scrolling within grid */
                 overflow-y: hidden;
                 scroll-snap-type: x mandatory; 
                 height: 75vh; align-items: center; 
-                padding: 0 40px 80px; gap: 20px; scrollbar-width: none;
+                /* Adjusted margin/padding so tops are not cut off */
+                margin-top: 80px; 
+                padding: 40px 40px 80px; /* Top padding is key here */
+                gap: 20px; scrollbar-width: none;
                 overscroll-behavior-x: contain;
-                margin-top: 60px; /* Space for header */
             }
             .stamp-wrapper { 
                 flex: 0 0 80vw; 
                 scroll-snap-align: center; 
+                /* Ensure scaling doesn't crop */
+                transform-origin: center center;
             }
             
-            /* Mobile "Focused" State */
             .is-centered .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot)); pointer-events: auto; }
-            .is-centered .stamp-title-overlay { transform: translateY(0); } /* Show notes on mobile focus */
+            .is-centered .stamp-note { max-height: 100px; opacity: 1; margin-top: 5px; } /* Show notes on mobile focus */
             
-            /* Tap Zones for Navigation */
             .nav-zone-left, .nav-zone-right {
                 position: fixed; top: 15%; bottom: 20%; width: 15vw; z-index: 14000;
             }
@@ -362,8 +376,10 @@
 <body>
 
     <div class="header-info-mobile">
-        <div class="user-pill" id="mobile-user-pill">@MassPort</div>
-        <div class="display-name-mobile" id="mobile-display-name">MassPort</div>
+        <div class="user-pill" onclick="openProfileModal()">
+            <span class="material-symbols-rounded" style="font-size:18px;">face</span>
+            <span id="mobile-user-pill-text">@MassPort</span>
+        </div>
     </div>
 
     <div class="top-controls">
@@ -477,7 +493,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
-        const inkPalette = ['#1B4F72', '#78281F', '#186A3B', '#7E5109', '#512E5F', '#4A235A', '#0B5345'];
+        // Note: Ink stamps are now gray, these colors are used for Nav Tabs
         const stateIcons = { "AZ": "brightness_7", "CA": "beach_access", "PA": "notifications_active", "EU": "public", "NY": "apartment", "FL": "sunny", "TX": "star", "NV": "playing_cards", "WA": "coffee", "HI": "surfing", "CO": "mountain_flag", "MA": "history_edu", "IL": "location_city", "LA": "music_note", "TN": "music_note", "GA": "agriculture", "OR": "forest", "ME": "sailing", "DC": "gavel", "UT": "hiking", "NM": "light_mode", "OH": "flight", "MI": "kayaking", "AK": "ac_unit", "WI": "forest", "VT": "ac_unit", "MT":"landscape", "NE":"psychiatry", "INTL": "public" };
         const defaultIcons = ['explore', 'place', 'map', 'flag', 'travel_explore'];
         const abbrToState = { 
@@ -514,7 +530,7 @@
                 document.getElementById('add-stamp-btn').classList.add('hidden');
                 document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('signup-modal').classList.add('hidden');
-                document.getElementById('mobile-share-btn').classList.remove('hidden'); // Show share on mobile
+                document.getElementById('mobile-share-btn').classList.remove('hidden'); 
                 
                 fetchPublicStamps(hash);
                 
@@ -536,8 +552,6 @@
             if (session?.user) {
                 currentUser = session.user;
                 
-                // --- ROBUST PROFILE CHECK ---
-                // Try to find the profile.
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
                     .select('*')
@@ -545,9 +559,7 @@
                     .single();
 
                 if (error || !profile) {
-                    console.log("Profile row missing. Auto-creating...");
-                    // Upsert default profile so UI doesn't break
-                    const { data: newProfile, error: createError } = await supabaseClient
+                    const { data: newProfile } = await supabaseClient
                         .from('profiles')
                         .upsert({ 
                             id: currentUser.id, 
@@ -557,14 +569,11 @@
                         }, { onConflict: 'id' })
                         .select()
                         .single();
-                    
-                    if(newProfile) userProfile = newProfile;
-                    else console.error("Critical: Could not create profile", createError);
+                    userProfile = newProfile;
                 } else {
                     userProfile = profile;
                 }
 
-                // UI Updates
                 document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('signup-modal').classList.add('hidden');
                 
@@ -573,8 +582,7 @@
                     document.getElementById('add-stamp-btn').classList.remove('hidden');
                     document.getElementById('mobile-share-btn').classList.remove('hidden');
                     document.getElementById('view-title').innerText = "MassPort";
-                    document.getElementById('mobile-display-name').innerText = userProfile?.display_name || "MassPort";
-                    document.getElementById('mobile-user-pill').innerText = `@${userProfile?.username || 'me'}`;
+                    document.getElementById('mobile-user-pill-text').innerText = `@${userProfile?.username || 'me'}`;
                     fetchMyStamps();
                 } else {
                     renderHeader(currentUser); 
@@ -659,7 +667,6 @@
             }
 
             if (authData.user) {
-                // UPSERT to prevent duplicate key errors
                 const { error: profileError } = await supabaseClient.from('profiles').upsert({
                     id: authData.user.id,
                     username: username,
@@ -680,10 +687,14 @@
         }
 
         function openProfileModal() {
-            if(!userProfile) return;
-            document.getElementById('edit-displayname').value = userProfile.display_name || '';
-            document.getElementById('edit-username').value = userProfile.username || '';
-            document.getElementById('profile-modal').classList.remove('hidden');
+            // Works for both desktop button and mobile pill
+            if(currentUser && userProfile) {
+                document.getElementById('edit-displayname').value = userProfile.display_name || '';
+                document.getElementById('edit-username').value = userProfile.username || '';
+                document.getElementById('profile-modal').classList.remove('hidden');
+            } else if (!currentUser) {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
         }
         function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
 
@@ -714,22 +725,12 @@
             document.getElementById('view-title').innerText = `@${username}`;
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('username', username).single();
             if (profile) {
-                document.getElementById('mobile-display-name').innerText = profile.display_name;
-                document.getElementById('mobile-user-pill').innerText = `@${profile.username}`;
+                document.getElementById('mobile-user-pill-text').innerText = `@${profile.username}`;
                 const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: true});
                 processStamps(data);
             } else {
                 alert("User not found: " + username);
             }
-        }
-
-        // --- HASH HELPER FOR CONSISTENT COLORS ---
-        function getStringHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            return Math.abs(hash);
         }
 
         function processStamps(data) {
@@ -769,12 +770,9 @@
 
             items.forEach(s => {
                 if (s._groupKey !== lastGroup) {
-                    // Get color based on hash so it stays consistent
-                    const colorIdx = getStringHash(s._groupKey) % inkPalette.length;
                     displayList.push({ 
                         type: 'ink', 
                         code: s._groupKey, 
-                        color: inkPalette[colorIdx],
                         full: abbrToState[s._groupKey] || (s._groupKey === 'INTL' ? 'INTERNATIONAL' : s._groupKey)
                     });
                     lastGroup = s._groupKey;
@@ -793,27 +791,20 @@
                     if(shouldAnimate) wrap.style.animationDelay = `${delay}s`;
                     wrap.id = `group-${item.code}`;
 
-                    // Randomize Border Style & Shape
                     const borderStyles = ['solid', 'double', 'dashed', 'dotted'];
                     const bStyle = borderStyles[Math.floor(Math.random() * borderStyles.length)];
                     
-                    // Random Shape (Border Radius)
-                    const shapes = [
-                        '4px', // Standard Box
-                        '20px', // Rounded Box
-                        '0 20px 0 20px', // Leaf
-                        '20px 0 20px 0', // Reverse Leaf
-                        '5px 20px 5px 20px' // Soft diagonal
-                    ];
+                    const shapes = ['4px', '20px', '0 20px 0 20px', '20px 0 20px 0', '5px 20px 5px 20px'];
                     const bRadius = shapes[Math.floor(Math.random() * shapes.length)];
 
                     const rot = (Math.random() * 10 - 5).toFixed(1);
                     let iconName = stateIcons[item.code] || defaultIcons[i % defaultIcons.length];
 
+                    // Fixed Gray Color via CSS Variable in Style tag
                     wrap.innerHTML = `
-                        <div class="ink-stamp" style="--ink-color: ${item.color}; --ink-rot: ${rot}deg">
+                        <div class="ink-stamp" style="--ink-rot: ${rot}deg">
                             <div class="ink-stamp-inner" style="border-style: ${bStyle}; border-radius: ${bRadius};">
-                                <span class="material-symbols-rounded" style="font-size:36px;">${iconName}</span>
+                                <span class="material-symbols-rounded ink-icon" style="font-size:36px;">${iconName}</span>
                                 <div class="ink-abbr">${item.code}</div>
                                 <div class="ink-sep">- - - - - -</div>
                                 <div class="ink-full">${item.full}</div>
@@ -832,25 +823,21 @@
                     const cityText = item.city.split(',')[0].trim();
                     const hasNotes = item.notes && item.notes.trim().length > 0;
                     
-                    // Calculation for slide distance (simulated)
-                    // We set CSS variable --slide-dist in JS if needed, but CSS transform is cleaner.
-                    // The CSS handles translation based on .has-notes
-
                     wrap.innerHTML = `
                         <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg">
-                            <div class="stamp-image ${hasNotes ? 'has-notes' : ''}">
+                            <div class="stamp-image">
                                 ${item.img_url ? `<img src="${item.img_url}">` : `<div class="placeholder pattern-${(i%2)+1}" style="--theme-color: ${theme}"></div>`}
-                                <div class="stamp-title-overlay" style="--slide-dist: calc(100% - 46px);">
+                                <div class="stamp-title-overlay">
                                     <div class="stamp-name">${item.name}</div>
                                     ${hasNotes ? `<div class="stamp-note">${item.notes}</div>` : ''}
                                 </div>
                             </div>
                         </div>
-                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg">
+                        <a href="https://maps.google.com/?q=${encodeURIComponent(item.city)}" target="_blank" class="postmark-seal" style="--seal-rot: ${sealRot}deg">
                             <div class="pm-line"></div>
-                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.city)}" target="_blank" class="pm-city">${cityText}</a>
+                            <div class="pm-city">${cityText}</div>
                             <div class="pm-line"></div>
-                        </div>`;
+                        </a>`;
                     
                     const stampEl = wrap.querySelector('.stamp');
                     addPressHandlers(stampEl, item);
@@ -891,6 +878,7 @@
             const allBtn = document.createElement('div');
             allBtn.className = 'nav-tag active';
             allBtn.innerHTML = `ALL`;
+            allBtn.style.background = '#333';
             allBtn.onclick = () => filterOrScroll('ALL', allBtn);
             nav.appendChild(allBtn);
 
@@ -899,10 +887,14 @@
                 return a.localeCompare(b);
             });
 
-            keys.forEach(k => {
+            keys.forEach((k, idx) => {
                 const btn = document.createElement('div');
                 btn.className = 'nav-tag';
                 btn.dataset.code = k;
+                // Assign Random Accent Color from Themes
+                const color = themes[idx % themes.length];
+                btn.dataset.color = color; // Store color
+                
                 btn.innerHTML = `${k} <span style="opacity:0.6; font-size:9px; margin-left:2px;">${groups[k]}</span>`;
                 btn.onclick = () => filterOrScroll(k, btn);
                 nav.appendChild(btn);
@@ -913,15 +905,22 @@
             const isMobile = window.innerWidth <= 600;
             document.querySelectorAll('.nav-tag').forEach(t => {
                 t.classList.remove('active');
+                t.style.background = '#f4f4f4'; // Reset to default
+                t.style.color = '#666';
+                
                 const tCode = t.dataset.code;
                 if(tCode) t.innerHTML = `${tCode} <span style="opacity:0.6; font-size:9px; margin-left:2px;">${globalGroups[tCode]}</span>`;
                 else t.innerHTML = `ALL`;
             });
-            btnEl.classList.add('active');
 
+            // Set Active Styling
+            btnEl.classList.add('active');
             if (code !== 'ALL') {
+                btnEl.style.background = btnEl.dataset.color; // Use stored color
                 const full = abbrToState[code] || (code === 'INTL' ? 'INTERNATIONAL' : code);
-                btnEl.innerText = full;
+                btnEl.innerText = full + ` (${globalGroups[code]})`;
+            } else {
+                btnEl.style.background = '#333';
             }
 
             if (isMobile) {
@@ -948,19 +947,15 @@
 
         function scrollGrid(dir) {
             const grid = document.getElementById('main-grid');
-            // Calculate EXACT width of card (80vw) + gap (20px)
-            // 80vw in pixels:
             const cardWidth = window.innerWidth * 0.8; 
             const gap = 20;
             const scrollAmount = cardWidth + gap;
-            
             grid.scrollBy({ left: dir * scrollAmount, behavior: 'smooth' });
         }
 
         function shareProfile() {
             if(!userProfile && !publicViewUser) return alert("Please log in first.");
             const usernameToShare = publicViewUser || userProfile.username;
-            // Ensure clean URL sharing
             const baseUrl = window.location.origin + window.location.pathname;
             const url = `${baseUrl}#${usernameToShare}`;
             
@@ -972,7 +967,7 @@
             }
         }
 
-        // --- ADD/EDIT LOGIC (Same as before) ---
+        // --- ADD/EDIT LOGIC ---
         function openAddModal(existing = null) {
             document.getElementById('modal-overlay').classList.remove('hidden');
             clearImage();
@@ -1088,3 +1083,5 @@
     </script>
 </body>
 </html>
+
+```
