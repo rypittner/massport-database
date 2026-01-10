@@ -170,12 +170,12 @@
         @media (min-width: 601px) {
             .stamp-wrapper:hover {
                 /* Scale transform only, avoiding layout thrashing */
-                transform: translateY(-5px) scale(1.1); 
+                transform: translateY(-5px) scale(1.05); 
                 z-index: 100;
                 filter: drop-shadow(5px 10px 20px rgba(0,0,0,0.15));
             }
             .stamp-wrapper:hover .stamp {
-                transform: translateY(-8px) scale(1.1); 
+                transform: translateY(-8px) scale(1.05); 
                 z-index: 100;
                 filter: drop-shadow(5px 10px 20px rgba(0,0,0,0.15));}
             .stamp-wrapper:hover .postmark-seal { opacity: 1; transform: translateY(-5px) scale(1) rotate(var(--seal-rot, 15deg)); }
@@ -268,7 +268,7 @@
         
         .state-ink-wrapper:hover .ink-stamp { 
             /* Darken on hover */
-            transform: translateY(-5px) scale(1.1); 
+            transform: translateY(-5px) scale(1.05); 
             z-index: 100;
             color: var(--ink-hover) !important;
             border-color: var(--ink-hover) !important;
@@ -781,7 +781,8 @@ async function handleLogout() {
                     const shapes = ['4px', '20px', '0 20px 0 20px', '20px 0 20px 0', '5px 20px 5px 20px'];
                     const bRadius = shapes[Math.floor(Math.random() * shapes.length)];
 
-                    const rot = (Math.random() * 10 - 5).toFixed(1);
+                    const isMobile = window.innerWidth <= 600;
+                    const rot = isMobile ? 0 : (Math.random() * 10 - 5).toFixed(1);
                     let iconName = stateIcons[item.code] || defaultIcons[i % defaultIcons.length];
 
                     // Fixed Gray Color via CSS Variable in Style tag
@@ -801,7 +802,9 @@ async function handleLogout() {
                     wrap.className = `stamp-wrapper ${animClass}`;
                     if(shouldAnimate) wrap.style.animationDelay = `${delay}s`;
 
-                    const rot = (Math.random() * 6 - 3).toFixed(1);
+                    const isMobile = window.innerWidth <= 600;
+                    const rot = isMobile ? 0 : (Math.random() * 6 - 3).toFixed(1);
+                    const sealRot = isMobile ? 0 : (Math.random() * 30 - 15).toFixed(1);
                     const sealRot = (Math.random() * 30 - 15).toFixed(1);
                     const theme = themes[i % themes.length];
                     const cityText = item.city.split(',')[0].trim();
