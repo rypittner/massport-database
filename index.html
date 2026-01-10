@@ -64,6 +64,7 @@
         @media (max-width: 600px) {
             body { position: fixed; overflow: hidden; } /* Lock Body on Mobile */
             .top-controls { display: none; }
+            .header { display: none !important; }
             
             /* Floating Pill Centered */
             .header-info-mobile {
@@ -111,15 +112,21 @@
                 }
             }
             .user-pill:active { transform: scale(0.95); }
-            .header { display: none !important; }
         }
 
         @media (min-width: 601px) {
             .header-info-mobile { display: none; }
             #mobile-share-btn { display: none; } 
         }
-
-        .header { max-width: var(--grid-max); margin: 60px auto 20px; text-align: center; position: relative; z-index: 10; }
+.header { 
+    max-width: var(--grid-max); 
+    /* Increase top margin so it starts BELOW the fixed top-controls */
+    margin: 100px auto 40px; 
+    text-align: center; 
+    position: relative; 
+    z-index: 10; 
+    display: block !important; /* Ensure it stays visible on desktop */
+}
         .header h1 { font-family: 'Yrsa', serif; font-size: 48px; margin: 0; letter-spacing: -1px; }
 
         /* ---------- NAVIGATION (BOTTOM) ---------- */
