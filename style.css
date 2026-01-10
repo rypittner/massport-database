@@ -71,13 +71,28 @@ body {
 
 .stagger-in { animation: fadeInUp 0.5s var(--ease-out-quint) both; }
 
-/* STAMP SCALLOPING (REVERTED) */
 .stamp {
-    aspect-ratio: 7 / 9; padding: var(--r); background: #fff;
-    cursor: pointer; position: relative; transform: rotate(var(--r_deg, 0deg));
-    transition: transform 0.4s var(--ease-smooth);
-    mask: radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
-    -webkit-mask: radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)), conic-gradient(#000 0 0) content-box;
+  aspect-ratio: 7 / 9; 
+  padding: var(--r); 
+  background: #fff;
+  cursor: pointer; 
+  position: relative; 
+  transform: rotate(var(--r_deg, 0deg));
+  transition: transform 0.4s var(--ease-smooth);
+
+  mask: 
+    radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)), 
+    conic-gradient(#000 0 0) content-box;
+
+  -webkit-mask-image: 
+    radial-gradient(50% 50%, #0000 66%, #000 67%), 
+    conic-gradient(#000 0 0);
+  -webkit-mask-position: var(--r) var(--r), 0 0;
+  -webkit-mask-size: calc(2*var(--r)) calc(2*var(--r)), auto;
+  -webkit-mask-repeat: round, no-repeat;
+  -webkit-mask-origin: border-box, content-box;
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
 }
 
 .stamp-image { 
