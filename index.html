@@ -371,6 +371,31 @@
 
         /* UTILS & MODALS */
         .hidden { display: none !important; }
+        /* Ensure the content doesn't overflow the screen */
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 440px;
+    max-height: 90vh; /* Limits height to 90% of screen */
+    border-radius: 24px;
+    padding: 24px;
+    overflow-y: auto; /* Adds scrollbar INSIDE modal if needed */
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Force the image to stay contained and not push the modal off-screen */
+#img-preview {
+    width: 100%;
+    height: 180px; /* Fixed height for the preview area */
+    object-fit: cover; /* Crops image to fit perfectly */
+    border-radius: 12px;
+    display: none;
+}
+
+#preview-box.has-image #img-preview {
+    display: block;
+}
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; z-index: 20000; justify-content: center; animation: fadeIn 0.2s ease; }
         .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 380px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
         
