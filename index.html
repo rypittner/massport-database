@@ -3,55 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MassPort</title>
+  <title>MassPort Updated</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
-
-  <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- TOP CONTROLS -->
   <div class="top-controls">
-    <div class="control-btn" onclick="shareProfile()">Share</div>
-    <div class="control-btn" style="color:#c65265" onclick="handleLogout()">Logout</div>
+    <div class="control-btn" onclick="shareProfile()">
+      <span class="material-symbols-rounded">ios_share</span> Share
+    </div>
+    <div class="control-btn" style="color:#c65265;" onclick="handleLogout()">Logout</div>
   </div>
 
-  <!-- HEADER -->
   <div class="header">
     <h1 id="view-title">MassPort</h1>
-    <p>TRAVEL ARCHIVE</p>
+    <p class="subtitle">TRAVEL ARCHIVE</p>
   </div>
 
-  <!-- AUTH -->
   <div id="auth-container" class="modal-overlay">
     <div class="auth-card">
-      <input id="username" placeholder="Username (required)" />
-      <input id="email" placeholder="Email (required)" />
+      <h2>Passport Control</h2>
+      <p>Please identify yourself to proceed.</p>
+
+      <input id="username" placeholder="Username (Required)" />
+      <input id="email" placeholder="Email Address (Optional)" />
       <input id="password" type="password" placeholder="Password" />
+
       <button class="primary-btn" onclick="handleLogin()">Login</button>
-      <button class="primary-btn" onclick="handleSignUp()">Create Passport</button>
+      <button class="primary-btn secondary" onclick="handleSignUp()">Create Passport</button>
       <p id="auth-msg"></p>
     </div>
   </div>
 
-  <!-- GRID -->
   <div id="main-grid"></div>
 
-  <!-- NAV -->
   <div id="nav-bar" class="collector-nav-container hidden">
     <div id="filter-nav" class="collector-nav"></div>
     <button class="add-btn" onclick="openAddModal()">+</button>
   </div>
 
-  <!-- SCRIPTS -->
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="data.js"></script>
-  <script src="render.js"></script>
-  <script src="ui.js"></script>
-  <script src="mobile.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
