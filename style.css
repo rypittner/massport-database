@@ -90,20 +90,39 @@
         .stamp-wrapper:hover .stamp-note { opacity: 1; }
     }
 
-    .stamp {
-        aspect-ratio: 7 / 9; padding: var(--r); background: #fff;
-        cursor: pointer; position: relative; 
-        transform: rotate(var(--r_deg, 0deg));
-        transition: transform 0.4s var(--ease-smooth);
-        
-        /* --- SCALLOPED EDGE FIX --- */
-        /* Using a mask-image approach that is robust on mobile */
-        --mask: radial-gradient(10px at 10px 10px, #0000 98%, #000) -10px -10px;
-        -webkit-mask: var(--mask); 
-        mask: var(--mask);
-        -webkit-mask-size: 20px 20px; mask-size: 20px 20px;
-        -webkit-mask-composite: source-over; mask-composite: add;
-    }
+.stamp {
+    aspect-ratio: 7 / 9;
+    padding: var(--r);
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    transform: rotate(var(--r_deg, 0deg));
+    transition: transform 0.4s var(--ease-smooth);
+    /* --- STANDARD (Chrome, Firefox, Edge) --- */
+    mask:
+        radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)),
+        conic-gradient(#000 0 0) content-box;
+    /* --- SAFARI / WEBKIT FIX --- */
+    /* Safari fails on the shorthand with 'round', so we define properties separately */
+    -webkit-mask-image:
+        radial-gradient(50% 50%, #0000 66%, #000 67%),
+        conic-gradient(#000 0 0);
+    -webkit-mask-position:
+        var(--r) var(--r),
+        0 0;
+    -webkit-mask-size:
+        calc(2*var(--r)) calc(2*var(--r)),
+        auto;
+    -webkit-mask-repeat:
+        round,
+        no-repeat;
+    -webkit-mask-origin:
+        border-box,
+        content-box;
+    /* Ensure the layers merge correctly */
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+}
 
     .stamp-image { 
         position: absolute; inset: var(--inner-padding); 
