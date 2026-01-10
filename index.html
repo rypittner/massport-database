@@ -60,6 +60,18 @@
 
         /* ---------- MOBILE HEADER (THE PILL) ---------- */
         .header-info-mobile { display: none; }
+
+         .header { 
+            max-width: var(--grid-max); 
+            /* Increase top margin so it starts BELOW the fixed top-controls */
+            margin: 100px auto 40px; 
+            text-align: center; 
+            position: relative; 
+            z-index: 10; 
+            display: block !important; /* Ensure it stays visible on desktop */
+        }
+        .header h1 { font-family: 'Yrsa', serif; font-size: 48px; margin: 0; letter-spacing: -1px; }
+
         
         @media (max-width: 600px) {
             body { position: fixed; overflow: hidden; } /* Lock Body on Mobile */
@@ -118,17 +130,7 @@
             .header-info-mobile { display: none; }
             #mobile-share-btn { display: none; } 
         }
-.header { 
-    max-width: var(--grid-max); 
-    /* Increase top margin so it starts BELOW the fixed top-controls */
-    margin: 100px auto 40px; 
-    text-align: center; 
-    position: relative; 
-    z-index: 10; 
-    display: block !important; /* Ensure it stays visible on desktop */
-}
-        .header h1 { font-family: 'Yrsa', serif; font-size: 48px; margin: 0; letter-spacing: -1px; }
-
+       
         /* ---------- NAVIGATION (BOTTOM) ---------- */
         .bottom-ui-container {
             position: fixed; bottom: 35px; left: 0; right: 0; /* Moved down slightly */
