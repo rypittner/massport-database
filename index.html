@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MASSPORT ugh</title>
+    <title>Massport YAY</title>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -22,13 +22,13 @@
 
     <div class="header">
         <h1 id="view-title">MassPort</h1>
-        <p id="group-display" style="font-size:13px; opacity:0.6; letter-spacing: 2px; text-transform: uppercase;">TRAVEL ARCHIVE</p>
+        <p id="sub-header" style="font-size:13px; opacity:0.6; letter-spacing: 1px;">TRAVEL ARCHIVE</p>
     </div>
 
     <div id="auth-container" class="modal-overlay">
         <div class="auth-card">
             <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px; margin-bottom: 20px;">Passport Control</h2>
-            <input type="text" id="username" placeholder="Username (Required)">
+            <input type="text" id="username" placeholder="Username">
             <input type="email" id="email" placeholder="Email Address">
             <input type="password" id="password" placeholder="Password">
             <button class="primary-btn" onclick="handleLogin()">Login</button>
@@ -47,24 +47,29 @@
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'; font-size:24px;">New Stamp</h3>
-            <input type="text" id="s-name" placeholder="Title (e.g. The Louvre)">
-            <input type="text" id="s-address" placeholder="Location (City, Country...)">
+            <label>TITLE</label>
+            <input type="text" id="s-name" placeholder="e.g. The Louvre">
+            <label>LOCATION</label>
+            <input type="text" id="s-address" placeholder="City, Country...">
+            <label>NOTES</label>
             <textarea id="s-notes" placeholder="Memories..." rows="3"></textarea>
+            <label>IMAGE</label>
             <input type="file" id="s-image-input" accept="image/*" onchange="previewImage()">
             <div id="preview-box" class="image-preview-container">
                 <div class="remove-img-btn" onclick="clearImage()">×</div>
-                <img id="img-preview" style="width:100%; height:120px; object-fit:cover; border-radius:8px;">
+                <img id="img-preview">
             </div>
             <input type="hidden" id="edit-id">
-            <input type="hidden" id="current-img-url">
             <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save Stamp</button>
-            <button class="primary-btn" style="background:transparent; color:#888;" onclick="closeModal()">Cancel</button>
+            <button class="primary-btn" style="background:transparent; color:#888; margin-top:0;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <div id="img-modal" class="modal-overlay hidden" onclick="this.classList.add('hidden')">
-        <img id="modal-img" style="max-width:90%; max-height:80vh; border:10px solid white; box-shadow:0 0 50px black;">
-        <h2 id="modal-caption" style="color:white; font-family:'Yrsa'; margin-top:20px;"></h2>
+        <div class="img-view-wrap">
+            <img id="modal-img">
+            <h2 id="modal-caption"></h2>
+        </div>
     </div>
 
     <script src="script.js"></script>
