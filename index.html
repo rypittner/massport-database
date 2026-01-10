@@ -67,14 +67,19 @@
             
             /* Floating Pill Centered */
             .header-info-mobile {
-                display: flex; justify-content: center; width: 100%;
-                pointer-events: none; position: fixed; top: 15px; left: 0; z-index: 14000;
+                display: flex; justify-content: flex-start;
+                width: 100%;
+                pointer-events: none;
+                position: fixed;
+                z-index: 14000;
+                top: 15px; left: 15px; /* Fixed distance from left edge */
+                z-index: 18000; /* Ensures it stays above the stamps */
             }
             .user-pill {
                 pointer-events: auto; cursor: pointer;
                 background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
                 padding: 8px 16px; border-radius: 30px; 
-                font-family: 'Yrsa', serif; font-size: 16px; font-weight: 700;
+                font-family: 'Yrsa', serif; font-size: 14px; font-weight: 700;
                 color: #333; border: 1px solid rgba(0,0,0,0.1);
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1);
                 display: flex; align-items: center; gap: 6px;
@@ -304,11 +309,11 @@
                 display: flex; flex-wrap: nowrap; overflow-x: auto; 
                 overflow-y: hidden;
                 scroll-snap-type: x mandatory; 
-                height: 75vh; align-items: center; 
-                /* Adjusted margin/padding so tops are not cut off */
-                margin-top: 80px; 
-                padding: 40px 40px 80px; /* Top padding is key here */
-                gap: 20px; scrollbar-width: none;
+                height: 100vh; /* Changed from 75vh to full screen height */
+                align-items: center; 
+                margin-top: 0; /* Removed the 80px gap at the top */
+                padding: 0 40px 80px; /* Top padding is 0 to go to the very top */
+                gap: 20px;
                 overscroll-behavior-x: contain;
             }
             .stamp-wrapper { 
@@ -654,12 +659,92 @@
             }
         }
 
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            window.location.hash = '';
-            location.reload();
-        }
+To achieve this, you need to update two specific sections of your CSS: the Mobile Header Pill positioning and the Mobile Grid padding.
 
+1. The Mobile User Pill (Top Left)
+Look for the .header-info-mobile class and the .user-pill class inside the @media (max-width: 600px) block (around lines 60-75). Update them to the following:
+
+CSS
+
+/* Update around Line 64 */
+.header-info-mobile {
+    display: flex; 
+    justify-content: flex-start; /* Aligns pill to the left */
+    width: auto; 
+    pointer-events: none; 
+    position: fixed; 
+    top: 15px; 
+    left: 15px; /* Fixed distance from left edge */
+    z-index: 18000; /* Ensures it stays above the stamps */
+}
+
+/* Update around Line 69 */
+.user-pill {
+    pointer-events: auto; 
+    cursor: pointer;
+    background: rgba(255,255,255,0.92); /* Slightly more transparent */
+    backdrop-filter: blur(8px);
+    padding: 6px 12px; 
+    border-radius: 30px; 
+    font-family: 'Yrsa', serif; 
+    font-size: 14px; /* Slightly smaller for the corner */
+    font-weight: 700;
+    color: #333; 
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+}
+2. The Mobile Grid (Full Height)
+Look for the #main-grid selector inside the same @media (max-width: 600px) block (around lines 225-240). You need to remove the top margin and adjust the padding so it starts at the top of the screen:
+
+CSS
+
+/* Update around Line 226 */
+#main-grid { 
+    display: flex; 
+    flex-wrap: nowrap; 
+    overflow-x: auto; 
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory; 
+    height: 100vh; /* Changed from 75vh to full screen height */
+    align-items: center; 
+    margin-top: 0; /* Removed the 80px gap at the top */
+    padding: 0 40px 80px; /* Top padding is 0 to go to the very top */
+    gap: 20px; 
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+}
+3. The Stamp Inner Stroke
+To add the stroke you mentioned earlier, update the .stamp-image class (around line 155):
+
+CSS
+
+/* Update around Line 155 */
+.stamp-image { 
+    position: absolute; 
+    inset: 13%; 
+    overflow: hidden; 
+    background: var(--theme-color);
+    border: 2px solid var(--theme-color); /* The inner stroke in theme color */
+}
+4. Logout Fix (The Javascript)
+Find the handleLogout function in your <script> tag (around line 520) and replace it with this version to ensure it actually clears the session:
+
+JavaScript
+
+async function handleLogout() {
+    try {
+        await supabaseClient.auth.signOut();
+    } catch (e) {
+        console.error("Logout error", e);
+    } finally {
+        localStorage.clear();
+        window.location.hash = '';
+        window.location.reload(); // Forces the page to reset
+    }
+}
         function openProfileModal() {
             // Works for both desktop button and mobile pill
             if(currentUser && userProfile) {
