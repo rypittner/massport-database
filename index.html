@@ -804,7 +804,6 @@ async function handleLogout() {
                     const isMobile = window.innerWidth <= 600;
                     const rot = isMobile ? 0 : (Math.random() * 6 - 3).toFixed(1);
                     const sealRot = isMobile ? 0 : (Math.random() * 30 - 15).toFixed(1);
-                    const sealRot = (Math.random() * 30 - 15).toFixed(1);
                     const theme = themes[i % themes.length];
                     const cityText = item.city.split(',')[0].trim();
                     const hasNotes = item.notes && item.notes.trim().length > 0;
