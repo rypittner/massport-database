@@ -281,6 +281,10 @@
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 🔑 AUTH STATE LISTENER (REQUIRED)
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        handleAuthState(session);
+    });
 
         // --- CONSTANTS & MAPS ---
         const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
@@ -301,21 +305,7 @@
         let globalStamps = [];
 
         // --- AUTH & INIT ---
-        window.addEventListener('load', () => {
-            // Check if URL has hash (Supabase auth redirect or profile view)
-            const hash = window.location.hash;
-            
-            if (hash && hash.includes('access_token')) {
-                // Let Supabase handle the session recovery
-                supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                    handleAuthState(session);
-                    // Clear hash after processing
-                    history.replaceState(null, null, ' ');
-                });
-            } else {
-                checkRoute();
-            }
-        });
+    window.addEventListener('load', checkRoute);
 
         window.addEventListener('hashchange', checkRoute);
 
