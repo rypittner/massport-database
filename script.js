@@ -98,8 +98,18 @@ async function handleLogin() {
     const password = document.getElementById('password').value;
     const msg = document.getElementById('auth-msg');
     
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) msg.innerText = error.message;
+    // Attempt login
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+        msg.innerText = error.message;
+    } else {
+        // Login succeeded
+        msg.innerText = ''; // clear any previous messages
+        document.getElementById('auth-container').classList.add('hidden'); // hide login modal
+        console.log('Logged in user:', data.user);
+        // You can also initialize your main grid or app here
+    }
 }
 
 async function handleLogout() {
