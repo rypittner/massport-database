@@ -27,6 +27,8 @@
         .add-label{
             text-transform:uppercase;
             font-size:10pt;
+            letter-spacing:0.5px;
+            opacity:0.8;
         }
         
         html, body {
@@ -528,18 +530,18 @@
             </div>
     
             <div class="form-group">
-                <label class="add-label">Search for a MassPort Location</label>
-                <input id="s-address" type="text" placeholder="Search for a city, park, or landmark...">
+                <label class="add-label">Search for Location</label>
+                <input id="s-address" type="text" placeholder="Search for a church, chapel, or holy site...">
             </div>
     
             <div class="form-group">
                 <label class="add-label">Church Name</label>
-                <input id="s-name" type="text" placeholder="e.g. Central Park">
+                <input id="s-name" type="text" placeholder="e.g. St. Anthony of Padua">
             </div>
     
             <div class="form-group">
                 <label class="add-label">Notes (Optional)</label>
-                <textarea id="s-notes" rows="2" placeholder="What was special about this spot?"></textarea>
+                <textarea id="s-notes" rows="2" placeholder="What makes this holy site special to you?"></textarea>
             </div>
     
             <input type="hidden" id="edit-id">
@@ -1094,7 +1096,7 @@ function initGoogleTools() {
         
         // Update Map Preview
         googleMap.setCenter(place.geometry.location);
-        googleMap.setZoom(15);
+        googleMap.setZoom(8);
         googleMarker.setPosition(place.geometry.location);
 
         // Parse Address Components for Supabase
