@@ -30,6 +30,19 @@
             letter-spacing:0.5px;
             opacity:0.7;
         }
+
+         .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
         
         html, body {
             margin: 0; padding: 0;
@@ -526,7 +539,9 @@
             <div id="map-preview" style="height: 100px; width: 100%; border-radius: 12px; margin-bottom: 15px; background: #eee;"></div>
             
             <div class="modal-header">
-                <button onclick="closeModal()" class="close-btn">&times;</button>
+                <button onclick="closeModal()" class="close-btn">
+    <span class="material-symbols-rounded">close</span>
+</button>
             </div>
     
             <div class="form-group">
@@ -558,7 +573,7 @@
                         <span class="material-symbols-rounded">add_a_photo</span>Add Photo
                     </div>
                 </div>
-                <input type="file" id="s-image-input" hidden accept="image/*" onchange="previewImage()">
+                <input class="height: 100px" type="file" id="s-image-input" hidden accept="image/*" onchange="previewImage()">
             </div>
     
             <button id="save-btn" class="primary-btn" onclick="saveStamp()">Save Stamp</button>
