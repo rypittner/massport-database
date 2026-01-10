@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MassPort | Catholic Travel Journal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root {
+            --primary: #333;
+            --bg: #f8f9fa;
+            --sidebar-width: 260px;
+            --nav-height: 70px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--primary);
+            display: flex;
+        }
+
+        /* --- NAVIGATION SYSTEM --- */
+        .nav-container {
+            background: white;
+            border-right: 1px solid #ddd;
+            height: 100vh;
+            width: var(--sidebar-width);
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .nav-logo { font-weight: 800; font-size: 24px; margin-bottom: 40px; }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: 0.2s;
+            color: #666;
+            text-decoration: none;
+        }
+
+        .nav-item:hover { background: #eee; }
+        .nav-item.active { background: var(--primary); color: white; }
+        .nav-item span { margin-right: 12px; }
+
+        .add-btn-main {
+            background: #e63946;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* --- CONTENT AREA --- */
+        main {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .view-section { display: none; max-width: 800px; margin: 0 auto; }
+        .view-section.active { display: block; }
+
+        /* --- JOURNAL VIEW (Full Screen Style) --- */
+        .journal-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .journal-stamp {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .journal-stamp img { width: 100%; height: auto; display: block; }
+        .journal-details { padding: 25px; }
+        .journal-details h2 { margin: 0 0 5px 0; font-size: 24px; }
+        .journal-location { color: #888; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        .journal-notes { line-height: 1.6; color: #444; border-top: 1px solid #eee; pt: 15px; }
+
+        /* --- FEED VIEW (Horizontal Cards) --- */
+        .feed-card {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+        .feed-img { width: 150px; height: 150px; object-fit: cover; }
+        .feed-content { padding: 15px; flex: 1; }
+        .feed-user { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .feed-avatar { width: 24px; height: 24px; border-radius: 50%; }
+
+        /* --- MOBILE ADAPTATION --- */
+        @media (max-width: 768px) {
+            .nav-container {
+                height: var(--nav-height);
+                width: 100%;
+                bottom: 0;
+                top: auto;
+                flex-direction: row;
+                padding: 0;
+                justify-content: space-around;
+                align-items: center;
+                border-right: none;
+                border-top: 1px solid #ddd;
+            }
+            .nav-item { flex-direction: column; font-size: 10px; padding: 5px; margin: 0; }
+            .nav-item span { margin: 0; }
+            .nav-logo, .desktop-text, .add-btn-main span { display: none; }
+            .add-btn-main { margin: 0; width: 50px; height: 50px; padding: 0; position: relative; top: -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            main { margin-left: 0; padding: 20px; padding-bottom: 100px; }
+            .feed-card { flex-direction: column; }
+            .feed-img { width: 100%; height: 200px; }
+        }
+
+        /* MODAL STYLES (Retained from your code) */
+        .hidden { display: none !important; }
+        .modal-overlay { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: rgba(0,0,0,0.8); z-index: 2000; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-card { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-container">
+        <div class="nav-logo">MassPort</div>
+        
+        <div class="nav-item active" onclick="switchTab('journal')">
+            <span class="material-symbols-rounded">menu_book</span>
+            <div class="desktop-text">My Journal</div>
+        </div>
+
+        <div class="nav-item" onclick="switchTab('feed')">
+            <span class="material-symbols-rounded">rss_feed</span>
+            <div class="desktop-text">Feed</div>
+        </div>
+
+        <button class="add-btn-main" onclick="openAddModal()">
+            <span class="material-symbols-rounded">add</span>
+            <span>Add Stamp</span>
+        </button>
+
+        <div class="nav-item" onclick="switchTab('find')">
+            <span class="material-symbols-rounded">person_search</span>
+            <div class="desktop-text">Find People</div>
+        </div>
+
+        <div class="nav-item" onclick="switchTab('map')">
+            <span class="material-symbols-rounded">map</span>
+            <div class="desktop-text">Map</div>
+        </div>
+        
+        <div class="nav-item" onclick="openProfileModal()" style="margin-top: auto;">
+            <span class="material-symbols-rounded">account_circle</span>
+            <div class="desktop-text">Profile</div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="view-journal" class="view-section active">
+            <div class="journal-filters">
+                <select id="filter-location" class="filter-select" onchange="applyFilters()">
+                    <option value="ALL">All Locations</option>
+                </select>
+                <select id="filter-year" class="filter-select" onchange="applyFilters()">
+                    <option value="ALL">All Years</option>
+                </select>
+                <select id="sort-by" class="filter-select" onchange="applyFilters()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="az">A-Z Name</option>
+                </select>
+            </div>
+            <div id="journal-grid"></div>
+        </section>
+
+        <section id="view-feed" class="view-section">
+            <h1 style="margin-top:0">Follower Feed</h1>
+            <div id="feed-list">
+                <p style="color:#888">Follow users to see their stamps here.</p>
+            </div>
+        </section>
+
+        <section id="view-find" class="view-section">
+            <h1>Find Users</h1>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="user-search" placeholder="Search by username..." class="filter-select" style="flex:3">
+                <button class="add-btn-main" style="margin:0; padding: 0 20px;" onclick="searchUsers()">Search</button>
+            </div>
+            <div id="user-results"></div>
+        </section>
+
+        <section id="view-map" class="view-section">
+            <h1>World Map</h1>
+            <div style="background: #eee; height: 400px; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #888;">
+                Map functionality coming soon...
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2 id="modal-title">New Stamp</h2>
+            <input type="hidden" id="edit-id">
+            <input type="hidden" id="current-img-url">
+            
+            <div id="preview-box" style="width:100%; height:200px; background:#f4f4f4; border-radius:12px; margin-bottom:15px; position:relative; overflow:hidden;">
+                <img id="img-preview" style="width:100%; height:100%; object-fit:cover;">
+                <input type="file" id="s-image-input" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="previewImage()">
+                <div class="upload-placeholder" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">+ Add Photo</div>
+            </div>
+
+            <input type="text" id="s-address" placeholder="Search Church Address..." class="filter-select" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <div id="map-preview" style="height:150px; margin-bottom:10px; border-radius:10px;"></div>
+            
+            <input type="text" id="s-name" placeholder="Church Name" class="filter-select" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <textarea id="s-notes" placeholder="Notes..." class="filter-select" style="width:100%; box-sizing:border-box; height:80px;"></textarea>
+
+            <input type="hidden" id="geo-city">
+            <input type="hidden" id="geo-state-code">
+            <input type="hidden" id="geo-state-name">
+            <input type="hidden" id="geo-country">
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeModal()" class="filter-select" style="flex:1">Cancel</button>
+                <button id="save-btn" onclick="saveStamp()" class="add-btn-main" style="margin:0; flex:2">Save Stamp</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>Welcome to MassPort</h2>
+            <input type="email" id="login-input" placeholder="Email" class="filter-select" style="width:100%; margin-bottom:10px;">
+            <input type="password" id="login-password" placeholder="Password" class="filter-select" style="width:100%; margin-bottom:15px;">
+            <button onclick="handleLogin()" class="add-btn-main" style="width:100%; margin:0;">Login</button>
+            <p id="login-msg" style="font-size:12px; color:red;"></p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "YOUR_URL";
+        const SUPABASE_KEY = "YOUR_KEY";
+        const IMGBB_API_KEY = "YOUR_KEY";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let userProfile = null;
+        let myStamps = [];
+
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- AUTH & DATA LOGIC (Maintaining your functions) ---
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            handleAuthState(session);
+        });
+
+        async function handleAuthState(session) {
+            if (session?.user) {
+                currentUser = session.user;
+                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+                userProfile = profile;
+                document.getElementById('login-modal').classList.add('hidden');
+                fetchMyStamps();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-input').value;
+            const password = document.getElementById('login-password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) document.getElementById('login-msg').innerText = error.message;
+        }
+
+        async function fetchMyStamps() {
+            const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false});
+            myStamps = data;
+            populateFilters(data);
+            renderJournal(data);
+        }
+
+        // --- NEW JOURNAL RENDERING ---
+        function renderJournal(stamps) {
+            const container = document.getElementById('journal-grid');
+            container.innerHTML = '';
+
+            stamps.forEach(s => {
+                const year = new Date(s.created_at).getFullYear();
+                const card = document.createElement('div');
+                card.className = 'journal-stamp';
+                card.innerHTML = `
+                    <div style="position:relative">
+                        ${s.img_url ? `<img src="${s.img_url}">` : `<div style="height:300px; background:#ddd; display:flex; align-items:center; justify-content:center">No Image</div>`}
+                        <div style="position:absolute; top:15px; right:15px; background:white; padding:5px 12px; border-radius:50px; font-weight:bold; font-size:12px;">${year}</div>
+                    </div>
+                    <div class="journal-details">
+                        <h2>${s.name}</h2>
+                        <div class="journal-location">
+                            <span class="material-symbols-rounded" style="font-size:18px">location_on</span>
+                            ${s.city}
+                        </div>
+                        <div class="journal-notes">${s.notes || 'No notes added.'}</div>
+                    </div>
+                `;
+                card.onclick = () => openAddModal(s);
+                container.appendChild(card);
+            });
+        }
+
+        function populateFilters(stamps) {
+            const locSelect = document.getElementById('filter-location');
+            const yearSelect = document.getElementById('filter-year');
+            const locations = [...new Set(stamps.map(s => s.state_code || 'INTL'))];
+            const years = [...new Set(stamps.map(s => new Date(s.created_at).getFullYear()))];
+
+            locations.forEach(l => locSelect.innerHTML += `<option value="${l}">${l}</option>`);
+            years.forEach(y => yearSelect.innerHTML += `<option value="${y}">${y}</option>`);
+        }
+
+        function applyFilters() {
+            const loc = document.getElementById('filter-location').value;
+            const year = document.getElementById('filter-year').value;
+            const sort = document.getElementById('sort-by').value;
+
+            let filtered = myStamps.filter(s => {
+                const matchLoc = (loc === 'ALL' || s.state_code === loc);
+                const matchYear = (year === 'ALL' || new Date(s.created_at).getFullYear().toString() === year);
+                return matchLoc && matchYear;
+            });
+
+            if(sort === 'az') filtered.sort((a,b) => a.name.localeCompare(b.name));
+            if(sort === 'oldest') filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            if(sort === 'newest') filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+            renderJournal(filtered);
+        }
+
+        // --- SEARCH USERS ---
+        async function searchUsers() {
+            const query = document.getElementById('user-search').value;
+            const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${query}%`);
+            const results = document.getElementById('user-results');
+            results.innerHTML = '';
+            data.forEach(u => {
+                results.innerHTML += `
+                    <div class="feed-card" style="padding:15px; align-items:center; flex-direction:row">
+                        <img src="${u.avatar_url || 'https://via.placeholder.com/50'}" class="feed-avatar" style="width:50px; height:50px">
+                        <div style="flex:1; margin-left:15px">
+                            <div style="font-weight:bold">@${u.username}</div>
+                            <div style="font-size:12px; color:#888">${u.display_name}</div>
+                        </div>
+                        <button class="add-btn-main" style="margin:0; font-size:12px; height:35px">Follow</button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- MAP & IMAGE LOGIC (Keeping existing) ---
+        function previewImage() {
+            const file = document.getElementById('s-image-input').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('img-preview').src = e.target.result;
+                    document.querySelector('.upload-placeholder').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openAddModal(existing = null) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            if(existing) {
+                document.getElementById('edit-id').value = existing.id;
+                document.getElementById('s-name').value = existing.name;
+                document.getElementById('s-address').value = existing.city;
+                document.getElementById('s-notes').value = existing.notes;
+                document.getElementById('img-preview').src = existing.img_url || '';
+                document.querySelector('.upload-placeholder').style.display = 'none';
+            } else {
+                document.getElementById('edit-id').value = '';
+                document.getElementById('s-name').value = '';
+                document.getElementById('s-address').value = '';
+                document.getElementById('s-notes').value = '';
+                document.getElementById('img-preview').src = '';
+                document.querySelector('.upload-placeholder').style.display = 'flex';
+            }
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+        // Placeholder for Google Init
+        function initGoogleTools() {
+            const input = document.getElementById('s-address');
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                document.getElementById('s-name').value = place.name;
+                // Add geo logic as per part 2...
+            });
+        }
+    </script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_KEY&libraries=places"></script>
+</body>
+</html>
