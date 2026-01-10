@@ -3,233 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MassPort FUNNNNN</title>
+    <title>MassPort</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Yrsa:wght@500;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
             --bg: #FCF1E7; --grid-max: 1100px; --grid-pad: 20px; 
-            --btn-bg: #FFFFFF; --accent: #4478A2; --r: 14px; 
+            --btn-bg: #FFFFFF; --accent: #4478A2; --r: 12px; 
             --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
-            --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
             --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
-            --stamp-red: #C65265; --inner-padding: 18px; 
+            --stamp-red: #C65265; --inner-padding: 16px; 
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             margin: 0; font-family: 'Inter', sans-serif; 
-            background: var(--bg) url("https://i.ibb.co/RpsfLzc4/88f6ca36fda8.jpg") repeat; 
+            background: var(--bg) url("https://www.transparenttextures.com/patterns/cardboard-flat.png"); 
             color: #333; overflow-x: hidden; min-height: 100vh;
             display: flex; flex-direction: column;
         }
 
-        .header { max-width: var(--grid-max); margin: 0 auto; padding: 40px var(--grid-pad) 20px; text-align: center; position: relative; z-index: 10; }
-        .header h1 { font-family: 'Yrsa', serif; font-size: 42px; margin: 0; }
+        /* ---------- GLOBAL LAYOUT ---------- */
+        .top-controls {
+            position: fixed; top: 0; left: 0; right: 0; padding: 20px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            pointer-events: none; z-index: 15000;
+        }
+        .control-btn {
+            pointer-events: auto; background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.1);
+            padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 600;
+            color: #333; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 5px;
+        }
+        .control-btn:hover { transform: translateY(-2px); }
 
-        /* ---------- MOBILE TAP ZONES ---------- */
-        .tap-zone { position: fixed; top: 0; bottom: 100px; width: 15%; z-index: 999; cursor: pointer; display: none; }
-        @media (max-width: 600px) { .tap-zone { display: block; } }
-        .tap-zone.left { left: 0; }
-        .tap-zone.right { right: 0; }
+        .header { max-width: var(--grid-max); margin: 60px auto 20px; text-align: center; position: relative; z-index: 10; }
+        .header h1 { font-family: 'Yrsa', serif; font-size: 48px; margin: 0; letter-spacing: -1px; }
 
-        /* ---------- NAVIGATION ---------- */
+        /* ---------- NAVIGATION (BOTTOM) ---------- */
         .collector-nav-container {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
-            padding: 6px; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
+            padding: 5px 6px; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1);
             box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             display: flex; align-items: center; z-index: 16000;
-            max-width: 95vw; width: max-content;
+            max-width: 92vw; width: max-content;
         }
-        .collector-nav { display: flex; gap: 4px; padding: 4px 8px; overflow-x: auto; scrollbar-width: none; }
-        .nav-tag { font-family: 'Inter'; font-size: 11px; color: #444; cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; transition: 0.3s var(--ease-smooth); }
+        .collector-nav { 
+            display: flex; gap: 4px; padding: 4px 8px; overflow-x: auto; 
+            scrollbar-width: none; max-width: 70vw; 
+        }
+        .collector-nav::-webkit-scrollbar { display: none; }
+        
+        .nav-tag { 
+            font-family: 'Inter'; font-size: 11px; font-weight: 700; color: #666; 
+            cursor: pointer; padding: 8px 14px; border-radius: 20px; white-space: nowrap; 
+            transition: 0.3s var(--ease-smooth); background: #f4f4f4;
+        }
         .nav-tag.active { background: var(--accent); color: white; }
-        .action-btn { background: #f1f5f9; font-weight: 700; border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; font-size: 11px; margin-left: 5px; color: var(--accent); }
+        
+        .add-btn { 
+            background: var(--accent); color: white; border: none; 
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; margin-left: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(68, 120, 162, 0.3);
+        }
 
-        /* ---------- GRID ---------- */
+        /* ---------- GRID & ANIMATIONS ---------- */
         #main-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 40px 25px; max-width: var(--grid-max); 
+            gap: 40px 30px; max-width: var(--grid-max); 
             margin: 0 auto; padding: 20px 40px 140px; width: 100%;
         }
 
-        /* ---------- STAMP VISUALS (With Hover Effects) ---------- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-in { opacity: 0; animation: fadeInUp 0.6s var(--ease-out-quint) forwards; }
+
+        /* ---------- STAMP VISUALS ---------- */
         .stamp-wrapper { 
             position: relative; 
-            transition: transform 0.4s var(--ease-smooth), filter 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
-            filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
+            transition: transform 0.4s var(--ease-smooth);
+            filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.1));
         }
 
-        /* Desktop Hover */
         @media (min-width: 601px) {
             .stamp-wrapper:not(.state-ink-wrapper):hover {
-                transform: translateY(-8px) scale(1.05);
-                filter: drop-shadow(5px 5px 12px rgba(0,0,0,0.2));
-                z-index: 1000;
+                transform: translateY(-8px) scale(1.05); z-index: 1000;
+                filter: drop-shadow(5px 10px 20px rgba(0,0,0,0.15));
             }
             .stamp-wrapper:hover .stamp { transform: rotate(var(--r_deg, 0deg)); }
-            .stamp-wrapper:hover .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot, 15deg)); pointer-events: auto; }
+            .stamp-wrapper:hover .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot, 15deg)); }
             .stamp-wrapper:hover .stamp-note { opacity: 1; }
         }
 
-.stamp {
-    aspect-ratio: 7 / 9; 
-    padding: var(--r); 
-    background: #fff;
-    cursor: pointer; 
-    position: relative; 
-    transform: rotate(var(--r_deg, 0deg));
-    transition: transform 0.4s var(--ease-smooth);
+        .stamp {
+            aspect-ratio: 7 / 9; padding: var(--r); background: #fff;
+            cursor: pointer; position: relative; 
+            transform: rotate(var(--r_deg, 0deg));
+            transition: transform 0.4s var(--ease-smooth);
+            
+            /* --- SCALLOPED EDGE FIX --- */
+            /* Using a mask-image approach that is robust on mobile */
+            --mask: radial-gradient(10px at 10px 10px, #0000 98%, #000) -10px -10px;
+            -webkit-mask: var(--mask); 
+            mask: var(--mask);
+            -webkit-mask-size: 20px 20px; mask-size: 20px 20px;
+            -webkit-mask-composite: source-over; mask-composite: add;
+        }
 
-    /* --- STANDARD (Chrome, Firefox, Edge) --- */
-    mask: 
-        radial-gradient(50% 50%, #0000 66%, #000 67%) round var(--r) var(--r) / calc(2*var(--r)) calc(2*var(--r)), 
-        conic-gradient(#000 0 0) content-box;
-
-    /* --- SAFARI / WEBKIT FIX --- */
-    /* Safari fails on the shorthand with 'round', so we define properties separately */
-    -webkit-mask-image: 
-        radial-gradient(50% 50%, #0000 66%, #000 67%), 
-        conic-gradient(#000 0 0);
-    -webkit-mask-position: 
-        var(--r) var(--r), 
-        0 0;
-    -webkit-mask-size: 
-        calc(2*var(--r)) calc(2*var(--r)), 
-        auto;
-    -webkit-mask-repeat: 
-        round, 
-        no-repeat;
-    -webkit-mask-origin: 
-        border-box, 
-        content-box;
-    /* Ensure the layers merge correctly */
-    -webkit-mask-composite: source-over; 
-    mask-composite: add;
-}
         .stamp-image { 
             position: absolute; inset: var(--inner-padding); 
             overflow: hidden; border: 4pt solid var(--theme-color); background: var(--theme-color);
             display: flex; flex-direction: column; justify-content: flex-end;
         }
-        .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease-smooth); }
+        .stamp-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
-        /* Placeholders */
         .placeholder { position: absolute; inset: -1px; --light: rgba(255,255,255,0.3); }
         .pattern-1 { background-image: repeating-linear-gradient(45deg, var(--light), var(--light) 14px, transparent 14px, transparent 18px); }
         .pattern-2 { background-image: repeating-linear-gradient(135deg, transparent, transparent 14px, var(--light) 14px, var(--light) 18px); }
 
         .stamp-title-overlay { 
             position: absolute; bottom: -1px; left: -1px; width: calc(100% + 2px); 
-            padding: 14px 12px; background: var(--theme-color); color: white; z-index: 5;
-            transition: all 0.6s var(--ease-smooth);
+            padding: 12px 10px; background: var(--theme-color); color: white; z-index: 5;
         }
-        .stamp-name { font-family: 'Yrsa', serif; font-size: 19px; font-weight: 600; line-height: 1.1; }
-        .stamp-note { font-size: 11px; opacity: 0; margin-top: 6px; line-height: 1.4; transition: opacity 0.4s ease 0.1s; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .stamp-name { font-family: 'Yrsa', serif; font-size: 18px; font-weight: 600; line-height: 1.1; }
+        .stamp-note { font-size: 10px; opacity: 0; margin-top: 4px; line-height: 1.3; transition: opacity 0.3s; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* POSTMARK */
+        /* ---------- REVISED POSTMARK ---------- */
         .postmark-seal {
-            position: absolute; top: -15px; right: -25px; width: 115px; height: 115px;
-            border: 4px solid var(--stamp-red); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Special Elite'; font-size: 12px; color: var(--stamp-red);
+            position: absolute; top: -15px; right: -25px; width: 110px; height: 110px;
+            border: 3px solid var(--stamp-red); border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'Special Elite'; color: var(--stamp-red);
             background: rgba(255,255,255,0.95); z-index: 2000;
-            transform: scale(0.5) rotate(var(--seal-rot, 15deg)); 
-            opacity: 0; transition: transform 0.3s var(--ease-out-quint), opacity 0.2s ease;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12); pointer-events: none; cursor: pointer;
+            transform: scale(0.6) rotate(var(--seal-rot, 15deg)); 
+            opacity: 0; transition: transform 0.4s var(--ease-out-quint), opacity 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); pointer-events: none;
+            padding: 10px; text-align: center;
         }
-        .postmark-seal::after { content: ''; position: absolute; inset: 4px; border: 1px solid var(--stamp-red); border-radius: 50%; pointer-events: none; }
+        .pm-line { width: 100%; height: 1px; background: var(--stamp-red); margin: 6px 0; }
+        .pm-city { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
 
-        /* INK STAMP */
+        /* ---------- INK STAMP (SEPARATOR) ---------- */
+        .state-ink-wrapper { z-index: 5; scroll-margin-left: 20px; scroll-margin-top: 100px; }
         .ink-stamp { 
-            aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.6;
+            aspect-ratio: 7/9; width: 100%; mix-blend-mode: multiply; opacity: 0.75;
             font-family: 'Special Elite'; color: var(--ink-color); text-align: center;
             display: flex; align-items: center; justify-content: center;
+            transform: rotate(var(--ink-rot));
         }
-        .ink-stamp-inner { border: 6px double var(--ink-color); width: 85%; height: 85%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .ink-abbr { font-size: 62px; line-height: 0.8; margin: 10px 0 0; font-weight: 900; }
-        .ink-full { font-size: 14px; margin-top: 15px; border-top: 2.5px solid; padding-top: 10px; letter-spacing: 2px; width: 100%; text-transform: uppercase;}
+        .ink-stamp-inner { 
+            width: 88%; height: 88%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; padding: 15px;
+            border-width: 5px; border-color: var(--ink-color);
+        }
+        .ink-abbr { font-size: 68px; line-height: 0.85; margin: 5px 0 0; font-weight: 900; letter-spacing: -3px; }
+        .ink-full { font-size: 12px; margin-top: 10px; border-top: 2px solid; padding-top: 6px; letter-spacing: 2px; width: 100%; text-transform: uppercase;}
 
-        /* MOBILE SCROLL VIEW */
+        /* ---------- MOBILE SCROLL VIEW ---------- */
         @media (max-width: 600px) {
-            .header { display: none; }
+            .header { margin-top: 80px; }
+            .top-controls { padding: 15px; }
+            
             #main-grid { 
                 display: flex; flex-wrap: nowrap; overflow-x: auto; 
-                scroll-snap-type: x mandatory; height: 100vh; align-items: center; 
-                padding: 0 10vw 80px; gap: 15px; scrollbar-width: none;
+                scroll-snap-type: x mandatory; height: 75vh; align-items: center; 
+                padding: 0 10vw 80px; gap: 20px; scrollbar-width: none;
             }
-            .stamp-wrapper { flex: 0 0 80vw; scroll-snap-align: center; }
+            .stamp-wrapper { flex: 0 0 75vw; scroll-snap-align: center; }
             
-            /* Mobile "Focused" State mimics hover */
+            /* Mobile Scallop Fallback if needed, but mask approach above works on modern iOS */
+            
+            /* Mobile "Focused" State */
             .is-centered .postmark-seal { opacity: 1; transform: scale(1) rotate(var(--seal-rot)); pointer-events: auto; }
             .is-centered .stamp-note { opacity: 1; }
         }
 
-        /* UTILS */
+        /* UTILS & MODALS */
         .hidden { display: none !important; }
-        .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 90%; margin: 50px auto; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; }
-        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; z-index: 20000; justify-content: center; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; font-family: 'Inter'; }
-        .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; z-index: 20000; justify-content: center; animation: fadeIn 0.2s ease; }
+        .auth-card, .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 380px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; }
+        
+        input, textarea { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; font-family: 'Inter'; font-size: 14px; background: #fafafa; }
+        .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 15px; }
+        
+        .image-preview-container { position: relative; margin-top: 10px; display: none; }
+        .image-preview-container.has-image { display: block; }
+        .remove-img-btn { position: absolute; top: -8px; right: -8px; background: red; color: white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     </style>
 </head>
 <body>
 
-    <div class="header" id="header-text">
-        <h1 id="view-title">MassPort</h1>
-        <p style="font-size:12px; opacity:0.6;">Your Personal Travel Archive</p>
+    <div class="top-controls">
+        <div class="control-btn" id="share-btn" onclick="shareProfile()">
+            <span class="material-symbols-rounded">ios_share</span> Share
+        </div>
+        <div class="control-btn" id="logout-btn" style="color: #c65265;" onclick="handleLogout()">
+            Logout
+        </div>
     </div>
 
-    <div class="tap-zone left" onclick="scrollGrid(-1)"></div>
-    <div class="tap-zone right" onclick="scrollGrid(1)"></div>
+    <div class="header">
+        <h1 id="view-title">MassPort</h1>
+        <p style="font-size:13px; opacity:0.6; letter-spacing: 1px;">TRAVEL ARCHIVE</p>
+    </div>
 
-    <div id="auth-container" class="auth-card hidden">
-        <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px;">Welcome</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button class="primary-btn" onclick="handleLogin()">Login</button>
-        <button class="primary-btn" style="background:#eee; color:#333;" onclick="handleSignUp()">Sign Up</button>
+    <div id="auth-container" class="modal-overlay">
+        <div class="auth-card">
+            <h2 style="text-align:center; font-family: 'Yrsa'; font-size: 32px; margin-bottom: 20px;">Passport Control</h2>
+            <p style="font-size:12px; text-align:center; color:#666; margin-bottom:20px;">Please identify yourself to proceed.</p>
+            
+            <input type="text" id="username" placeholder="Username (Required)">
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Password">
+            
+            <button class="primary-btn" onclick="handleLogin()">Login</button>
+            <button class="primary-btn" style="background:#f1f5f9; color:#333;" onclick="handleSignUp()">Create Passport</button>
+            <p id="auth-msg" style="font-size:11px; color:#c65265; text-align:center; margin-top:10px;"></p>
+        </div>
     </div>
 
     <div id="main-grid"></div>
 
     <div id="nav-bar" class="collector-nav-container hidden">
         <div class="collector-nav" id="filter-nav"></div>
-        <button class="action-btn" style="background:var(--accent); color:white;" onclick="openAddModal()">+ Add</button>
-        <button class="action-btn" onclick="shareProfile()">Share</button>
-        <button class="action-btn" style="color:#ef4444" onclick="supabaseClient.auth.signOut()">Exit</button>
+        <button class="add-btn" onclick="openAddModal()">+</button>
     </div>
 
-    <div id="modal-overlay" class="hidden">
+    <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-content">
-            <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'">New Stamp</h3>
+            <h3 id="modal-title" style="margin:0 0 15px; font-family:'Yrsa'; font-size:24px;">New Stamp</h3>
             
-            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Title</label>
-            <input type="text" id="s-name" placeholder="e.g. Best Coffee Shop">
+            <label style="font-size:11px; font-weight:700; color:#555;">TITLE</label>
+            <input type="text" id="s-name" placeholder="e.g. The Louvre">
             
-            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Address (Search)</label>
-            <input type="text" id="s-address" placeholder="e.g. 123 Main St, Tucson, AZ">
+            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">LOCATION (Search)</label>
+            <input type="text" id="s-address" placeholder="City, Country...">
             
-            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Notes (Optional)</label>
+            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">NOTES</label>
             <textarea id="s-notes" placeholder="Memories..." rows="3"></textarea>
             
-            <label style="font-size:12px; font-weight:bold; margin-top:10px; display:block;">Image (Optional)</label>
-            <input type="file" id="s-image" accept="image/*">
+            <label style="font-size:11px; font-weight:700; color:#555; margin-top:10px; display:block;">IMAGE</label>
+            <input type="file" id="s-image-input" accept="image/*" onchange="previewImage()">
+            
+            <div id="preview-box" class="image-preview-container">
+                <div class="remove-img-btn" onclick="clearImage()">×</div>
+                <img id="img-preview" style="width:100%; height:120px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
+            </div>
             
             <input type="hidden" id="edit-id">
-            <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save to Collection</button>
-            <button class="primary-btn" style="background:none; color:#999; margin-top:0;" onclick="closeModal()">Cancel</button>
+            <input type="hidden" id="current-img-url">
+
+            <button class="primary-btn" id="save-btn" onclick="saveStamp()">Save Stamp</button>
+            <button class="primary-btn" style="background:transparent; color:#888; margin-top:0;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
-    <div id="img-modal" class="hidden" style="position:fixed; inset:0; z-index:21000; background:rgba(0,0,0,0.85); display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <div style="position:absolute; top:20px; right:20px; color:white; font-size:30px; cursor:pointer;" onclick="document.getElementById('img-modal').classList.add('hidden')">&times;</div>
-        <img id="modal-img" style="max-width:90%; max-height:80vh; border:10px solid white; box-shadow:0 0 50px black;">
-        <h2 id="modal-caption" style="color:white; font-family:'Yrsa'; margin-top:20px;"></h2>
+    <div id="img-modal" class="modal-overlay hidden" onclick="this.classList.add('hidden')">
+        <div style="position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+            <img id="modal-img" style="max-width:90%; max-height:80vh; border:10px solid white; box-shadow:0 0 50px black; pointer-events:auto;">
+            <h2 id="modal-caption" style="color:white; font-family:'Yrsa'; margin-top:20px; text-shadow:0 2px 4px black;"></h2>
+        </div>
     </div>
 
     <script>
@@ -238,61 +280,122 @@
         const LOCATIONIQ_KEY = 'pk.7fb90bfc2abb6e9b7ac921233aa0d0ce';
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
         
-        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
-        const inkPalette = ['#1B4F72', '#78281F', '#186A3B', '#7E5109', '#512E5F'];
-        const abbrToState = { "AL": "ALABAMA", "AK": "ALASKA", "AZ": "ARIZONA", "AR": "ARKANSAS", "CA": "CALIFORNIA", "CO": "COLORADO", "CT": "CONNECTICUT", "DE": "DELAWARE", "FL": "FLORIDA", "GA": "GEORGIA", "HI": "HAWAII", "ID": "IDAHO", "IL": "ILLINOIS", "IN": "INDIANA", "IA": "IOWA", "KS": "KANSAS", "KY": "KENTUCKY", "LA": "LOUISIANA", "ME": "MAINE", "MD": "MARYLAND", "MA": "MASSACHUSETTS", "MI": "MICHIGAN", "MN": "MINNESOTA", "MS": "MISSISSIPPI", "MO": "MISSOURI", "MT": "MONTANA", "NE": "NEBRASKA", "NV": "NEVADA", "NH": "NEW HAMPSHIRE", "NJ": "NEW JERSEY", "NM": "NEW MEXICO", "NY": "NEW YORK", "NC": "NORTH CAROLINA", "ND": "NORTH DAKOTA", "OH": "OHIO", "OK": "OKLAHOMA", "OR": "OREGON", "PA": "PENNSYLVANIA", "RI": "RHODE ISLAND", "SC": "SOUTH CAROLINA", "SD": "SOUTH DAKOTA", "TN": "TENNESSEE", "TX": "TEXAS", "UT": "UTAH", "VT": "VERMONT", "VA": "VIRGINIA", "WA": "WASHINGTON", "WV": "WEST VIRGINIA", "WI": "WISCONSIN", "WY": "WYOMING", "EU": "EUROPE" };
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- CONSTANTS & MAPS ---
+        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
+        const inkPalette = ['#1B4F72', '#78281F', '#186A3B', '#7E5109', '#512E5F', '#4A235A', '#0B5345'];
+        
+        const stateIcons = { "AZ": "brightness_7", "CA": "beach_access", "PA": "notifications_active", "EU": "public", "NY": "apartment", "FL": "sunny", "TX": "star", "NV": "playing_cards", "WA": "coffee", "HI": "surfing", "CO": "mountain_flag", "MA": "history_edu", "IL": "location_city", "LA": "music_note", "TN": "music_note", "GA": "agriculture", "OR": "forest", "ME": "sailing", "DC": "gavel", "UT": "hiking", "NM": "light_mode", "OH": "flight", "MI": "kayaking", "AK": "ac_unit", "WI": "forest", "VT": "ac_unit", "MT":"landscape", "NE":"psychiatry", "INTL": "public" };
+        const defaultIcons = ['explore', 'place', 'map', 'flag', 'travel_explore'];
+
+        const abbrToState = { 
+            "AL":"ALABAMA","AK":"ALASKA","AZ":"ARIZONA","AR":"ARKANSAS","CA":"CALIFORNIA","CO":"COLORADO","CT":"CONNECTICUT","DE":"DELAWARE","FL":"FLORIDA","GA":"GEORGIA","HI":"HAWAII","ID":"IDAHO","IL":"ILLINOIS","IN":"INDIANA","IA":"IOWA","KS":"KANSAS","KY":"KENTUCKY","LA":"LOUISIANA","ME":"MAINE","MD":"MARYLAND","MA":"MASSACHUSETTS","MI":"MICHIGAN","MN":"MINNESOTA","MS":"MISSISSIPPI","MO":"MISSOURI","MT":"MONTANA","NE":"NEBRASKA","NV":"NEVADA","NH":"NEW HAMPSHIRE","NJ":"NEW JERSEY","NM":"NEW MEXICO","NY":"NEW YORK","NC":"NORTH CAROLINA","ND":"NORTH DAKOTA","OH":"OHIO","OK":"OKLAHOMA","OR":"OREGON","PA":"PENNSYLVANIA","RI":"RHODE ISLAND","SC":"SOUTH CAROLINA","SD":"SOUTH DAKOTA","TN":"TENNESSEE","TX":"TEXAS","UT":"UTAH","VT":"VERMONT","VA":"VIRGINIA","WA":"WASHINGTON","WV":"WEST VIRGINIA","WI":"WISCONSIN","WY":"WYOMING", "DC": "DISTRICT OF COLUMBIA"
+        };
+        // Reverse map for lookup
+        const stateToAbbr = Object.fromEntries(Object.entries(abbrToState).map(a => a.reverse()));
+
         let currentUser = null;
-        let publicUsername = null;
+        let profileUsername = null; // Stores the username of the logged in user
+        let publicViewUser = null; // Stores the username we are currently viewing
         let globalStamps = [];
 
-        // --- AUTH ---
+        // --- AUTH & INIT ---
+        window.addEventListener('load', () => {
+            // Check if URL has hash (Supabase auth redirect or profile view)
+            const hash = window.location.hash;
+            
+            if (hash && hash.includes('access_token')) {
+                // Let Supabase handle the session recovery
+                supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                    handleAuthState(session);
+                    // Clear hash after processing
+                    history.replaceState(null, null, ' ');
+                });
+            } else {
+                checkRoute();
+            }
+        });
+
+        window.addEventListener('hashchange', checkRoute);
+
         function checkRoute() {
             const hash = window.location.hash.replace('#', '').trim();
-            if (hash) {
-                publicUsername = hash;
+            if (hash && !hash.includes('access_token')) {
+                // Viewing a public profile
+                publicViewUser = hash;
                 document.getElementById('auth-container').classList.add('hidden');
+                document.querySelector('.top-controls').classList.add('hidden'); // Hide controls if viewing other
+                document.getElementById('nav-bar').classList.add('hidden'); // Hide controls for public view initially (optional, but requested layout implies controls for owner)
                 fetchPublicStamps(hash);
             } else {
-                publicUsername = null;
+                publicViewUser = null;
                 initAuth();
             }
         }
 
-        function initAuth() {
-            supabaseClient.auth.getSession().then(({ data: { session } }) => handleAuthState(session));
+        async function initAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            handleAuthState(session);
+        }
+
+        async function handleAuthState(session) {
+            if (session?.user) {
+                currentUser = session.user;
+                // Fetch username from profiles
+                const { data: profile } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
+                profileUsername = profile ? profile.username : 'Traveler';
+                
+                if (!publicViewUser) {
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.querySelector('.top-controls').classList.remove('hidden');
+                    document.getElementById('nav-bar').classList.remove('hidden');
+                    document.getElementById('view-title').innerText = "MassPort";
+                    fetchMyStamps();
+                }
+            } else {
+                if (!publicViewUser) {
+                    document.getElementById('auth-container').classList.remove('hidden');
+                    document.querySelector('.top-controls').classList.add('hidden');
+                    document.getElementById('nav-bar').classList.add('hidden');
+                }
+            }
         }
 
         async function handleSignUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const { data, error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) alert(error.message);
-            else alert("Check your email!");
+            const username = document.getElementById('username').value;
+            const msg = document.getElementById('auth-msg');
+
+            if(!username) { msg.innerText = "Username is required"; return; }
+
+            const { data, error } = await supabaseClient.auth.signUp({ 
+                email, 
+                password,
+                options: { data: { username: username } } // Store in metadata to trigger profile creation
+            });
+            
+            if (error) msg.innerText = error.message;
+            else msg.innerText = "Confirmation link sent to your email!";
         }
 
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const msg = document.getElementById('auth-msg');
+            
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) alert(error.message);
+            if (error) msg.innerText = error.message;
         }
 
-        function handleAuthState(session) {
-            currentUser = session?.user || null;
-            if (currentUser && !publicUsername) {
-                document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('nav-bar').classList.remove('hidden');
-                fetchMyStamps();
-            } else if (!currentUser && !publicUsername) {
-                document.getElementById('auth-container').classList.remove('hidden');
-                document.getElementById('nav-bar').classList.add('hidden');
-            }
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.hash = '';
+            location.reload();
         }
-        supabaseClient.auth.onAuthStateChange((_e, session) => handleAuthState(session));
 
-        // --- FETCH & PROCESS ---
+        // --- DATA FETCHING ---
         async function fetchMyStamps() {
             const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: true});
             processStamps(data, true);
@@ -304,69 +407,103 @@
             if (profile) {
                 const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', profile.id).order('created_at', {ascending: true});
                 processStamps(data, false);
+            } else {
+                alert("User not found");
             }
         }
 
         function processStamps(data, isOwner) {
             globalStamps = [];
-            let lastStateCode = null;
-            let inkIdx = 0;
-            const stateCounts = {};
+            const groups = {}; // Key: "AZ" or "INTL", Value: Count
 
-            // Sort by state code (extracted from city string)
-            data.sort((a,b) => {
-                const stateA = a.city.split(',').pop().trim().toUpperCase();
-                const stateB = b.city.split(',').pop().trim().toUpperCase();
-                return stateA.localeCompare(stateB);
-            });
-
+            // 1. Group logic
             data.forEach(s => {
-                // Parse "City, ST"
-                const parts = s.city.split(',');
-                let stateCode = parts.length > 1 ? parts[parts.length - 1].trim().toUpperCase() : 'EU';
-                // If 2 chars, assume US state. If longer (e.g. Italy), use full name or map to EU/INTL if desired. 
-                // For simplicity, if not in our dictionary, we treat it as valid if it's 2 chars, otherwise we keep as is.
-                
-                if (stateCode !== lastStateCode) {
-                    globalStamps.push({ type: 'ink', code: stateCode, color: inkPalette[inkIdx % inkPalette.length] });
-                    lastStateCode = stateCode;
-                    inkIdx++;
+                let groupKey = "INTL";
+                if (s.country_code === 'US' || s.country_code === 'USA' || s.country_code === 'us') {
+                    // Try to get state abbreviation
+                    if (s.state_code && s.state_code.length === 2) groupKey = s.state_code;
+                    else if (stateToAbbr[s.full_state_name]) groupKey = stateToAbbr[s.full_state_name];
+                    else groupKey = "USA"; // Fallback
                 }
                 
-                stateCounts[stateCode] = (stateCounts[stateCode] || 0) + 1;
-                globalStamps.push({ ...s, type: 'paper', parsedState: stateCode });
+                s._groupKey = groupKey;
+                groups[groupKey] = (groups[groupKey] || 0) + 1;
             });
 
-            renderGrid(globalStamps, isOwner);
-            renderNav(stateCounts);
+            // 2. Sort: USA States alphabetical, then INTL
+            data.sort((a, b) => {
+                if (a._groupKey === "INTL" && b._groupKey !== "INTL") return 1;
+                if (a._groupKey !== "INTL" && b._groupKey === "INTL") return -1;
+                if (a._groupKey === b._groupKey) return 0;
+                return a._groupKey.localeCompare(b._groupKey);
+            });
+
+            // 3. Insert Separators
+            let lastGroup = null;
+            let inkIdx = 0;
+            
+            data.forEach(s => {
+                if (s._groupKey !== lastGroup) {
+                    globalStamps.push({ 
+                        type: 'ink', 
+                        code: s._groupKey, 
+                        color: inkPalette[inkIdx % inkPalette.length],
+                        full: abbrToState[s._groupKey] || (s._groupKey === 'INTL' ? 'INTERNATIONAL' : s._groupKey)
+                    });
+                    lastGroup = s._groupKey;
+                    inkIdx++;
+                }
+                globalStamps.push({ ...s, type: 'paper' });
+            });
+
+            renderGrid(globalStamps);
+            renderNav(groups);
         }
 
-        // --- RENDER ---
-        function renderGrid(items, isOwner) {
+        // --- RENDERING ---
+        function renderGrid(items) {
             const grid = document.getElementById('main-grid');
             grid.innerHTML = '';
 
             items.forEach((item, i) => {
-                const wrap = document.createElement('div');
-                wrap.className = 'stamp-wrapper';
+                // Stagger Animation Delay
+                const delay = i * 0.05;
                 
                 if (item.type === 'ink') {
-                    wrap.classList.add('state-ink-wrapper');
-                    const fullName = abbrToState[item.code] || item.code;
+                    const wrap = document.createElement('div');
+                    wrap.className = 'stamp-wrapper state-ink-wrapper stagger-in';
+                    wrap.style.animationDelay = `${delay}s`;
+                    wrap.id = `group-${item.code}`;
+
+                    // Border style randomization
+                    const borderStyles = ['solid', 'double', 'dashed'];
+                    const bStyle = borderStyles[i % borderStyles.length];
+                    const rot = (Math.random() * 10 - 5).toFixed(1);
+                    
+                    // Icon logic
+                    let iconName = stateIcons[item.code] || defaultIcons[i % defaultIcons.length];
+
                     wrap.innerHTML = `
-                        <div class="ink-stamp" style="--ink-color: ${item.color}">
-                            <div class="ink-stamp-inner">
-                                <span class="material-symbols-rounded" style="font-size:40px; margin-bottom:10px;">verified</span>
-                                <div class="ink-abbr">${item.code.substring(0,2)}</div>
-                                <div class="ink-full">${fullName}</div>
+                        <div class="ink-stamp" style="--ink-color: ${item.color}; --ink-rot: ${rot}deg">
+                            <div class="ink-stamp-inner" style="border-style: ${bStyle}">
+                                <span class="material-symbols-rounded" style="font-size:36px; margin-bottom:5px;">${iconName}</span>
+                                <div class="ink-abbr">${item.code}</div>
+                                <div class="ink-full">${item.full}</div>
                             </div>
                         </div>`;
+                    grid.appendChild(wrap);
+
                 } else {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'stamp-wrapper stagger-in';
+                    wrap.style.animationDelay = `${delay}s`;
+
                     const rot = (Math.random() * 6 - 3).toFixed(1);
-                    const sealRot = (Math.random() * 40 - 20).toFixed(1);
+                    const sealRot = (Math.random() * 30 - 15).toFixed(1);
                     const theme = themes[i % themes.length];
-                    const cityName = item.city.split(',')[0].trim();
-                    const stateCode = item.parsedState;
+                    
+                    // Postmark Text: Just the City
+                    const cityText = item.city.split(',')[0].trim();
 
                     wrap.innerHTML = `
                         <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg" onclick="viewStamp(${i})">
@@ -378,131 +515,180 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg" onclick="openMap('${item.city}')">
-                            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1.2;">
-                                <div style="font-size:9px">POSTMARK</div>
-                                <div style="font-weight:bold; font-size:14px; text-transform:uppercase;">${cityName}</div>
-                                <div style="font-size:10px; font-weight:bold;">${stateCode}</div>
-                            </div>
+                        <div class="postmark-seal" style="--seal-rot: ${sealRot}deg">
+                            <div class="pm-line"></div>
+                            <div class="pm-city">${cityText}</div>
+                            <div class="pm-line"></div>
                         </div>`;
+                    grid.appendChild(wrap);
                 }
-                grid.appendChild(wrap);
             });
             setupMobileScroll();
         }
 
-        function renderNav(counts) {
+        function renderNav(groups) {
             const nav = document.getElementById('filter-nav');
             nav.innerHTML = '';
             
-            // Sort keys: US states first, then others
-            const keys = Object.keys(counts).sort((a,b) => {
-                const aIsUS = !!abbrToState[a];
-                const bIsUS = !!abbrToState[b];
-                if(aIsUS && !bIsUS) return -1;
-                if(!aIsUS && bIsUS) return 1;
+            // Sort keys similar to stamps
+            const keys = Object.keys(groups).sort((a,b) => {
+                if(a==='INTL') return 1; if(b==='INTL') return -1;
                 return a.localeCompare(b);
             });
 
             keys.forEach(k => {
                 const btn = document.createElement('div');
                 btn.className = 'nav-tag';
-                const label = abbrToState[k] || k;
-                btn.innerText = `${label} (${counts[k]})`;
-                btn.onclick = () => {
-                    const target = Array.from(document.querySelectorAll('.ink-abbr')).find(el => el.innerText === k.substring(0,2));
-                    if(target) target.closest('.stamp-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                    
-                    document.querySelectorAll('.nav-tag').forEach(t => t.classList.remove('active'));
-                    btn.classList.add('active');
-                };
+                btn.innerHTML = `${k} <span style="opacity:0.6; font-size:9px; margin-left:2px;">${groups[k]}</span>`;
+                btn.onclick = () => scrollToGroup(k, btn);
                 nav.appendChild(btn);
             });
         }
 
-        // --- INTERACTIONS ---
-        function openMap(query) {
-            // Prevent event bubbling if necessary, though structure handles it
-            window.open(`https://maps.google.com/?q=${encodeURIComponent(query)}`, '_blank');
+        function scrollToGroup(code, btnEl) {
+            // Update active state
+            document.querySelectorAll('.nav-tag').forEach(t => t.classList.remove('active'));
+            if(btnEl) btnEl.classList.add('active');
+
+            const target = document.getElementById(`group-${code}`);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
         }
 
+        // --- UI INTERACTIONS ---
         function viewStamp(idx) {
+            // idx in renderGrid refers to globalStamps index
+            // Find the actual item in globalStamps
+            // Note: globalStamps includes ink separators. We need to pass the actual object or logic.
+            // Simplified: The onclick in renderGrid passes the loop index.
+            
             const item = globalStamps[idx];
+            if (item.type === 'ink') return;
+
             if(item.img_url) {
                 document.getElementById('modal-img').src = item.img_url;
                 document.getElementById('modal-caption').innerText = item.name;
                 document.getElementById('img-modal').classList.remove('hidden');
-            } else {
-                openAddModal(item); // If no image, maybe open edit mode? Or just do nothing. Let's open edit for owner.
+            } else if (currentUser) {
+                openAddModal(item); 
             }
         }
 
-        // --- ADD/SAVE STAMP ---
+        function shareProfile() {
+            if(!profileUsername) return alert("Please log in first.");
+            const url = `${window.location.origin}${window.location.pathname}#${profileUsername}`;
+            navigator.clipboard.writeText(url);
+            alert("Profile link copied to clipboard!");
+        }
+
+        // --- ADD/EDIT LOGIC ---
         function openAddModal(existing = null) {
             document.getElementById('modal-overlay').classList.remove('hidden');
+            clearImage();
+            
             if(existing) {
                 document.getElementById('edit-id').value = existing.id;
                 document.getElementById('s-name').value = existing.name;
-                document.getElementById('s-address').value = existing.city; // Showing stored city in address field for now
+                document.getElementById('s-address').value = existing.city; 
                 document.getElementById('s-notes').value = existing.notes;
+                document.getElementById('current-img-url').value = existing.img_url || '';
+                if(existing.img_url) {
+                    document.getElementById('img-preview').src = existing.img_url;
+                    document.getElementById('preview-box').classList.add('has-image');
+                }
+                document.getElementById('save-btn').innerText = "Update Stamp";
             } else {
                 document.getElementById('edit-id').value = '';
                 document.getElementById('s-name').value = '';
                 document.getElementById('s-address').value = '';
                 document.getElementById('s-notes').value = '';
-                document.getElementById('s-image').value = '';
+                document.getElementById('save-btn').innerText = "Save Stamp";
             }
         }
-        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+        function closeModal() { 
+            document.getElementById('modal-overlay').classList.add('hidden'); 
+        }
+
+        function previewImage() {
+            const file = document.getElementById('s-image-input').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('img-preview').src = e.target.result;
+                    document.getElementById('preview-box').classList.add('has-image');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage() {
+            document.getElementById('s-image-input').value = '';
+            document.getElementById('preview-box').classList.remove('has-image');
+            document.getElementById('img-preview').src = '';
+            // If editing, logic to clear hidden url if user explicitly removed it could go here, 
+            // but simplified for now we just clear the input preview.
+        }
 
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
             const addressInput = document.getElementById('s-address').value;
-            if(!addressInput) return alert("Address is required!");
+            if(!addressInput) return alert("Location is required!");
 
-            btn.innerText = "Locating...";
+            btn.innerText = "Processing...";
             
-            // 1. Geocode via LocationIQ to get clean "City, ST"
-            let finalCityString = addressInput;
+            // 1. Geocode
+            let finalCity = addressInput;
+            let finalStateCode = null;
+            let finalStateName = null;
+            let finalCountry = 'US'; // Default assumption if parsing fails, but we adjust
+
             try {
                 const res = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(addressInput)}&format=json&addressdetails=1`);
                 const data = await res.json();
+                
                 if(data && data[0]) {
                     const addr = data[0].address;
-                    // Prefer City > Town > Village
-                    const city = addr.city || addr.town || addr.village || addr.county || "Unknown";
-                    // Prefer State Code (US) or Country (Intl)
-                    let region = addr.state_code ? addr.state_code.toUpperCase() : (addr.country || "XX");
+                    finalCity = addr.city || addr.town || addr.village || addr.county || addressInput.split(',')[0];
+                    finalCountry = addr.country_code ? addr.country_code.toUpperCase() : 'INTL';
                     
-                    // If region is a full state name (rare in state_code but possible), try to map it
-                    // The LocationIQ 'state_code' is usually 2 digits for US.
+                    if(finalCountry === 'US' || finalCountry === 'USA') {
+                        finalStateCode = addr.state_code ? addr.state_code.toUpperCase() : null;
+                        finalStateName = addr.state ? addr.state.toUpperCase() : null;
+                    }
                     
-                    finalCityString = `${city}, ${region}`;
+                    // Create formatted string for display
+                    if(finalStateCode) finalCity = `${finalCity}, ${finalStateCode}`;
+                    else finalCity = `${finalCity}, ${addr.country || finalCountry}`;
                 }
             } catch(e) {
-                console.log("Geocoding error, using raw input", e);
+                console.log("Geocode fail", e);
             }
 
-            btn.innerText = "Uploading...";
-            
             // 2. Image Upload
-            const file = document.getElementById('s-image').files[0];
-            let imgUrl = "";
+            let imgUrl = document.getElementById('current-img-url').value;
+            const file = document.getElementById('s-image-input').files[0];
+            
             if (file) {
+                btn.innerText = "Uploading Image...";
                 const fd = new FormData(); fd.append('image', file);
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
                 const json = await res.json();
                 imgUrl = json.data.url;
             }
 
-            // 3. Save to Supabase
+            // 3. Supabase Save
             const payload = {
                 name: document.getElementById('s-name').value,
-                city: finalCityString, // Stored as "Tucson, AZ"
+                city: finalCity, // Display string
+                country_code: finalCountry,
+                state_code: finalStateCode,
+                full_state_name: finalStateName,
                 notes: document.getElementById('s-notes').value,
-                user_id: currentUser.id
+                user_id: currentUser.id,
+                img_url: imgUrl
             };
-            if (imgUrl) payload.img_url = imgUrl;
 
             const editId = document.getElementById('edit-id').value;
             if (editId) await supabaseClient.from('stamps').update(payload).eq('id', editId);
@@ -510,29 +696,23 @@
 
             closeModal();
             fetchMyStamps();
-            btn.innerText = "Save to Collection";
         }
 
-        function shareProfile() {
-            const url = `${window.location.origin}${window.location.pathname}#${currentUser.username}`;
-            navigator.clipboard.writeText(url);
-            alert("Share link copied!");
-        }
-
-        // --- MOBILE SCROLL ---
+        // --- MOBILE SCROLL FX ---
         function setupMobileScroll() {
             if(window.innerWidth > 600) return;
             const grid = document.getElementById('main-grid');
+            
             grid.addEventListener('scroll', () => {
                 const center = window.innerWidth / 2;
                 document.querySelectorAll('.stamp-wrapper').forEach(card => {
                     const rect = card.getBoundingClientRect();
                     const cardCenter = rect.left + rect.width/2;
                     const dist = Math.abs(center - cardCenter);
-                    if(dist < 150) {
+                    
+                    if(dist < 120) {
                         card.classList.add('is-centered');
-                        // Optional: Scale effect
-                        card.style.transform = `scale(${1.1 - (dist/1000)})`;
+                        card.style.transform = `scale(1.05)`;
                     } else {
                         card.classList.remove('is-centered');
                         card.style.transform = 'scale(0.9)';
@@ -540,15 +720,6 @@
                 });
             });
         }
-        
-        function scrollGrid(dir) {
-            const grid = document.getElementById('main-grid');
-            const itemW = window.innerWidth * 0.8; 
-            grid.scrollBy({ left: dir * itemW, behavior: 'smooth' });
-        }
-
-        window.addEventListener('hashchange', checkRoute);
-        checkRoute();
     </script>
 </body>
 </html>
