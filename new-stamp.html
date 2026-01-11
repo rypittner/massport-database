@@ -1114,7 +1114,9 @@ async function compressImage(file) {
                 img_url: imgUrl,
                 
                 state_code: document.getElementById('geo-state-code').value || 'INTL',
-                full_state_name: document.getElementById('geo-state-name').value || '',
+            full_state_name: (document.getElementById('geo-country').value === 'US') 
+                ? (document.getElementById('geo-state-name').value || '') 
+                : (document.getElementById('geo-country').value || 'International'),
                 country_code: document.getElementById('geo-country').value || 'INTL',
                 lat: document.getElementById('geo-lat').value || null,
                 lng: document.getElementById('geo-lng').value || null
