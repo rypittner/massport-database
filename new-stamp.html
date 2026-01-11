@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places&callback=initGoogleTools" async defer></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Yrsa:wght@500;600;700&display=swap');
@@ -32,10 +32,11 @@
             break-inside: avoid;
             margin-bottom: 1.5rem;
             transition: transform 0.3s var(--ease-smooth);
+            position: relative;
         }
         .masonry-item:hover { transform: translateY(-4px); }
 
-        /* --- Stamp Visuals --- */
+        /* --- Stamp Visuals (With Image) --- */
         .stamp {
             aspect-ratio: 39 / 50; 
             background-image: url('https://raw.githubusercontent.com/rypittner/massport-database/main/stamp_bg.svg');
@@ -45,41 +46,62 @@
             cursor: pointer; 
             position: relative; 
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-            transition: all 0.3s ease;
+            overflow: hidden; /* Ensure content stays in shape */
         }
         
         .stamp-image { 
             position: absolute; 
-            inset: 6% 7.689%; 
+            inset: 6% 7.689%; /* Match SVG borders */
             overflow: hidden; 
-            background: var(--theme-color);
-            border: 3px solid var(--theme-color);
+            background: white;
+            z-index: 1;
         }
-        .stamp-image img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; mix-blend-mode: multiply; }
+        .stamp-image img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            opacity: 1; /* No opacity showing through */
+        }
         
         .stamp-overlay-text {
             position: absolute;
-            inset: 10%;
+            bottom: 6%; left: 7.689%; right: 7.689%; /* Align inside the stamp border */
+            background-color: var(--theme-color);
+            padding: 12px 10px;
+            color: white;
+            z-index: 10;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-            pointer-events: none;
-            z-index: 10;
+            justify-content: center;
+            text-align: left;
+        }
+
+        /* --- Ink Stamp Decorative Item --- */
+        .ink-stamp-deco {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1/1;
+            opacity: 0.6;
+            margin-bottom: 1.5rem;
+            border: 2px dashed #e5e7eb;
+            border-radius: 50%;
         }
 
         /* --- Text-Only Journal Card --- */
         .journal-card {
             background: white;
             border: 1px solid #eaddd7;
-            border-top: 4px solid var(--theme-color);
+            border-top: 5px solid var(--theme-color);
             border-radius: 8px;
-            padding: 1.25rem;
+            padding: 1.5rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             cursor: pointer;
             position: relative;
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
         .journal-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
 
@@ -92,13 +114,13 @@
             border: 1px solid #f1eeed;
             transition: all 0.3s ease;
             cursor: pointer;
-            height: 220px;
+            height: 200px;
         }
         .feed-container-card:hover { transform: translateY(-2px); border-color: #e5e7eb; box-shadow: 0 10px 20px rgba(0,0,0,0.04); }
         
         .feed-left-visual {
             width: 35%;
-            min-width: 140px;
+            min-width: 120px;
             background: #f8f6f5;
             padding: 1rem;
             display: flex;
@@ -107,59 +129,58 @@
         }
 
         /* --- Nav & Utilities --- */
-        .active-link { color: #065f46 !important; font-weight: 700; }
-        .active-link::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #065f46; border-radius: 50%; }
+        .active-link i { color: #065f46; stroke-width: 2.5px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Floating Add Button on Mobile */
-        .fab-mobile {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            z-index: 40;
-            box-shadow: 0 4px 15px rgba(6, 95, 70, 0.3);
-        }
     </style>
 </head>
 <body class="md:pl-64 pb-24 md:pb-0">
 
-    <nav class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-stone-100 md:top-0 md:left-0 md:w-64 md:h-full md:border-t-0 md:border-r z-50 flex md:flex-col p-2 md:p-6">
-        <div class="hidden md:block mb-12 px-2">
+    <nav class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-stone-100 md:top-0 md:left-0 md:w-64 md:h-full md:border-t-0 md:border-r z-50 flex md:flex-col p-2 md:p-6 justify-between">
+        
+        <div class="hidden md:block mb-8 px-2 pt-4">
             <h1 class="text-3xl font-heading text-emerald-900">MassPort</h1>
             <p class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Sanctuary Journal</p>
         </div>
 
-        <div class="flex flex-1 justify-around md:justify-start md:flex-col gap-1 md:gap-4 items-center md:items-stretch">
-            <button onclick="switchView('journal')" class="relative p-3 text-stone-400 active-link flex flex-col items-center md:items-start md:flex-row md:gap-3 transition-colors rounded-xl hover:bg-stone-50" id="btn-journal">
-                <i data-lucide="scroll" class="w-6 h-6 md:w-5 md:h-5"></i><span class="text-[10px] md:text-sm md:block mt-1 md:mt-0">Journal</span>
-            </button>
-            <button onclick="switchView('feed')" class="relative p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-3 transition-colors rounded-xl hover:bg-stone-50" id="btn-feed">
-                <i data-lucide="flame" class="w-6 h-6 md:w-5 md:h-5"></i><span class="text-[10px] md:text-sm md:block mt-1 md:mt-0">Recent</span>
+        <div class="flex flex-1 justify-around md:justify-start md:flex-col gap-1 md:gap-2 items-center md:items-stretch">
+            
+            <button onclick="switchView('journal')" class="group p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-journal">
+                <i data-lucide="scroll" class="w-6 h-6 md:w-5 md:h-5 transition-colors group-hover:text-emerald-800"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Journal</span>
             </button>
             
-            <button onclick="openAddModal()" class="md:hidden -mt-8 bg-emerald-900 text-white p-4 rounded-full shadow-lg transform transition active:scale-95">
-                <i data-lucide="plus" class="w-6 h-6"></i>
+            <button onclick="switchView('feed')" class="group p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-feed">
+                <i data-lucide="flame" class="w-6 h-6 md:w-5 md:h-5 transition-colors group-hover:text-emerald-800"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Recent</span>
+            </button>
+            
+            <button onclick="openAddModal()" class="md:hidden -mt-8 bg-emerald-900 text-white p-4 rounded-full shadow-lg transform transition active:scale-95 border-4 border-white">
+                <i data-lucide="plus" class="w-7 h-7"></i>
             </button>
 
-            <button onclick="switchView('community')" class="relative p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-3 transition-colors rounded-xl hover:bg-stone-50" id="btn-community">
-                <i data-lucide="users" class="w-6 h-6 md:w-5 md:h-5"></i><span class="text-[10px] md:text-sm md:block mt-1 md:mt-0">Find</span>
-            </button>
-            <button onclick="switchView('map')" class="relative p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-3 transition-colors rounded-xl hover:bg-stone-50" id="btn-map">
-                <i data-lucide="map" class="w-6 h-6 md:w-5 md:h-5"></i><span class="text-[10px] md:text-sm md:block mt-1 md:mt-0">Map</span>
+            <button onclick="switchView('community')" class="group p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-community">
+                <i data-lucide="users" class="w-6 h-6 md:w-5 md:h-5 transition-colors group-hover:text-emerald-800"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Find</span>
             </button>
             
-            <button onclick="openAddModal()" class="hidden md:flex mt-8 bg-emerald-900 text-white p-3 rounded-xl gap-3 items-center justify-center hover:bg-emerald-800 transition shadow-sm">
+            <button onclick="switchView('map')" class="group p-3 text-stone-400 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-map">
+                <i data-lucide="map" class="w-6 h-6 md:w-5 md:h-5 transition-colors group-hover:text-emerald-800"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Map</span>
+            </button>
+            
+            <button onclick="openAddModal()" class="hidden md:flex mt-6 bg-emerald-900 text-white p-3 rounded-xl gap-3 items-center justify-center hover:bg-emerald-800 transition shadow-sm">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i><span>Add Stamp</span>
             </button>
         </div>
 
-        <div id="desktop-profile-foot" class="hidden md:flex items-center gap-3 mt-auto p-2 border-t border-stone-100 pt-4 cursor-pointer hover:bg-stone-50 rounded-lg" onclick="openProfileModal()">
+        <div id="desktop-profile-foot" class="hidden md:flex items-center gap-3 mt-auto p-2 border-t border-stone-100 pt-4 cursor-pointer hover:bg-stone-50 rounded-lg transition" onclick="openProfileModal()">
             </div>
     </nav>
 
     <main class="p-4 md:p-12 max-w-7xl mx-auto min-h-screen">
         
-        <div id="auth-wall" class="hidden fixed inset-0 z-[60] bg-white/95 flex flex-col items-center justify-center p-6 text-center">
+        <div id="auth-wall" class="hidden fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center p-6 text-center">
             <h1 class="text-5xl font-heading text-emerald-900 mb-4">MassPort</h1>
             <p class="mb-8 text-stone-500">Sign in to view your sacred journal.</p>
             <div class="space-y-4 w-full max-w-xs">
@@ -174,19 +195,19 @@
                     <h2 class="text-4xl md:text-5xl font-heading text-stone-800">My Journal</h2>
                     <p class="text-stone-400 mt-2" id="journal-count-display">Loading...</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <select id="filter-location" onchange="applyJournalFilters()" class="bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer">
+                <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                    <select id="filter-location" onchange="applyJournalFilters()" class="bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition">
                         <option value="ALL">All Locations</option>
-                    </select>
-                    <select id="filter-year" onchange="applyJournalFilters()" class="bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer">
+                        </select>
+                    <select id="filter-year" onchange="applyJournalFilters()" class="bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition">
                         <option value="ALL">All Years</option>
                     </select>
                     <select id="filter-sort" onchange="applyJournalFilters()" class="bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full text-xs text-emerald-700 font-semibold outline-none cursor-pointer">
                         <option value="newest">Newest Added</option>
                         <option value="oldest">Oldest Added</option>
                         <option value="az">A - Z</option>
-                        <option value="date_desc">Recent Date</option>
-                        <option value="date_asc">Oldest Date</option>
+                        <option value="date_desc">Recent Visit</option>
+                        <option value="date_asc">Oldest Visit</option>
                     </select>
                 </div>
             </header>
@@ -195,7 +216,7 @@
                 </div>
             
             <div id="journal-empty" class="hidden text-center py-20 text-stone-400">
-                <i data-lucide="book-open" class="mx-auto w-12 h-12 mb-4 opacity-50"></i>
+                <i data-lucide="book-open" class="mx-auto w-12 h-12 mb-4 opacity-30"></i>
                 <p>No stamps found. Add your first memory.</p>
             </div>
         </section>
@@ -203,10 +224,12 @@
         <section id="page-feed" class="page-view hidden max-w-3xl mx-auto animate-in fade-in duration-500">
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-4xl font-heading text-stone-800">Pilgrimage Feed</h2>
-                <div class="text-xs font-bold text-stone-400 bg-stone-100 px-3 py-1 rounded-full">Global / Following</div>
             </div>
             <div id="feed-items" class="space-y-6">
                 <div class="text-center py-10"><p class="text-stone-400">Loading feed...</p></div>
+            </div>
+            <div class="mt-8 text-center hidden" id="feed-load-more">
+                <button onclick="fetchFeed(true)" class="bg-stone-100 text-stone-500 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200">Load More</button>
             </div>
         </section>
 
@@ -217,9 +240,8 @@
                 <input type="text" id="user-search-input" placeholder="Find travelers by username..." class="w-full py-3 outline-none text-sm" onkeyup="debounceSearchUsers()">
             </div>
             
-            <h3 class="font-bold text-stone-400 text-xs uppercase tracking-widest mb-4">Results / Recommendations</h3>
-            <div id="followers-list" class="space-y-4">
-                </div>
+            <h3 class="font-bold text-stone-400 text-xs uppercase tracking-widest mb-4">Results</h3>
+            <div id="followers-list" class="space-y-4"></div>
         </section>
 
         <section id="page-map" class="page-view hidden animate-in fade-in duration-500">
@@ -282,46 +304,79 @@
     </div>
 
     <div id="view-modal-overlay" class="fixed inset-0 bg-stone-900/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 md:p-10" onclick="closeViewModal()">
-        <div class="bg-white rounded-[2rem] max-w-4xl w-full max-h-[90vh] overflow-y-auto md:overflow-hidden flex flex-col md:flex-row shadow-2xl transition-all scale-95" id="view-modal-container" onclick="event.stopPropagation()">
-            <div id="view-visual-side" class="md:w-1/2 min-h-[300px] md:h-auto bg-[#f8f6f5] relative p-10 flex items-center justify-center">
+        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-y-auto md:overflow-hidden flex flex-col md:flex-row shadow-2xl transition-all scale-95" id="view-modal-container" onclick="event.stopPropagation()">
+            
+            <div id="view-visual-side" class="w-full md:w-1/2 min-h-[250px] md:h-auto bg-[#f0edea] relative flex items-center justify-center overflow-hidden">
                 </div>
-            <div class="md:w-1/2 p-8 md:p-12 flex flex-col">
+            
+            <div class="w-full md:w-1/2 p-6 md:p-12 flex flex-col bg-white">
                 <div class="mb-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div id="v-avatar" class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-bold"></div>
-                        <span id="v-user" class="text-xs font-bold text-stone-400 uppercase"></span>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div id="v-avatar" class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-bold overflow-hidden border border-emerald-50"></div>
+                        <span id="v-user" class="text-xs font-bold text-stone-400 uppercase tracking-wide"></span>
                     </div>
-                    <p id="v-city" class="text-xs uppercase tracking-[0.2em] text-emerald-600 font-bold mb-2"></p>
-                    <h3 id="v-title" class="text-3xl md:text-4xl font-heading leading-tight text-stone-800"></h3>
+
+                    <a id="v-map-link" href="#" target="_blank" class="block w-fit text-xs uppercase tracking-[0.2em] font-bold mb-2 hover:underline transition-all decoration-2 underline-offset-4" style="color: var(--theme-color);"></a>
+                    
+                    <h3 id="v-title" class="text-3xl md:text-5xl font-heading leading-none text-stone-800"></h3>
                 </div>
-                <div class="flex-1 overflow-y-auto no-scrollbar">
-                    <p id="v-notes" class="text-stone-600 leading-relaxed italic text-lg"></p>
+                
+                <div class="flex-1 overflow-y-auto no-scrollbar mb-6">
+                    <p id="v-notes" class="text-stone-600 leading-relaxed italic text-lg md:text-xl font-serif"></p>
                 </div>
-                <div class="mt-8 pt-6 border-t border-stone-100 flex items-center justify-between">
-                    <span id="v-date" class="text-stone-400 text-xs font-bold"></span>
-                    <button onclick="closeViewModal()" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors">Dismiss</button>
+                
+                <div class="mt-auto pt-6 border-t border-stone-100 flex items-center justify-between">
+                    <span id="v-date" class="text-stone-400 text-xs font-bold uppercase tracking-widest"></span>
+                    <button onclick="closeViewModal()" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors text-stone-600">Dismiss</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="profile-modal" class="fixed inset-0 bg-white z-[110] hidden overflow-y-auto">
-        <div class="max-w-4xl mx-auto p-6 md:p-12">
-            <button onclick="closeProfileModal()" class="absolute top-6 right-6 p-2 bg-stone-100 rounded-full hover:bg-stone-200"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <div class="max-w-6xl mx-auto p-4 md:p-12 min-h-screen">
+            <button onclick="closeProfileModal()" class="fixed top-6 right-6 p-2 bg-stone-100 rounded-full hover:bg-stone-200 z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
             
-            <div class="text-center mb-12">
-                <div id="p-avatar-lg" class="w-24 h-24 mx-auto rounded-full bg-emerald-800 text-white text-3xl font-heading flex items-center justify-center mb-4 border-4 border-emerald-50 shadow-lg"></div>
-                <h2 id="p-name" class="text-3xl font-heading mb-1"></h2>
-                <p id="p-username" class="text-stone-400 text-sm font-bold uppercase tracking-widest mb-6"></p>
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-12 mt-10 md:mt-0">
+                <div id="p-avatar-lg" class="w-32 h-32 rounded-full bg-emerald-800 text-white text-4xl font-heading flex items-center justify-center border-4 border-emerald-50 shadow-xl overflow-hidden shrink-0"></div>
                 
-                <div id="p-actions" class="flex justify-center gap-3">
-                    </div>
+                <div class="text-center md:text-left flex-1">
+                    <h2 id="p-name" class="text-4xl md:text-5xl font-heading mb-2 text-stone-800"></h2>
+                    <p id="p-username" class="text-stone-400 text-sm font-bold uppercase tracking-widest mb-6"></p>
+                    
+                    <div id="p-actions" class="flex justify-center md:justify-start gap-3"></div>
+                </div>
             </div>
 
             <div class="border-t border-stone-100 pt-8">
-                <h3 class="text-2xl font-heading mb-6 pl-2 border-l-4 border-emerald-900">Pilgrim's Log</h3>
-                <div class="masonry-grid" id="profile-grid">
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
+                    <h3 class="text-2xl font-heading pl-2 border-l-4 border-emerald-900">Pilgrim's Log</h3>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <select id="p-filter-loc" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none"><option value="ALL">All Places</option></select>
+                        <select id="p-filter-sort" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                        </select>
                     </div>
+                </div>
+
+                <div class="masonry-grid" id="profile-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-profile-modal" class="fixed inset-0 bg-stone-900/50 z-[150] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <h3 class="text-xl font-heading mb-4">Edit Profile</h3>
+            <div class="space-y-4">
+                <input id="ep-name" type="text" placeholder="Display Name" class="w-full p-3 border rounded-lg text-sm">
+                
+                <label class="block text-xs font-bold text-stone-400">Profile Picture URL</label>
+                <input id="ep-avatar" type="text" placeholder="https://..." class="w-full p-3 border rounded-lg text-sm">
+                
+                <button onclick="saveProfile()" class="w-full bg-emerald-900 text-white py-3 rounded-lg font-bold mt-2">Save Changes</button>
+                <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="w-full text-xs text-stone-400 mt-2 hover:underline">Cancel</button>
             </div>
         </div>
     </div>
@@ -351,57 +406,62 @@
 
     <script>
         // --- CONFIGURATION ---
-    const SUPABASE_URL = 'https://ujyoxnrfchzyduhtcpaz.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M'
+        const SUPABASE_URL = 'https://ujyoxnrfchzyduhtcpaz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M';
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
 
         // --- STATE ---
         let currentUser = null;
         let userProfile = null;
-        let myStamps = []; // Local cache
+        let myStamps = [];
         let feedStamps = [];
+        let feedPage = 0;
         let followingIds = [];
-        
-        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
+        let viewingProfileStamps = []; // Cache for profile view
 
         // --- INIT ---
         window.addEventListener('load', async () => {
             lucide.createIcons();
-            
-            // Check Session
             const { data: { session } } = await supabaseClient.auth.getSession();
             handleAuthState(session);
 
-            // Auth Listener
-            supabaseClient.auth.onAuthStateChange((_event, session) => {
-                handleAuthState(session);
-            });
+            supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
+            
+            // Check for hash routing (e.g. #username)
+            if(window.location.hash) {
+                const handle = window.location.hash.substring(1).replace('@','');
+                findUserByHandle(handle);
+            }
         });
 
-        // --- AUTH LOGIC ---
+        async function findUserByHandle(handle) {
+            const { data } = await supabaseClient.from('profiles').select('id').eq('username', handle).single();
+            if(data) openUserProfile(data.id);
+        }
+
+        // --- AUTH ---
         async function handleAuthState(session) {
             if (session?.user) {
                 currentUser = session.user;
                 document.getElementById('auth-wall').classList.add('hidden');
                 
-                // Fetch Profile
-                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-                if(profile) userProfile = profile;
-                else {
-                    // Create minimal profile if missing
+                // Load Profile
+                let { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+                if(!profile) {
                     const { data: newP } = await supabaseClient.from('profiles').insert([{ id: currentUser.id, username: currentUser.email.split('@')[0], display_name: 'Traveler' }]).select().single();
-                    userProfile = newP;
+                    profile = newP;
                 }
-
+                userProfile = profile;
                 renderDesktopProfile();
-                await fetchFollowing();
-                await fetchMyStamps();
-                fetchFeed(); // Load background
+
+                // Initial Data Load
+                await Promise.all([fetchFollowing(), fetchMyStamps()]);
+                fetchFeed(false);
             } else {
                 currentUser = null;
-                userProfile = null;
                 document.getElementById('auth-wall').classList.remove('hidden');
             }
         }
@@ -418,10 +478,8 @@
             const email = document.getElementById('signup-email').value;
             const pass = document.getElementById('signup-password').value;
             const user = document.getElementById('signup-username').value;
-            
             const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
             if(error) { document.getElementById('signup-msg').innerText = error.message; return; }
-            
             if(data.user) {
                 await supabaseClient.from('profiles').insert([{ id: data.user.id, username: user, display_name: user }]);
                 document.getElementById('signup-msg').innerText = "Success! Check email.";
@@ -433,95 +491,80 @@
             location.reload();
         }
 
-        // --- DATA FETCHING ---
+        // --- DATA ---
         async function fetchMyStamps() {
             const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             myStamps = data || [];
-            
-            // Populate Filters
             populateFilters(myStamps);
-            applyJournalFilters(); // Renders Grid
+            applyJournalFilters();
             document.getElementById('journal-count-display').innerText = `${myStamps.length} sacred sites visited`;
         }
 
         async function fetchFollowing() {
-            // Get list of IDs I follow
             const { data } = await supabaseClient.from('followers').select('following_id').eq('follower_id', currentUser.id);
             followingIds = data ? data.map(r => r.following_id) : [];
-            // Add myself to see my own posts in feed
+            // Add myself so my posts show in feed
             followingIds.push(currentUser.id);
         }
 
-        async function fetchFeed() {
-            if(!currentUser) return;
-            // Fetch stamps from followed users (Simulated "IN" query)
-            // Note: Supabase .in() limit is usually fine for personal apps.
-            if(followingIds.length === 0) {
-                 document.getElementById('feed-items').innerHTML = `<div class="text-center py-10 text-stone-400">Follow people to see their journey here.</div>`;
-                 return;
-            }
+        async function fetchFeed(loadMore = false) {
+            if(!currentUser || followingIds.length === 0) return;
+            
+            if(!loadMore) { feedStamps = []; feedPage = 0; }
+            else feedPage++;
 
-            const { data, error } = await supabaseClient
+            const PAGE_SIZE = 10;
+            const from = feedPage * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data } = await supabaseClient
                 .from('stamps')
-                .select(`*, profiles(username, display_name, avatar_url)`)
+                .select(`*, profiles(username, display_name, avatar_url, id)`)
                 .in('user_id', followingIds)
                 .order('created_at', { ascending: false })
-                .limit(50);
+                .range(from, to);
 
-            if(data) {
-                feedStamps = data;
-                renderFeedHTML(data);
-            }
-        }
-
-        async function searchUsers() {
-            const query = document.getElementById('user-search-input').value;
-            if(query.length < 3) return;
-            
-            const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${query}%`).limit(10);
-            renderSearchResults(data || []);
-        }
-
-        let debounceTimer;
-        function debounceSearchUsers() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(searchUsers, 500);
-        }
-
-        async function toggleFollow(targetId, btnElement) {
-            const isFollowing = followingIds.includes(targetId);
-            
-            if (isFollowing) {
-                await supabaseClient.from('followers').delete().match({ follower_id: currentUser.id, following_id: targetId });
-                followingIds = followingIds.filter(id => id !== targetId);
-                btnElement.innerText = "Follow";
-                btnElement.classList.replace('text-stone-300', 'bg-emerald-900');
-                btnElement.classList.add('text-white');
+            if(data && data.length > 0) {
+                feedStamps = [...feedStamps, ...data];
+                renderFeedHTML(feedStamps);
+                document.getElementById('feed-load-more').classList.remove('hidden');
             } else {
-                await supabaseClient.from('followers').insert([{ follower_id: currentUser.id, following_id: targetId }]);
-                followingIds.push(targetId);
-                btnElement.innerText = "Following";
-                btnElement.classList.remove('bg-emerald-900', 'text-white');
-                btnElement.classList.add('text-stone-300');
+                document.getElementById('feed-load-more').classList.add('hidden');
+                if(feedPage === 0) document.getElementById('feed-items').innerHTML = `<p class="text-center text-stone-400 mt-10">Your feed is quiet. Follow others or add a stamp.</p>`;
             }
-            fetchFeed(); // Refresh feed
         }
 
-        // --- RENDERING UI ---
-
-        // 1. Journal Masonry
+        // --- JOURNAL RENDERING ---
         function populateFilters(stamps) {
             const locSelect = document.getElementById('filter-location');
             const yearSelect = document.getElementById('filter-year');
             
-            const cities = [...new Set(stamps.map(s => s.city ? s.city.split(',')[0].trim() : 'Unknown'))].sort();
-            const years = [...new Set(stamps.map(s => s.visit_date ? s.visit_date.slice(-4) : 'Unknown'))].sort().reverse(); // Dumb parse looking for last 4 chars
+            // Group by State
+            const usStates = new Set();
+            const international = new Set();
             
-            // Clear but keep first option
-            while(locSelect.options.length > 1) locSelect.remove(1);
-            while(yearSelect.options.length > 1) yearSelect.remove(1);
+            stamps.forEach(s => {
+                if(s.country_code === 'US' && s.state_name) usStates.add(s.state_name);
+                else if(s.country_code !== 'US') international.add(s.country_code); // Use country name ideally
+            });
 
-            cities.forEach(c => locSelect.add(new Option(c, c)));
+            // Reset
+            locSelect.innerHTML = '<option value="ALL">All Locations</option>';
+            
+            if(usStates.size > 0) {
+                const grp = document.createElement('optgroup'); grp.label = "United States";
+                [...usStates].sort().forEach(st => grp.appendChild(new Option(st, st)));
+                locSelect.appendChild(grp);
+            }
+            if(international.size > 0) {
+                const grp = document.createElement('optgroup'); grp.label = "International";
+                [...international].sort().forEach(c => grp.appendChild(new Option(c, c))); // Ideally map code to name
+                locSelect.appendChild(grp);
+            }
+
+            // Years
+            const years = [...new Set(stamps.map(s => s.visit_date ? s.visit_date.slice(-4) : 'Unknown'))].sort().reverse(); 
+            yearSelect.innerHTML = '<option value="ALL">All Years</option>';
             years.forEach(y => yearSelect.add(new Option(y, y)));
         }
 
@@ -531,17 +574,17 @@
             const sort = document.getElementById('filter-sort').value;
 
             let filtered = myStamps.filter(s => {
-                const sCity = s.city ? s.city.split(',')[0].trim() : 'Unknown';
                 const sYear = s.visit_date ? s.visit_date.slice(-4) : 'Unknown';
-                return (loc === 'ALL' || sCity === loc) && (year === 'ALL' || sYear === year);
+                // Check US State OR Country Code match
+                const locMatch = loc === 'ALL' || (s.state_name === loc) || (s.country_code === loc);
+                return locMatch && (year === 'ALL' || sYear === year);
             });
 
-            // Sorting
+            // Sort
             filtered.sort((a, b) => {
                 if (sort === 'newest') return new Date(b.created_at) - new Date(a.created_at);
                 if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
                 if (sort === 'az') return a.name.localeCompare(b.name);
-                // Attempt date sort
                 if (sort.includes('date')) {
                     const dA = parseDate(a.visit_date);
                     const dB = parseDate(b.visit_date);
@@ -551,61 +594,63 @@
             });
 
             const grid = document.getElementById('journal-grid');
-            const empty = document.getElementById('journal-empty');
-            
             if(filtered.length === 0) {
-                grid.innerHTML = '';
-                empty.classList.remove('hidden');
+                grid.innerHTML = ''; document.getElementById('journal-empty').classList.remove('hidden');
             } else {
-                empty.classList.add('hidden');
-                grid.innerHTML = filtered.map((s, idx) => `
+                document.getElementById('journal-empty').classList.add('hidden');
+                
+                // Add Ink Stamp Decoration at start
+                let html = `<div class="masonry-item"><div class="ink-stamp-deco"><i data-lucide="stamp" class="w-16 h-16 text-stone-300"></i></div></div>`;
+                
+                html += filtered.map((s, idx) => `
                     <div class="masonry-item" onclick="openViewModal(${idx}, 'local')">
                         ${createStampCardHTML(s, idx)}
                     </div>
                 `).join('');
+                grid.innerHTML = html;
+                lucide.createIcons();
             }
-            lucide.createIcons();
         }
 
         function createStampCardHTML(s, idx) {
             const theme = themes[idx % themes.length];
-            // If image exists, return Stamp style, else Journal Card style
+            const cityColor = `style="color: ${theme}"`;
+            
             if (s.img_url) {
                 return `
                 <div class="stamp w-full" style="--theme-color: ${theme}">
                     <div class="stamp-image"><img src="${s.img_url}"></div>
                     <div class="stamp-overlay-text">
-                        <h4 class="font-heading text-lg leading-tight mb-1">${s.name}</h4>
-                        <p class="text-[8px] uppercase tracking-widest opacity-80">${s.city}</p>
+                        <h4 class="font-heading text-xl leading-none mb-1">${s.name}</h4>
+                        <p class="text-[9px] uppercase tracking-widest opacity-90">${s.city}</p>
                     </div>
                 </div>`;
             } else {
                 return `
                 <div class="journal-card w-full" style="--theme-color: ${theme}">
-                    <p class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-1">${s.city}</p>
-                    <h4 class="font-heading text-xl mb-2 text-stone-800">${s.name}</h4>
-                    <p class="text-[13px] text-stone-500 italic line-clamp-4 leading-relaxed">"${s.notes}"</p>
-                    <div class="mt-4 flex items-center justify-between">
+                    <p class="text-[9px] font-bold uppercase tracking-widest" ${cityColor}>${s.city}</p>
+                    <h4 class="font-heading text-2xl leading-tight text-stone-800">${s.name}</h4>
+                    ${s.notes ? `<p class="text-[13px] text-stone-500 italic line-clamp-4 leading-relaxed">"${s.notes}"</p>` : ''}
+                    <div class="mt-2 flex items-center justify-between pt-2">
                         <span class="text-[9px] text-stone-300 font-bold">${s.visit_date || ''}</span>
-                        <i data-lucide="pen-tool" class="w-3 h-3 text-stone-200"></i>
+                        <i data-lucide="feather" class="w-3 h-3 text-stone-200"></i>
                     </div>
                 </div>`;
             }
         }
 
-        // 2. Feed Rendering
+        // --- FEED & SEARCH ---
         function renderFeedHTML(stamps) {
             const container = document.getElementById('feed-items');
             container.innerHTML = stamps.map((s, idx) => {
                 const theme = themes[idx % themes.length];
-                const username = s.profiles?.username || 'Unknown';
-                const avatar = s.profiles?.avatar_url || null;
-                const initials = username.substring(0,2).toUpperCase();
+                const u = s.profiles;
+                const initials = u.username.substring(0,2).toUpperCase();
 
-                // Generate left visual (Reuse createStampCardHTML logic but adapt sizing)
+                // Visual Left
                 const visual = s.img_url 
-                    ? `<div class="stamp w-full max-w-[100px]" style="--theme-color: ${theme}"><div class="stamp-image"><img src="${s.img_url}"></div></div>`
-                    : `<div class="w-full h-24 bg-white border-l-4 border-[${theme}] flex items-center justify-center text-center p-2 shadow-sm"><span class="font-heading text-stone-800 leading-tight">${s.name}</span></div>`;
+                    ? `<div class="stamp w-full h-full" style="--theme-color: ${theme}"><div class="stamp-image"><img src="${s.img_url}"></div></div>`
+                    : `<div class="w-20 h-20 rounded-full border-2 border-[${theme}] flex items-center justify-center bg-white"><i data-lucide="map-pin" class="text-stone-300"></i></div>`;
 
                 return `
                 <div class="feed-container-card" onclick="openViewModal('${s.id}', 'feed')">
@@ -613,155 +658,235 @@
                         ${visual}
                     </div>
                     <div class="p-4 md:p-6 flex-1 flex flex-col justify-center border-l border-stone-50">
-                        <div class="flex items-center gap-2 mb-2 cursor-pointer" onclick="event.stopPropagation(); openUserProfile('${s.user_id}')">
-                            <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[8px] font-bold text-emerald-700 overflow-hidden">
-                                ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : initials}
+                        <div class="flex items-center gap-2 mb-2 cursor-pointer group" onclick="event.stopPropagation(); openUserProfile('${s.user_id}')">
+                            <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 overflow-hidden border border-white shadow-sm">
+                                ${u.avatar_url ? `<img src="${u.avatar_url}" class="w-full h-full object-cover">` : initials}
                             </div>
-                            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-tighter hover:text-emerald-700 transition">${username}</span>
+                            <div>
+                                <div class="text-[11px] font-bold text-stone-800 group-hover:text-emerald-700 transition">${u.username}</div>
+                                <div class="text-[9px] text-stone-400">added a memory</div>
+                            </div>
                         </div>
-                        <h3 class="font-heading text-xl md:text-2xl text-stone-800 mb-1 leading-tight">${s.name}</h3>
-                        <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-widest mb-3">${s.city}</p>
-                        <p class="text-stone-500 text-sm italic line-clamp-2">"${s.notes}"</p>
+                        <h3 class="font-heading text-xl text-stone-800 mb-1 leading-none">${s.name}</h3>
+                        <p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color: ${theme}">${s.city}</p>
+                        ${s.notes ? `<p class="text-stone-500 text-xs italic line-clamp-2">"${s.notes}"</p>` : ''}
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        // 3. User Search Results
+        async function searchUsers() {
+            const query = document.getElementById('user-search-input').value;
+            if(query.length < 3) return;
+            const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${query}%`).limit(10);
+            renderSearchResults(data || []);
+        }
+        
+        let debounceTimer;
+        function debounceSearchUsers() { clearTimeout(debounceTimer); debounceTimer = setTimeout(searchUsers, 500); }
+
         function renderSearchResults(profiles) {
             const list = document.getElementById('followers-list');
-            if(profiles.length === 0) { list.innerHTML = '<p class="text-stone-400 text-sm italic">No users found.</p>'; return; }
-            
             list.innerHTML = profiles.map(p => {
                 const isMe = p.id === currentUser.id;
                 const isFollowing = followingIds.includes(p.id);
-                const initials = p.username.substring(0,2).toUpperCase();
-
                 return `
-                <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-stone-100 shadow-sm">
-                    <div class="flex items-center gap-4 cursor-pointer" onclick="openUserProfile('${p.id}')">
-                        <div class="w-11 h-11 rounded-full bg-stone-50 text-emerald-800 flex items-center justify-center font-bold border border-stone-100 overflow-hidden">
-                             ${p.avatar_url ? `<img src="${p.avatar_url}" class="w-full h-full object-cover">` : initials}
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-stone-100 shadow-sm hover:shadow-md transition cursor-pointer" onclick="openUserProfile('${p.id}')">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-stone-100 overflow-hidden">
+                             ${p.avatar_url ? `<img src="${p.avatar_url}" class="w-full h-full object-cover">` : ''}
                         </div>
                         <div>
                             <h4 class="font-bold text-stone-800 text-sm">${p.display_name || p.username}</h4>
                             <p class="text-[10px] text-stone-400 uppercase tracking-widest">@${p.username}</p>
                         </div>
                     </div>
-                    ${!isMe ? `
-                    <button onclick="toggleFollow('${p.id}', this)" class="${isFollowing ? 'text-stone-300' : 'bg-emerald-900 text-white shadow-sm'} px-5 py-1.5 rounded-full text-xs font-bold transition-all">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
-                    ` : ''}
+                    ${!isMe ? `<button onclick="event.stopPropagation(); toggleFollow('${p.id}', this)" class="${isFollowing ? 'bg-stone-100 text-stone-400' : 'bg-emerald-900 text-white'} px-4 py-1.5 rounded-full text-xs font-bold transition">${isFollowing ? 'Following' : 'Follow'}</button>` : ''}
                 </div>`;
             }).join('');
         }
 
-        function renderDesktopProfile() {
-            const container = document.getElementById('desktop-profile-foot');
-            if(!userProfile) return;
-            const initials = userProfile.username.substring(0,2).toUpperCase();
-            container.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs overflow-hidden">
-                    ${userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">` : initials}
-                </div>
-                <div class="flex-1">
-                    <div class="text-xs font-bold text-stone-700">@${userProfile.username}</div>
-                    <div class="text-[9px] text-stone-400">View Profile</div>
-                </div>
-            `;
+        async function toggleFollow(targetId, btn) {
+            const isFollowing = followingIds.includes(targetId);
+            if (isFollowing) {
+                await supabaseClient.from('followers').delete().match({ follower_id: currentUser.id, following_id: targetId });
+                followingIds = followingIds.filter(id => id !== targetId);
+                btn.innerText = "Follow"; btn.className = "bg-emerald-900 text-white px-4 py-1.5 rounded-full text-xs font-bold transition";
+            } else {
+                await supabaseClient.from('followers').insert([{ follower_id: currentUser.id, following_id: targetId }]);
+                followingIds.push(targetId);
+                btn.innerText = "Following"; btn.className = "bg-stone-100 text-stone-400 px-4 py-1.5 rounded-full text-xs font-bold transition";
+            }
+            fetchFeed(false);
         }
 
-        // --- NAVIGATION ---
-        function switchView(viewName) {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`page-${viewName}`).classList.remove('hidden');
-            
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-link'));
-            const btn = document.getElementById(`btn-${viewName}`);
-            if(btn) btn.classList.add('active-link');
+        // --- PROFILE VIEW ---
+        async function openUserProfile(userId) {
+            document.getElementById('profile-modal').classList.remove('hidden');
+            const isMe = userId === currentUser.id;
 
-            window.scrollTo({top: 0, behavior: 'smooth'});
-            
-            if(viewName === 'feed') fetchFeed(); // Refresh feed
+            // Fetch
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+            const { data: stamps } = await supabaseClient.from('stamps').select('*').eq('user_id', userId).order('created_at', {ascending:false});
+            viewingProfileStamps = stamps || [];
+
+            // Render Header
+            const initials = profile.username.substring(0,2).toUpperCase();
+            document.getElementById('p-avatar-lg').innerHTML = profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : initials;
+            document.getElementById('p-name').innerText = profile.display_name;
+            document.getElementById('p-username').innerText = `@${profile.username} • ${stamps.length} Stamps`;
+
+            // Actions
+            const actionDiv = document.getElementById('p-actions');
+            if(isMe) {
+                actionDiv.innerHTML = `
+                    <button onclick="document.getElementById('edit-profile-modal').classList.remove('hidden')" class="px-6 py-2 rounded-full border border-stone-200 text-stone-600 font-bold text-xs hover:bg-stone-50">Edit Profile</button>
+                    <button onclick="handleLogout()" class="px-6 py-2 rounded-full border border-stone-200 text-red-400 font-bold text-xs hover:bg-stone-50">Log Out</button>
+                `;
+                // Pre-fill edit modal
+                document.getElementById('ep-name').value = profile.display_name;
+                document.getElementById('ep-avatar').value = profile.avatar_url || '';
+            } else {
+                const isFollowing = followingIds.includes(userId);
+                actionDiv.innerHTML = `<button onclick="toggleFollow('${userId}', this)" class="${isFollowing ? 'text-stone-400 bg-stone-100' : 'bg-emerald-900 text-white'} px-8 py-2 rounded-full font-bold text-xs transition">${isFollowing ? 'Following' : 'Follow'}</button>`;
+            }
+
+            // Populate Filter dropdown
+            const locSel = document.getElementById('p-filter-loc');
+            const cities = [...new Set(stamps.map(s => s.city))];
+            locSel.innerHTML = '<option value="ALL">All Places</option>';
+            cities.forEach(c => locSel.add(new Option(c, c)));
+
+            renderProfileMasonry();
         }
 
-        // --- MODAL LOGIC (ADD / EDIT) ---
+        function renderProfileMasonry() {
+            const loc = document.getElementById('p-filter-loc').value;
+            const sort = document.getElementById('p-filter-sort').value;
+
+            let filtered = viewingProfileStamps.filter(s => loc === 'ALL' || s.city === loc);
+            if(sort === 'oldest') filtered.reverse();
+
+            const grid = document.getElementById('profile-grid');
+            grid.innerHTML = filtered.map((s, idx) => `
+                <div class="masonry-item" onclick="openViewModal(${JSON.stringify(s).replace(/"/g, '&quot;')}, 'direct')">
+                    ${createStampCardHTML(s, idx)}
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('ep-name').value;
+            const av = document.getElementById('ep-avatar').value;
+            await supabaseClient.from('profiles').update({ display_name: name, avatar_url: av }).eq('id', currentUser.id);
+            location.reload();
+        }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        // --- VIEW MODAL ---
+        function openViewModal(identifier, source) {
+            let stamp;
+            if (source === 'local') stamp = myStamps[identifier];
+            else if (source === 'feed') stamp = feedStamps.find(s => s.id === identifier);
+            else stamp = identifier; // Direct object
+
+            if (!stamp) return;
+
+            // Content
+            document.getElementById('v-title').innerText = stamp.name;
+            const cityLink = document.getElementById('v-map-link');
+            cityLink.innerText = stamp.city;
+            cityLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
+            cityLink.style.color = themes[Math.floor(Math.random()*themes.length)]; // Theme color
+
+            document.getElementById('v-notes').innerText = stamp.notes || ""; // Blank if no notes
+            
+            // Date logic
+            if(stamp.visit_date) {
+                document.getElementById('v-date').innerText = stamp.visit_date;
+                document.getElementById('v-date').classList.remove('hidden');
+            } else {
+                document.getElementById('v-date').classList.add('hidden');
+            }
+
+            // User Info Logic
+            let uName, uAv;
+            if(stamp.user_id === currentUser.id) {
+                uName = userProfile.username;
+                uAv = userProfile.avatar_url;
+            } else if(stamp.profiles) {
+                uName = stamp.profiles.username;
+                uAv = stamp.profiles.avatar_url;
+            } else {
+                uName = "Unknown"; uAv = null;
+            }
+            document.getElementById('v-user').innerText = uName;
+            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover">` : uName.substring(0,2).toUpperCase();
+
+            // Visual Side
+            const visual = document.getElementById('view-visual-side');
+            if(stamp.img_url) {
+                // Mobile: Full image, Desktop: Contained
+                visual.innerHTML = `<img src="${stamp.img_url}" class="w-full h-full object-cover">`;
+                visual.classList.remove('h-32'); // Ensure full height availability
+            } else {
+                // Blank gray area
+                visual.innerHTML = '';
+                // Adjust height for mobile visual cue
+                visual.classList.add('h-32'); 
+            }
+
+            document.getElementById('view-modal-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
+        }
+        function closeViewModal() {
+            document.getElementById('view-modal-container').classList.add('scale-95');
+            setTimeout(() => document.getElementById('view-modal-overlay').classList.add('hidden'), 150);
+        }
+
+        // --- ADD MODAL & GOOGLE MAPS ---
         let googleMap, googleMarker, autocomplete;
-
         function initGoogleTools() {
             autocomplete = new google.maps.places.Autocomplete(document.getElementById('s-address'));
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
                 if (!place.geometry) return;
-
                 document.getElementById('s-name').value = place.name;
-                
-                // Parse address components
-                let city = '', stateCode = '', stateName = '', country = 'INTL';
+
+                let city = '', state = '', country = 'INTL';
                 if (place.address_components) {
                     place.address_components.forEach(c => {
                         if (c.types.includes('locality')) city = c.long_name;
-                        else if (c.types.includes('administrative_area_level_1')) {
-                            stateCode = c.short_name;
-                            stateName = c.long_name;
-                        } else if (c.types.includes('country')) country = c.short_name;
+                        if (c.types.includes('administrative_area_level_1')) state = c.long_name;
+                        if (c.types.includes('country')) country = c.short_name;
                     });
                 }
-                document.getElementById('geo-city').value = city || place.name;
-                document.getElementById('geo-state-code').value = stateCode;
-                document.getElementById('geo-state-name').value = stateName;
+                document.getElementById('geo-city').value = city;
+                document.getElementById('geo-state-name').value = state;
                 document.getElementById('geo-country').value = country;
-
-                // Map Preview
+                
                 if(googleMap) {
                     googleMap.setCenter(place.geometry.location);
                     googleMap.setZoom(15);
                     googleMarker.setPosition(place.geometry.location);
                 }
             });
-            
-            // Init Map Preview
-            googleMap = new google.maps.Map(document.getElementById('map-preview'), {
-                center: { lat: 0, lng: 0 }, zoom: 2, disableDefaultUI: true
-            });
+            googleMap = new google.maps.Map(document.getElementById('map-preview'), { center: { lat: 0, lng: 0 }, zoom: 2, disableDefaultUI: true });
             googleMarker = new google.maps.Marker({ map: googleMap });
         }
 
-        function openAddModal(existing = null) {
+        function openAddModal() {
             document.getElementById('add-modal-overlay').classList.remove('hidden');
-            
-            if(existing) {
-                document.getElementById('modal-title-text').innerText = "Edit Entry";
-                document.getElementById('edit-id').value = existing.id;
-                document.getElementById('s-name').value = existing.name;
-                document.getElementById('s-address').value = existing.city;
-                document.getElementById('s-date').value = existing.visit_date || '';
-                document.getElementById('s-notes').value = existing.notes;
-                document.getElementById('current-img-url').value = existing.img_url || '';
-                if(existing.img_url) {
-                    document.getElementById('img-preview').src = existing.img_url;
-                    document.getElementById('preview-box').classList.remove('hidden');
-                }
-                // Keep hidden geo fields same unless user searches again
-                document.getElementById('geo-city').value = existing.city.split(',')[0];
-            } else {
-                document.getElementById('modal-title-text').innerText = "Add New Entry";
-                document.getElementById('edit-id').value = '';
-                document.getElementById('s-name').value = '';
-                document.getElementById('s-address').value = '';
-                document.getElementById('s-date').value = '';
-                document.getElementById('s-notes').value = '';
-                document.getElementById('s-image-input').value = '';
-                document.getElementById('current-img-url').value = '';
-                document.getElementById('preview-box').classList.add('hidden');
-            }
+            document.getElementById('s-name').value = '';
+            document.getElementById('s-address').value = '';
+            document.getElementById('s-date').value = '';
+            document.getElementById('s-notes').value = '';
+            document.getElementById('s-image-input').value = '';
+            document.getElementById('preview-box').classList.add('hidden');
         }
-
-        function closeAddModal() {
-            document.getElementById('add-modal-overlay').classList.add('hidden');
-        }
+        function closeAddModal() { document.getElementById('add-modal-overlay').classList.add('hidden'); }
 
         function previewImage() {
             const file = document.getElementById('s-image-input').files[0];
@@ -774,10 +899,8 @@
                 reader.readAsDataURL(file);
             }
         }
-        
         function clearImage() {
             document.getElementById('s-image-input').value = '';
-            document.getElementById('current-img-url').value = '';
             document.getElementById('preview-box').classList.add('hidden');
         }
 
@@ -785,8 +908,7 @@
             const btn = document.getElementById('save-btn');
             btn.innerText = "Processing...";
             
-            // Image Upload
-            let imgUrl = document.getElementById('current-img-url').value;
+            let imgUrl = null;
             const file = document.getElementById('s-image-input').files[0];
             
             if(file) {
@@ -799,131 +921,50 @@
             }
 
             const payload = {
-                name: document.getElementById('s-name').value,
-                city: document.getElementById('s-address').value, // Use the full string from autocomplete or input
-                visit_date: document.getElementById('s-date').value,
-                notes: document.getElementById('s-notes').value,
                 user_id: currentUser.id,
+                name: document.getElementById('s-name').value,
+                city: document.getElementById('s-address').value,
+                visit_date: document.getElementById('s-date').value || null,
+                notes: document.getElementById('s-notes').value || null,
                 img_url: imgUrl,
-                // Geo fields
                 country_code: document.getElementById('geo-country').value || 'INTL',
-                state_code: document.getElementById('geo-state-code').value || '',
-                full_state_name: document.getElementById('geo-state-name').value || ''
+                state_name: document.getElementById('geo-state-name').value || ''
             };
 
-            const editId = document.getElementById('edit-id').value;
-            if(editId) await supabaseClient.from('stamps').update(payload).eq('id', editId);
-            else await supabaseClient.from('stamps').insert([payload]);
-
-            closeAddModal();
-            fetchMyStamps(); // Refresh UI
+            const { error } = await supabaseClient.from('stamps').insert([payload]);
+            if(error) alert("Error saving: " + error.message);
+            else {
+                closeAddModal();
+                fetchMyStamps();
+            }
             btn.innerText = "Save Stamp";
         }
 
-        // --- MODAL LOGIC (VIEW DETAILS) ---
-        function openViewModal(identifier, source) {
-            // Find stamp object
-            let stamp;
-            if (source === 'local') stamp = myStamps[identifier]; // identifier is index
-            else if (source === 'feed') stamp = feedStamps.find(s => s.id === identifier); // identifier is UUID
-            else stamp = identifier; // Passed directly
-
-            if (!stamp) return;
-
-            const theme = themes[Math.floor(Math.random()*themes.length)];
-            
-            // Populate Content
-            document.getElementById('v-title').innerText = stamp.name;
-            document.getElementById('v-city').innerText = stamp.city;
-            document.getElementById('v-notes').innerText = stamp.notes || "No reflection added.";
-            document.getElementById('v-date').innerText = stamp.visit_date || 'Unknown Date';
-            
-            // User info
-            const uName = stamp.profiles ? stamp.profiles.username : (source==='local' ? 'You' : 'Unknown');
-            const uAv = stamp.profiles ? stamp.profiles.avatar_url : null;
-            document.getElementById('v-user').innerText = uName;
-            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover rounded-full">` : uName.substring(0,2).toUpperCase();
-
-            // Visual
-            const visualContainer = document.getElementById('view-visual-side');
-            if (stamp.img_url) {
-                visualContainer.innerHTML = `
-                <div class="stamp w-full max-w-[300px]" style="--theme-color: ${theme}">
-                    <div class="stamp-image"><img src="${stamp.img_url}"></div>
-                </div>`;
-            } else {
-                visualContainer.innerHTML = `
-                <div class="journal-card w-full max-w-[280px]" style="--theme-color: ${theme}">
-                    <h4 class="font-heading text-2xl text-stone-800 text-center">${stamp.name}</h4>
-                    <p class="text-xs text-center mt-2 text-stone-400 uppercase tracking-widest">${stamp.city}</p>
-                </div>`;
-            }
-
-            document.getElementById('view-modal-overlay').classList.remove('hidden');
-            setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
-            
-            // If local and mine, maybe add edit button logic here in future
+        function renderDesktopProfile() {
+            if(!userProfile) return;
+            document.getElementById('desktop-profile-foot').innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs overflow-hidden">
+                    ${userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">` : userProfile.username.substring(0,2).toUpperCase()}
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-stone-700">@${userProfile.username}</div>
+                    <div class="text-[9px] text-stone-400">View Profile</div>
+                </div>
+            `;
         }
 
-        function closeViewModal() {
-            document.getElementById('view-modal-container').classList.add('scale-95');
-            setTimeout(() => document.getElementById('view-modal-overlay').classList.add('hidden'), 150);
-        }
-
-        // --- PROFILE MODAL logic ---
-        async function openProfileModal() { openUserProfile(currentUser.id); }
-
-        async function openUserProfile(userId) {
-            const isMe = userId === currentUser.id;
-            const container = document.getElementById('profile-modal');
-            container.classList.remove('hidden');
-
-            // Fetch Data
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
-            const { data: stamps } = await supabaseClient.from('stamps').select('*').eq('user_id', userId).order('created_at', {ascending:false});
+        function switchView(viewName) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${viewName}`).classList.remove('hidden');
             
-            // Render Header
-            const initials = profile.username.substring(0,2).toUpperCase();
-            document.getElementById('p-avatar-lg').innerHTML = profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover rounded-full">` : initials;
-            document.getElementById('p-name').innerText = profile.display_name;
-            document.getElementById('p-username').innerText = `@${profile.username} • ${stamps.length} Stamps`;
-
-            // Render Actions
-            const actionDiv = document.getElementById('p-actions');
-            if(isMe) {
-                actionDiv.innerHTML = `<button onclick="handleLogout()" class="px-6 py-2 rounded-full border border-stone-200 text-stone-500 font-bold text-xs hover:bg-stone-50">Log Out</button>`;
-            } else {
-                const isFollowing = followingIds.includes(userId);
-                actionDiv.innerHTML = `
-                    <button onclick="toggleFollow('${userId}', this)" class="${isFollowing ? 'text-stone-400 bg-stone-100' : 'bg-emerald-900 text-white'} px-8 py-2 rounded-full font-bold text-xs transition">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>`;
-            }
-
-            // Render Masonry
-            const grid = document.getElementById('profile-grid');
-            if(!stamps || stamps.length === 0) {
-                grid.innerHTML = '<p class="text-stone-400 text-center col-span-full">No stamps collected yet.</p>';
-            } else {
-                grid.innerHTML = stamps.map((s, idx) => `
-                    <div class="masonry-item" onclick="openViewModal(${JSON.stringify(s).replace(/"/g, '&quot;')}, 'direct')">
-                        ${createStampCardHTML(s, idx)}
-                    </div>
-                `).join('');
-            }
-            lucide.createIcons();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            if(viewName === 'feed') fetchFeed(false);
         }
-
-        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
-
-        // --- UTILS ---
+        
         function parseDate(input) {
             if(!input) return 0;
-            // Try parsing "YYYY"
             if(input.match(/^\d{4}$/)) return new Date(input, 0, 1);
-            // Try standard parse
-            const d = new Date(input);
-            return isNaN(d) ? 0 : d;
+            const d = new Date(input); return isNaN(d) ? 0 : d;
         }
 
     </script>
