@@ -938,12 +938,12 @@ async function handleLogout() {
                         <div class="stamp" style="--theme-color: ${theme}; --r_deg: ${rot}deg">
                             <div class="stamp-image">
                                 ${item.img_url ? `<img src="${item.img_url}">` : `<div class="placeholder pattern-${(i%2)+1}" style="--theme-color: ${theme}"></div>`}
-                                <div class="stamp-title-overlay">
-                                    <div class="stamp-name">${item.name}</div>
-                                    ${hasNotes ? `<div class="stamp-note">${item.notes}</div>` : ''}
-                                </div>
                             </div>
                         </div>
+                            <div class="stamp-title-overlay">
+                                <div class="stamp-name">${item.name}</div>
+                                ${hasNotes ? `<div class="stamp-note">${item.notes}</div>` : ''}
+                            </div>
                         <a href="https://maps.google.com/?q=${encodeURIComponent(item.city)}" target="_blank" class="postmark-seal" style="--seal-rot: ${sealRot}deg">
                             <div class="pm-line"></div>
                             <div class="pm-city">${cityText}</div>
