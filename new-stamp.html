@@ -884,7 +884,7 @@
             if (isDirectObj) {
                 stamp = viewingProfileStamps.find(s => s.id === identifier);
             } else if (source === 'local') {
-                stamp = myStamps.find(s => s.id === identifier); 
+                stamp = myStamps.find(s => s.id == identifier); 
             } else if (source === 'feed') {
                 stamp = feedStamps.find(s => s.id === identifier);
             } else {
