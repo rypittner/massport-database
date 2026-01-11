@@ -553,7 +553,7 @@
         }
 
         async function fetchFeed(loadMore = false) {
-            fetchFollowing();
+            await fetchFollowing();
             if(!currentUser || followingIds.length === 0) return;
             if(!loadMore) { feedStamps = []; feedPage = 0; }
             else feedPage++;
