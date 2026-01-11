@@ -744,6 +744,22 @@
                         <h4 class="font-heading text-2xl leading-none mb-1">${s.name}</h4>
                     </div>
                 </div>`;
+                `
+    /* The container: h-full makes sure it takes up the grid space, overflow-hidden keeps the corners clean */
+    <div class="w-full h-full flex flex-col rounded-lg overflow-hidden shadow-sm border border-stone-100" style="--theme-color: ${theme}">
+        
+        /* The Image: flex-1 tells it to take up every pixel NOT used by the text below */
+        <div class="flex-1 overflow-hidden bg-stone-50">
+            <img src="${s.img_url}" class="w-full h-full object-cover">
+        </div>
+        
+        /* The Text Box: No fixed height, so it only takes what it needs. */
+        /* We use var(--theme-color) directly in the style tag. */
+        <div class="p-3 flex flex-col gap-1" style="background-color: var(--theme-color);">
+             <p class="text-[9px] uppercase tracking-widest text-white/90">${s.city}</p>
+             <h4 class="font-heading text-xl md:text-2xl leading-tight text-white">${s.name}</h4>
+        </div>
+    </div>`;
             } else {
                 // Text Card: Remove date padding if no date
                 return `
