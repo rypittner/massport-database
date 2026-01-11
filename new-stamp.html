@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MassPort APPLICATION</title>
+    <title>MassPort App</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -553,7 +553,7 @@
         }
 
         async function fetchFeed(loadMore = false) {
-            await fetchFollowing();
+            fetchFollowing();
             if(!currentUser || followingIds.length === 0) return;
             if(!loadMore) { feedStamps = []; feedPage = 0; }
             else feedPage++;
@@ -877,53 +877,44 @@
         function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
 
         // --- VIEW MODAL ---
-       function openViewModal(identifier, source, isDirectObj) {
+        function openViewModal(identifier, source, isDirectObj) {
             let stamp;
-            
-            // FIX: Always find by ID for local stamps too, so filters don't break it
-            if (isDirectObj) {
-                stamp = viewingProfileStamps.find(s => s.id === identifier);
-            } else if (source === 'local') {
-                stamp = myStamps.find(s => s.id == identifier); 
-            } else if (source === 'feed') {
-                stamp = feedStamps.find(s => s.id === identifier);
-            } else {
-                stamp = identifier; 
-            }
-        
+            if (isDirectObj) stamp = viewingProfileStamps.find(s => s.id === identifier);
+            else if (source === 'local') stamp = myStamps[identifier];
+            else if (source === 'feed') stamp = feedStamps.find(s => s.id === identifier);
+            else stamp = identifier; 
+
             if (!stamp) return;
-        
+
             // Content
             document.getElementById('v-title').innerText = stamp.name;
             const cityLink = document.getElementById('v-map-link');
             cityLink.innerText = stamp.city;
+            // Google Maps Link
+            cityLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
             
-            // FIX: Correct Google Maps Search URL format
-            const searchQuery = encodeURIComponent(`${stamp.name}, ${stamp.city}`);
-            cityLink.href = `https://www.google.com/maps/search/?api=1&query=${searchQuery}`;
-            
-            // Match color consistency
+            // Match color
+            // Need index for color consistency, use random or hash if not available in object
             const colorIndex = stamp.name.length % themes.length; 
             const theme = themes[colorIndex];
             cityLink.style.color = theme;
-        
+
             document.getElementById('v-notes').innerText = stamp.notes || ""; 
             
-            // Date logic (Keep your logic, it's solid)
+            // Date logic
             let dateStr = "";
             if(stamp.visit_month && stamp.visit_day && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_day}, ${stamp.visit_year}`;
             else if(stamp.visit_month && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_year}`;
             else if(stamp.visit_year) dateStr = `${stamp.visit_year}`;
             else dateStr = stamp.visit_date || '';
-        
-            const dateEl = document.getElementById('v-date');
+
             if(dateStr) {
-                dateEl.innerText = dateStr;
-                dateEl.classList.remove('hidden');
+                document.getElementById('v-date').innerText = dateStr;
+                document.getElementById('v-date').classList.remove('hidden');
             } else {
-                dateEl.classList.add('hidden');
+                document.getElementById('v-date').classList.add('hidden');
             }
-        
+
             // User Info
             let uName, uAv;
             if(stamp.user_id === currentUser.id) {
@@ -936,22 +927,24 @@
                 uName = "Traveler"; uAv = null;
             }
             document.getElementById('v-user').innerText = uName;
-            document.getElementById('v-avatar').innerHTML = uAv ? 
-                `<img src="${uAv}" class="w-full h-full object-cover">` : 
-                `<div class="w-full h-full flex items-center justify-center bg-stone-100">${uName.substring(0,2).toUpperCase()}</div>`;
-        
+            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover">` : uName.substring(0,2).toUpperCase();
+
             // Visual Side Logic
             const visual = document.getElementById('view-visual-side');
             if(stamp.img_url) {
                 visual.innerHTML = `<img src="${stamp.img_url}" class="w-full h-full object-cover absolute inset-0">`;
-                // Use the classes we talked about earlier to make it fill correctly
-                visual.className = "w-full md:w-1/2 bg-[#f0edea] relative flex items-center justify-center overflow-hidden min-h-[300px] md:h-full";
+                visual.classList.remove('h-32'); 
+                visual.style.minHeight = "300px"; // Mobile consistency
             } else {
-                const abbrev = stamp.state_code || '??';
-                visual.innerHTML = `<div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>`;
-                visual.className = "w-full md:w-1/2 bg-[#f0edea] relative flex items-center justify-center overflow-hidden h-48 md:h-full";
+                // Ink Stamp Background
+                const abbrev = stamp.state_code === 'INTL' ? 'INTL' : stamp.state_code;
+                visual.innerHTML = `
+                    <div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>
+                `;
+                visual.classList.add('h-32'); // Smaller height on mobile if no image
+                visual.style.minHeight = ""; 
             }
-        
+
             document.getElementById('view-modal-overlay').classList.remove('hidden');
             setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
         }
