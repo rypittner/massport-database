@@ -22,11 +22,13 @@
         .masonry-grid {
             column-count: 1;
             column-gap: 1.5rem;
-            width: 100%;
+            width: 90%;
         }
-        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
-        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
-        @media (min-width: 1280px) { .masonry-grid { column-count: 4; } }
+
+
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; width: 100%;} }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
+        @media (min-width: 1280px) { .masonry-grid { column-count: 4; width: 100%;} }
         
         .masonry-item {
             break-inside: avoid;
@@ -98,6 +100,11 @@
             text-transform: uppercase;
             letter-spacing: 0.1em;
             opacity: 0.3;
+        }
+
+            @media (max-width:639px){     
+        .ink-stamp-deco {
+            width: 50%;
         }
 
         /* --- Text-Only Journal Card --- */
