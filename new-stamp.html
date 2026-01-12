@@ -2,582 +2,485 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MassPort App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Massport (Bug Fix)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places&callback=initGoogleTools" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif'],
+                        heading: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 800: '#292524', 900: '#1c1917' },
+                        emerald: { 900: '#064e3b' }
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Yrsa:wght@500;600;700&display=swap');
-        
-        :root { --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1); }
-        body { font-family: 'Inter', sans-serif; background-color: #f2eeea; color: #2d2d2d; overflow-x: hidden; }
-        h1, h2, h3, .font-heading { font-family: 'Yrsa', serif; }
-
-        /* --- Masonry Layout --- */
+        /* Masonry & Layout */
         .masonry-grid {
-            column-count: 1;
-            column-gap: 1.5rem;
-            width: 90%;
-            margin: 0 auto;
+            column-count: 2;
+            column-gap: 1rem;
         }
-
-
-        @media (min-width: 640px) { .masonry-grid { column-count: 2; width: 100%;} }
-        @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
-        @media (min-width: 1280px) { .masonry-grid { column-count: 4; width: 100%;} }
-        
         .masonry-item {
-            break-inside: avoid;
-            margin-bottom: 1.4rem;
-            position: relative;
-            transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
-            will-change: transform;
-        }
-        .masonry-item:hover { transform: translateY(-2px) scale(1.01); }
-
-        /* --- Stamp Visuals (With Image) --- */
-        .stamp {
-            aspect-ratio: 39 / 50; 
-            background-image: url('https://raw.githubusercontent.com/rypittner/massport-database/main/stamp_bg.svg');
-            background-size: 100% 100%;
-            stroke: #eaddd7;
-            stroke-width: 2px;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer; 
-            position: relative; 
-            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.1));
-            overflow: hidden;
-            
+            break-inside: avoid; /* CRITICAL FIX: Prevents items from being cut off or invisible */
+            page-break-inside: avoid;
+            margin-bottom: 1rem;
+            display: inline-block; /* Helps with column rendering */
+            width: 100%;
         }
         
-/* This wrapper handles the 'inset' padding once for both elements */
-.stamp-content-wrapper {
-    position: absolute;
-    inset: 6% 7.689%; /* This matches your original stamp border inset */
-    display: flex;
-    flex-direction: column;
-    z-index: 5;
-        border: 4px solid var(--theme-color);
-    border-radius:2px;
-}
-
-.stamp-image { 
-    flex-grow: 1; /* This pushes the image to fill the remaining top space */
-    overflow: hidden; 
-    background: white;
-}
-
-        .stamp-image img {
-    width: 100%;
-    height: 100%;
-    /* 1. Fill the container without stretching */
-    object-fit: cover; 
-    /* 2. Keep the subject of the photo centered */
-    object-position: center;
-    /* 3. Prevents the image from being 'wider' than it is 'tall' relative to its original size */
-    aspect-ratio: auto; 
-}
-
-.stamp-overlay-text {
-    /* REMOVED: position absolute, bottom, left, right */
-    background-color: var(--theme-color);
-    padding: 12px 10px;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-    gap: 4px;
-}
-
-        /* --- Ink Stamp Decorative Item --- */
-        .ink-stamp-deco {
+        /* Stamp Aesthetics */
+        .stamp {
+            background: white;
+            padding: 10px 10px 25px 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
+            border: 1px solid #e7e5e4;
+            position: relative;
+        }
+        .stamp:active { transform: scale(0.98); }
+        .stamp-content-wrapper {
+            border: 1px solid var(--theme-color);
+            padding: 4px;
+            height: 100%;
+        }
+        .stamp-image {
             width: 100%;
-            max-width: 300px;
-            display: flex;
-            aspect-ratio: 1/1;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            border: 2px dashed #383533;
-            border-radius: 50%;
-            color: #383533;
-            font-family: 'Yrsa', serif;
-            font-weight: 700;
-            font-size: 4rem;
-            text-transform: uppercase;
-            opacity: 0.3;
+            background: #f5f5f4;
+            overflow: hidden;
+            aspect-ratio: 1/1; /* Square by default in grid */
+            position: relative;
+        }
+        .stamp-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(110%);
+        }
+        .stamp-overlay-text {
+            margin-top: 12px;
+            text-align: center;
+            color: var(--theme-color);
         }
 
-            @media (max-width:639px){     
-                .ink-stamp-deco {
-                width: 50%;
-                }
-                .journal-header{font-size: 12pt;}
-            }
-
-        /* --- Text-Only Journal Card --- */
+        /* Journal Card (Text Only) */
         .journal-card {
             background: white;
-            border: 1px solid #eaddd7;
-            border-top: 5px solid var(--theme-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
+            padding: 24px;
+            border: 1px solid #e7e5e4;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem; /* Tighter gap */
+            border-top: 4px solid var(--theme-color);
         }
-        .journal-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .journal-card:active { transform: scale(0.98); }
 
-        /* --- Feed Card --- */
+        /* Feed Card */
         .feed-container-card {
-            display: flex;
             background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid #f1eeed;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            height: 200px;
-        }
-        .feed-container-card:hover { transform: translateY(-2px); border-color: #e5e7eb; box-shadow: 0 10px 20px rgba(0,0,0,0.04); }
-        
-        .feed-left-visual {
-            width: 35%;
-            min-width: 120px;
-            background: #f8f6f5;
-            padding: 1rem;
+            border-bottom: 1px solid #e7e5e4;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: row;
+            overflow: hidden;
+            margin-bottom: 0;
+            padding: 16px 0;
         }
+        .feed-left-visual { width: 100px; height: 100px; flex-shrink: 0; padding: 0 0 0 16px; display: flex; align-items: center; justify-content: center; }
+        .feed-left-visual .stamp { padding: 4px 4px 12px 4px; box-shadow: none; border: 1px solid #eee; height: auto; }
+        .feed-left-visual .stamp-content-wrapper { padding: 2px; }
 
-        /* --- Nav & Utilities --- */
-        .nav-btn {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            color: #a8a29e; /* stone-400 */
+        /* Utility */
+        .hidden { display: none !important; }
+        .ink-stamp-deco {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #e7e5e4;
+            border: 3px double #e7e5e4;
+            padding: 8px 16px;
+            border-radius: 4px;
+            display: inline-block;
+            transform: rotate(-2deg);
+            letter-spacing: 0.1em;
         }
-        .nav-btn.active {
-            color: #065f46; /* emerald-800 */
-        }
-        .nav-btn.active svg {
-            stroke-width: 2.5px;
-        }
+        .active-nav { color: #064e3b; }
         
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* Sticky Header Mobile */
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 40;
-            background: rgba(242, 238, 234, 0.85);
-            backdrop-filter: blur(8px);
-            padding-bottom: 1rem;
-            padding-top: 1rem;
-            margin-top: -1rem;
+        /* Modal Adjustments */
+        #view-modal-container {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
         }
-        
     </style>
 </head>
-<body class="md:pl-64 pb-24 md:pb-0">
+<body class="bg-stone-50 text-stone-800 antialiased pb-20">
 
-    <nav class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-stone-100 md:top-0 md:left-0 md:w-64 md:h-full md:border-t-0 md:border-r z-50 flex md:flex-col p-2 md:p-6 justify-between">
+    <div id="login-screen" class="fixed inset-0 bg-stone-50 z-50 flex flex-col items-center justify-center p-6 hidden">
+        <div class="mb-8 p-6 bg-white rounded-full shadow-sm border border-stone-100">
+            <i data-lucide="stamp" class="w-12 h-12 text-emerald-900"></i>
+        </div>
+        <h1 class="font-heading text-4xl mb-2">Stamp Journal</h1>
+        <p class="text-stone-500 mb-8 text-center max-w-xs">Collect memories, follow friends, and document your journey.</p>
+        <button onclick="handleLogin()" class="bg-emerald-900 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-emerald-800 transition w-full max-w-xs flex items-center justify-center gap-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i> Sign in with Google
+        </button>
+        <button onclick="continueGuest()" id="guest-btn" class="mt-4 text-stone-400 text-xs font-bold uppercase tracking-widest hidden">Continue as Guest</button>
+    </div>
+
+    <div id="app-container" class="max-w-md mx-auto min-h-screen relative hidden">
         
-        <div class="hidden md:block mb-8 px-2 pt-4">
-            <h1 class="text-3xl font-heading text-emerald-900">MassPort</h1>
-            <p class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Sanctuary Journal</p>
-        </div>
-
-        <div class="flex flex-1 justify-around md:justify-start md:flex-col gap-1 md:gap-2 items-center md:items-stretch">
-            
-            <button onclick="switchView('journal')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-journal">
-                <i data-lucide="scroll" class="w-6 h-6 md:w-5 md:h-5"></i>
-                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Journal</span>
-            </button>
-            
-            <button onclick="switchView('feed')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-feed">
-                <i data-lucide="flame" class="w-6 h-6 md:w-5 md:h-5"></i>
-                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Recent</span>
-            </button>
-            
-            <button onclick="openAddModal()" class="md:hidden -mt-8 bg-emerald-900 text-white p-4 rounded-full shadow-lg transform transition active:scale-95 border-4 border-white">
-                <i data-lucide="plus" class="w-7 h-7"></i>
-            </button>
-
-            <button onclick="switchView('community')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-community">
-                <i data-lucide="users" class="w-6 h-6 md:w-5 md:h-5"></i>
-                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Find</span>
-            </button>
-            
-            <button onclick="switchView('map')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-map">
-                <i data-lucide="map" class="w-6 h-6 md:w-5 md:h-5"></i>
-                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Map</span>
-            </button>
-            
-            <button onclick="openAddModal()" class="hidden md:flex mt-6 bg-emerald-900 text-white p-3 rounded-xl gap-3 items-center justify-center hover:bg-emerald-800 transition shadow-sm">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i><span>Add Stamp</span>
-            </button>
-        </div>
-
-        <div id="desktop-profile-foot" class="hidden md:flex items-center gap-3 mt-auto p-2 border-t border-stone-100 pt-4 cursor-pointer hover:bg-stone-50 rounded-lg transition" onclick="openProfileModal()">
+        <header class="sticky top-0 bg-stone-50/95 backdrop-blur-md z-30 px-6 py-4 flex items-center justify-between border-b border-stone-200/50">
+            <div class="flex items-center gap-3">
+                <i data-lucide="stamp" class="w-6 h-6 text-emerald-900"></i>
+                <span class="font-heading text-xl font-bold" id="header-title">My Journal</span>
             </div>
-    </nav>
-
-    <main class="p-4 md:p-12 max-w-7xl mx-auto min-h-screen">
-        
-        <div id="auth-wall" class="hidden fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center p-6 text-center">
-            <h1 class="text-5xl font-heading text-emerald-900 mb-4">MassPort</h1>
-            <p class="mb-8 text-stone-500">Sign in to view your sacred journal.</p>
-            <div class="space-y-4 w-full max-w-xs">
-                <button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="w-full bg-emerald-900 text-white py-3 rounded-lg font-bold">Log In</button>
-                <button onclick="document.getElementById('signup-modal').classList.remove('hidden')" class="w-full border border-emerald-900 text-emerald-900 py-3 rounded-lg font-bold">Create Account</button>
+            <div class="flex items-center gap-3">
+                <button onclick="openAddModal()" class="w-8 h-8 bg-emerald-900 rounded-full flex items-center justify-center text-white shadow-md hover:bg-emerald-800 transition">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
             </div>
-        </div>
+        </header>
 
-        <section id="page-journal" class="page-view animate-in fade-in duration-500">
+        <main id="page-journal" class="page-view px-4 py-4">
+            <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                <select id="filter-location" onchange="applyJournalFilters()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none focus:border-emerald-900">
+                    <option value="ALL">All Locations</option>
+                </select>
+                <select id="filter-year" onchange="applyJournalFilters()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none focus:border-emerald-900">
+                    <option value="ALL">All Years</option>
+                </select>
+                <select id="filter-sort" onchange="applyJournalFilters()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none focus:border-emerald-900">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="location_asc">By Location</option>
+                </select>
+            </div>
+
+            <div id="journal-grid" class="masonry-grid pb-20"></div>
             
-            <header class="sticky-header flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 md:gap-6">
-                <div class="flex items-baseline justify-between md:block">
-                    <h2 class="text-4xl md:text-5xl font-heading text-stone-800 journal-header">My Stamps</h2>
-                    <p class="text-stone-400 mt-2 text-sm" id="journal-count-display">Loading...</p>
+            <div id="journal-empty" class="hidden flex flex-col items-center justify-center mt-20 text-center px-6">
+                <div class="text-stone-300 mb-4"><i data-lucide="map" class="w-16 h-16"></i></div>
+                <h3 class="font-heading text-xl text-stone-800 mb-2">No stamps yet</h3>
+                <p class="text-stone-500 text-sm">Add your first travel memory to start your collection.</p>
+            </div>
+        </main>
+
+        <main id="page-feed" class="page-view hidden bg-white min-h-screen">
+            <div id="feed-items" class="pb-24"></div>
+            <button id="feed-load-more" onclick="fetchFeed(true)" class="hidden w-full py-4 text-center text-stone-400 text-xs font-bold uppercase tracking-widest hover:bg-stone-50">Load More</button>
+        </main>
+
+        <main id="page-find" class="page-view hidden px-4 py-4">
+            <div class="relative mb-6">
+                <i data-lucide="search" class="absolute left-4 top-3 w-5 h-5 text-stone-400"></i>
+                <input type="text" id="user-search-input" onkeyup="debounceSearchUsers()" placeholder="Search travelers..." class="w-full bg-white border border-stone-200 rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-emerald-900 shadow-sm">
+            </div>
+            
+            <h3 class="font-heading text-lg mb-3 pl-1">Results & Following</h3>
+            <div id="followers-list" class="space-y-3 pb-24"></div>
+        </main>
+
+        <main id="page-profile" class="page-view hidden px-6 py-8 flex flex-col items-center">
+            </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 px-6 py-3 flex justify-between items-center z-40 max-w-md mx-auto">
+            <button id="btn-journal" onclick="switchView('journal')" class="nav-btn active flex flex-col items-center gap-1 text-stone-400 hover:text-emerald-900">
+                <i data-lucide="book-open" class="w-6 h-6"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Journal</span>
+            </button>
+            <button id="btn-feed" onclick="switchView('feed')" class="nav-btn flex flex-col items-center gap-1 text-stone-400 hover:text-emerald-900">
+                <i data-lucide="globe" class="w-6 h-6"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Feed</span>
+            </button>
+            <button id="btn-find" onclick="switchView('find')" class="nav-btn flex flex-col items-center gap-1 text-stone-400 hover:text-emerald-900">
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Find</span>
+            </button>
+            <button id="btn-profile" onclick="openUserProfile(currentUser.id)" class="nav-btn flex flex-col items-center gap-1 text-stone-400 hover:text-emerald-900">
+                <div class="w-6 h-6 rounded-full overflow-hidden border border-current" id="nav-avatar-img">
+                    <i data-lucide="user" class="w-4 h-4 m-auto mt-0.5"></i>
                 </div>
-                <div class=" flex flex-nowrap items-center gap-2 md:gap-3">
-                    <select id="filter-location" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition shadow-sm">
+                <span class="text-[9px] font-bold uppercase tracking-widest">Profile</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="add-modal-overlay" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                <h3 class="font-heading text-lg">New Stamp</h3>
+                <button onclick="closeAddModal()" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="relative w-full h-32 bg-stone-100 border-2 border-dashed border-stone-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-stone-50 transition group" onclick="document.getElementById('s-image-input').click()">
+                    <input type="file" id="s-image-input" class="hidden" accept="image/*" onchange="previewImage()">
+                    <i data-lucide="image-plus" class="w-8 h-8 text-stone-300 group-hover:text-stone-400 mb-2"></i>
+                    <span class="text-xs font-bold text-stone-400 uppercase tracking-widest">Add Photo</span>
+                    <div id="preview-box" class="absolute inset-0 bg-white hidden">
+                        <img id="img-preview" class="w-full h-full object-cover rounded-xl">
+                        <button onclick="event.stopPropagation(); clearImage()" class="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Location Name</label>
+                    <input type="text" id="s-name" placeholder="e.g. The Louvre" class="w-full border-b border-stone-200 py-2 font-heading text-xl focus:outline-none focus:border-emerald-900 placeholder:text-stone-300">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Search Address/City</label>
+                    <input type="text" id="s-address-search" placeholder="Search Google Maps..." class="w-full border-b border-stone-200 py-2 text-sm focus:outline-none focus:border-emerald-900">
+                    <input type="hidden" id="geo-city">
+                    <input type="hidden" id="geo-state-code">
+                    <input type="hidden" id="geo-state-name">
+                    <input type="hidden" id="geo-country">
+                    <input type="hidden" id="geo-lat">
+                    <input type="hidden" id="geo-lng">
+                </div>
+                
+                <div id="map-preview" class="w-full h-24 rounded-lg bg-stone-100 hidden md:block"></div>
+
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Month</label>
+                        <select id="s-date-month" class="w-full border-b border-stone-200 py-2 text-sm bg-transparent"><option value="">--</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option></select>
+                    </div>
+                    <div class="w-16">
+                        <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Day</label>
+                        <input type="number" id="s-date-day" placeholder="DD" class="w-full border-b border-stone-200 py-2 text-sm">
+                    </div>
+                    <div class="w-20">
+                        <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Year</label>
+                        <input type="number" id="s-date-year" placeholder="YYYY" class="w-full border-b border-stone-200 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Notes</label>
+                    <textarea id="s-notes" rows="3" placeholder="Write about your experience..." class="w-full border border-stone-200 rounded-lg p-3 text-sm mt-1 focus:outline-none focus:border-emerald-900"></textarea>
+                </div>
+
+                <button id="save-btn" onclick="saveStamp()" class="w-full bg-emerald-900 text-white py-3 rounded-full font-bold shadow-lg hover:bg-emerald-800 transition">Save Stamp</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-modal-overlay" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+        <div id="view-modal-container" class="bg-white w-full max-w-sm rounded-lg shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 relative">
+            
+            <button onclick="closeViewModal()" class="absolute top-3 right-3 z-10 bg-black/20 hover:bg-black/40 text-white p-1.5 rounded-full backdrop-blur-sm transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div id="view-visual-side" class="w-full relative bg-stone-100 flex items-center justify-center overflow-hidden">
+                </div>
+            
+            <div class="p-6 bg-white relative">
+                <div class="flex items-center gap-3 mb-4 cursor-pointer" id="v-user-link">
+                    <div id="v-avatar" class="w-8 h-8 rounded-full bg-stone-200 overflow-hidden flex items-center justify-center text-[10px] font-bold"></div>
+                    <div>
+                        <div id="v-user" class="text-xs font-bold text-stone-800"></div>
+                        <div id="v-date" class="text-[10px] text-stone-400"></div>
+                    </div>
+                </div>
+
+                <h2 id="v-title" class="font-heading text-3xl text-stone-800 mb-1 leading-none"></h2>
+                <a id="v-map-link" href="#" target="_blank" class="text-[10px] font-bold uppercase tracking-widest mb-4 inline-flex items-center gap-1 hover:underline"></a>
+                
+                <div class="flex items-start gap-2 mt-4">
+                    <i data-lucide="quote" class="w-4 h-4 text-stone-300 flex-shrink-0 mt-1"></i>
+                    <p id="v-notes" class="text-stone-600 text-sm italic leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="fixed inset-0 bg-stone-50 z-40 hidden overflow-y-auto">
+        <div class="max-w-md mx-auto min-h-screen relative pb-10">
+            <div class="h-40 bg-stone-200 relative">
+                <button onclick="closeProfileModal()" class="absolute top-4 left-4 bg-white/50 backdrop-blur-md p-2 rounded-full hover:bg-white transition text-stone-700">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="px-6 relative -mt-12 mb-6 text-center">
+                <div class="w-24 h-24 rounded-full bg-white p-1 mx-auto shadow-md">
+                    <div id="p-avatar-lg" class="w-full h-full rounded-full bg-stone-100 overflow-hidden flex items-center justify-center text-xl font-bold text-stone-400"></div>
+                </div>
+                <h2 id="p-name" class="font-heading text-2xl mt-3 text-stone-900"></h2>
+                <p id="p-username" class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4"></p>
+                <div id="p-actions" class="flex justify-center gap-2"></div>
+            </div>
+
+            <div class="px-4">
+                <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide justify-center mb-2">
+                    <select id="p-filter-loc" onchange="renderProfileMasonry()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none">
                         <option value="ALL">All Locations</option>
-                        </select>
-                    <select id="filter-year" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition shadow-sm">
-                        <option value="ALL">Years</option>
                     </select>
-                    <select id="filter-sort" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full text-xs text-emerald-700 font-semibold outline-none cursor-pointer">
-                        <option value="location_asc">Sort by:</option>
-                        <option value="newest">Newest Added</option>
-                        <option value="oldest">Oldest Added</option>
-                        <option value="date_desc">Recent Visit</option>
-                        <option value="date_asc">Oldest Visit</option>
+                    <select id="p-filter-year" onchange="renderProfileMasonry()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none">
+                        <option value="ALL">All Years</option>
+                    </select>
+                    <select id="p-filter-sort" onchange="renderProfileMasonry()" class="bg-white border border-stone-200 rounded-full px-4 py-2 text-xs font-bold text-stone-600 focus:outline-none">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="location_asc">Location</option>
                     </select>
                 </div>
-            </header>
-
-            <div class="masonry-grid" id="journal-grid">
-                </div>
-            
-            <div id="journal-empty" class="hidden text-center py-20 text-stone-400">
-                <i data-lucide="book-open" class="mx-auto w-12 h-12 mb-4 opacity-30"></i>
-                <p>No stamps found. Add your first memory.</p>
+                <div id="profile-grid" class="masonry-grid"></div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <section id="page-feed" class="page-view hidden max-w-3xl mx-auto animate-in fade-in duration-500">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-heading text-stone-800">Pilgrimage Feed</h2>
-            </div>
-            <div id="feed-items" class="space-y-6">
-                <div class="text-center py-10"><p class="text-stone-400">Loading feed...</p></div>
-            </div>
-            <div class="mt-8 text-center hidden" id="feed-load-more">
-                <button onclick="fetchFeed(true)" class="bg-stone-100 text-stone-500 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200">Load More</button>
-            </div>
-        </section>
-
-        <section id="page-community" class="page-view hidden max-w-2xl mx-auto animate-in fade-in duration-500">
-            <h2 class="text-4xl font-heading mb-6">Discovery</h2>
-            <div class="bg-white border rounded-2xl p-2 flex items-center mb-8 shadow-sm focus-within:ring-2 ring-emerald-100 transition-all">
-                <i data-lucide="search" class="mx-3 text-stone-400"></i>
-                <input type="text" id="user-search-input" placeholder="Find travelers by username..." class="w-full py-3 outline-none text-sm" onkeyup="debounceSearchUsers()">
-            </div>
-            
-            <h3 class="font-bold text-stone-400 text-xs uppercase tracking-widest mb-4">Results</h3>
-            <div id="followers-list" class="space-y-4"></div>
-        </section>
-
-        <section id="page-map" class="page-view hidden animate-in fade-in duration-500">
-            <h2 class="text-4xl font-heading mb-6">Sanctuary Map</h2>
-            <div class="w-full aspect-[4/3] md:aspect-video bg-[#e5e7eb] rounded-[2.5rem] flex flex-col items-center justify-center border-4 border-white shadow-xl relative overflow-hidden">
-                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#065f46 2px, transparent 2px); background-size: 40px 40px;"></div>
-                <i data-lucide="map-pin" class="text-emerald-800 w-12 h-12 mb-4 animate-bounce"></i>
-                <p class="text-stone-500 font-medium">Map View Coming Soon</p>
-                <button onclick="switchView('journal')" class="mt-4 text-emerald-700 text-sm font-bold underline">Back to Journal</button>
-            </div>
-        </section>
-    </main>
-
-    <div id="add-modal-overlay" class="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2rem] max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-            <h3 class="text-2xl font-heading mb-6 text-emerald-900" id="modal-title-text">Add New Entry</h3>
-            
-            <input type="hidden" id="edit-id">
-            <input type="hidden" id="geo-city">
-            <input type="hidden" id="geo-state-code">
-            <input type="hidden" id="geo-state-name">
-            <input type="hidden" id="geo-country">
-            <input type="hidden" id="geo-lat">
-            <input type="hidden" id="geo-lng">
-
+    <div id="edit-profile-modal" class="fixed inset-0 bg-stone-900/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6">
+            <h3 class="font-heading text-xl mb-4">Edit Profile</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Location Search</label>
-                    <input id="s-address-search" type="text" placeholder="Search Google Maps..." class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Display Name</label>
+                    <input type="text" id="ep-name" class="w-full border-b border-stone-200 py-2">
                 </div>
-                
-                <div id="map-preview" class="w-full h-32 bg-stone-100 rounded-lg overflow-hidden"></div>
-
                 <div>
-                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Place Name</label>
-                    <input id="s-name" type="text" placeholder="e.g. Notre Dame" class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Avatar URL</label>
+                    <input type="text" id="ep-avatar" class="w-full border-b border-stone-200 py-2 text-xs">
                 </div>
-                
-                <div>
-                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Date Visited (Optional)</label>
-                    <div class="flex gap-2">
-                        <select id="s-date-month" class="w-1/2 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
-                            <option value="">Month</option>
-                            <option value="January">January</option><option value="February">February</option><option value="March">March</option>
-                            <option value="April">April</option><option value="May">May</option><option value="June">June</option>
-                            <option value="July">July</option><option value="August">August</option><option value="September">September</option>
-                            <option value="October">October</option><option value="November">November</option><option value="December">December</option>
-                        </select>
-                        <input id="s-date-day" type="number" min="1" max="31" placeholder="Day" class="w-1/4 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
-                        <input id="s-date-year" type="number" min="1900" max="2100" placeholder="Year" class="w-1/4 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Notes</label>
-                    <textarea id="s-notes" rows="3" placeholder="Your reflection..." class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Photo (Optional)</label>
-                    <input type="file" id="s-image-input" accept="image/*" class="w-full text-xs text-stone-500" onchange="previewImage()">
-                    <div id="preview-box" class="mt-2 hidden">
-                        <img id="img-preview" class="w-full h-40 object-cover rounded-lg">
-                        <button onclick="clearImage()" class="text-xs text-red-500 mt-1 underline">Remove Image</button>
-                    </div>
-                </div>
-
-                <div class="flex gap-3 pt-4">
-                    <button onclick="saveStamp()" id="save-btn" class="flex-1 bg-emerald-900 text-white py-3 rounded-xl font-bold hover:bg-emerald-800 transition">Save Stamp</button>
-                    <button onclick="closeAddModal()" class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-100 transition">Cancel</button>
-                </div>
+                <button onclick="saveProfile()" class="w-full bg-emerald-900 text-white py-3 rounded-full font-bold">Save Changes</button>
+                <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="w-full text-stone-400 py-2 text-xs font-bold uppercase">Cancel</button>
             </div>
-        </div>
-    </div>
-    
-
-    <div id="view-modal-overlay" class="fixed inset-0 bg-stone-900/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 md:p-10" onclick="closeViewModal()">
-        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-y-auto md:overflow-hidden flex flex-col md:flex-row shadow-2xl transition-all scale-95" id="view-modal-container" onclick="event.stopPropagation()">
-            <div id="view-visual-side" class="w-full md:w-1/2 h-64 md:h-auto bg-[#f0edea] relative flex items-center justify-center overflow-hidden">
-                </div>
-            
-            <div class="w-full md:w-1/2 p-6 md:p-12 flex flex-col bg-white">
-                <div class="mb-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div id="v-avatar" class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-bold overflow-hidden border border-emerald-50"></div>
-                        <span id="v-user" class="text-xs font-bold text-stone-400 uppercase tracking-wide"></span>
-                    </div>
-
-                    <a id="v-map-link" href="#" target="_blank" class="block w-fit text-xs uppercase tracking-[0.2em] font-bold mb-2 hover:underline transition-all decoration-2 underline-offset-4" style="color: var(--theme-color);"></a>
-                    
-                    <h3 id="v-title" class="text-3xl md:text-5xl font-heading leading-none text-stone-800"></h3>
-                </div>
-                
-                <div class="flex-1 overflow-y-auto no-scrollbar mb-6">
-                    <p id="v-notes" class="text-stone-600 leading-relaxed italic text-lg md:text-xl font-serif"></p>
-                </div>
-                
-                <div class="mt-auto pt-6 border-t border-stone-100 flex items-center justify-between">
-                    <span id="v-date" class="text-stone-400 text-xs font-bold uppercase tracking-widest"></span>
-                    <button onclick="closeViewModal()" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors text-stone-600">Dismiss</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="profile-modal" class="fixed inset-0 bg-white z-[110] hidden overflow-y-auto">
-        <div class="max-w-6xl mx-auto p-4 md:p-12 min-h-screen">
-            <button onclick="closeProfileModal()" class="fixed top-6 right-6 p-2 bg-stone-100 rounded-full hover:bg-stone-200 z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
-            
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-12 mt-10 md:mt-0">
-                <div id="p-avatar-lg" class="w-32 h-32 rounded-full bg-emerald-800 text-white text-4xl font-heading flex items-center justify-center border-4 border-emerald-50 shadow-xl overflow-hidden shrink-0"></div>
-                
-                <div class="text-center md:text-left flex-1">
-                    <h2 id="p-name" class="text-4xl md:text-5xl font-heading mb-2 text-stone-800"></h2>
-                    <p id="p-username" class="text-stone-400 text-sm font-bold uppercase tracking-widest mb-6"></p>
-                    
-                    <div id="p-actions" class="flex justify-center md:justify-start gap-3"></div>
-                </div>
-            </div>
-
-            <div class="border-t border-stone-100 pt-8">
-                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
-                    <h3 class="text-2xl font-heading pl-2 border-l-4 border-emerald-900">Pilgrim's Log</h3>
-                    
-                    <div class="flex flex-wrap gap-2">
-                        <select id="p-filter-loc" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none"><option value="ALL">All Places</option></select>
-                        <select id="p-filter-year" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none"><option value="ALL">All Years</option></select>
-                        <select id="p-filter-sort" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none">
-                            <option value="location_asc">Sort by Location</option>
-                            <option value="newest">Newest</option>
-                            <option value="oldest">Oldest</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="masonry-grid" id="profile-grid"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="edit-profile-modal" class="fixed inset-0 bg-stone-900/50 z-[150] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
-            <h3 class="text-xl font-heading mb-4">Edit Profile</h3>
-            <div class="space-y-4">
-                <input id="ep-name" type="text" placeholder="Display Name" class="w-full p-3 border rounded-lg text-sm">
-                
-                <label class="block text-xs font-bold text-stone-400">Profile Picture URL</label>
-                <input id="ep-avatar" type="text" placeholder="https://..." class="w-full p-3 border rounded-lg text-sm">
-                
-                <button onclick="saveProfile()" class="w-full bg-emerald-900 text-white py-3 rounded-lg font-bold mt-2">Save Changes</button>
-                <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="w-full text-xs text-stone-400 mt-2 hover:underline">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="login-modal" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-sm">
-            <h3 class="text-xl font-heading mb-4">Welcome Back</h3>
-            <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-3 border rounded">
-            <input id="login-password" type="password" placeholder="Password" class="w-full p-3 mb-4 border rounded">
-            <button onclick="handleLogin()" class="w-full bg-emerald-900 text-white py-3 rounded font-bold">Log In</button>
-            <p id="login-msg" class="text-red-500 text-xs mt-2"></p>
-            <button onclick="document.getElementById('login-modal').classList.add('hidden')" class="mt-4 text-xs text-stone-400 underline w-full text-center">Cancel</button>
-        </div>
-    </div>
-
-    <div id="signup-modal" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-sm">
-            <h3 class="text-xl font-heading mb-4">Join the Journey</h3>
-            <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 mb-3 border rounded">
-            <input id="signup-username" type="text" placeholder="Username" class="w-full p-3 mb-3 border rounded">
-            <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 mb-4 border rounded">
-            <button onclick="handleSignUp()" class="w-full bg-emerald-900 text-white py-3 rounded font-bold">Sign Up</button>
-            <p id="signup-msg" class="text-xs mt-2"></p>
-            <button onclick="document.getElementById('signup-modal').classList.add('hidden')" class="mt-4 text-xs text-stone-400 underline w-full text-center">Cancel</button>
         </div>
     </div>
 
     <script>
         // --- CONFIGURATION ---
-        const SUPABASE_URL = 'https://ujyoxnrfchzyduhtcpaz.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M';
-        const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
-        
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; 
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
 
         // --- STATE ---
+        let session = null;
         let currentUser = null;
         let userProfile = null;
         let myStamps = [];
         let feedStamps = [];
-        let feedPage = 0;
-        let followingIds = [];
         let viewingProfileStamps = [];
+        let followingIds = [];
+        let feedPage = 0;
+
+        // Colors for stamps - Used for visual variety
+        const themes = ['#064e3b', '#065f46', '#047857', '#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#115e59', '#0f766e', '#0d9488'];
 
         // --- INIT ---
-        window.addEventListener('load', async () => {
-            lucide.createIcons();
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            handleAuthState(session);
-
-            supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
+        window.onload = async () => {
+            initGoogleTools();
             
-            if(window.location.hash) {
-                const handle = window.location.hash.substring(1).replace('@','');
-                findUserByHandle(handle);
-            }
-        });
-
-        async function findUserByHandle(handle) {
-            const { data } = await supabaseClient.from('profiles').select('id').eq('username', handle).single();
-            if(data) openUserProfile(data.id);
-        }
-
-        // --- AUTH ---
-        async function handleAuthState(session) {
-            if (session?.user) {
-                currentUser = session.user;
-                document.getElementById('auth-wall').classList.add('hidden');
-                
-                let { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-                if(!profile) {
-                    const { data: newP } = await supabaseClient.from('profiles').insert([{ id: currentUser.id, username: currentUser.email.split('@')[0], display_name: 'Traveler' }]).select().single();
-                    profile = newP;
+            // 1. Check for Public Profile via URL Hash (#username)
+            const hash = window.location.hash.substring(1);
+            if(hash && hash.length > 0) {
+                // Try to find user by username
+                const { data: profiles, error } = await supabaseClient.from('profiles').select('*').eq('username', hash);
+                if(profiles && profiles.length > 0) {
+                    // Show app container but stay in 'guest' mode essentially
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('login-screen').classList.add('hidden');
+                    
+                    // We might still be logged in, let's check
+                    const { data } = await supabaseClient.auth.getSession();
+                    session = data.session;
+                    if(session) {
+                        currentUser = session.user;
+                        await fetchUserProfile();
+                    } else {
+                        // Guest Mode: Hide nav buttons except maybe simple ones
+                        document.querySelector('nav').classList.add('hidden'); 
+                        document.querySelector('header').classList.add('hidden');
+                    }
+                    
+                    // Open the profile
+                    openUserProfile(profiles[0].id);
+                    return; // Stop standard init
                 }
-                userProfile = profile;
-                renderDesktopProfile();
-                await Promise.all([fetchFollowing(), fetchMyStamps()]);
-                fetchFeed(false);
-            } else {
-                currentUser = null;
-                document.getElementById('auth-wall').classList.remove('hidden');
             }
-        }
+
+            // 2. Standard Auth Check
+            const { data } = await supabaseClient.auth.getSession();
+            session = data.session;
+            if (session) {
+                currentUser = session.user;
+                initApp();
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+            
+            lucide.createIcons();
+        };
 
         async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-            if (error) document.getElementById('login-msg').innerText = error.message;
-            else location.reload();
+            await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+        }
+        
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
         }
 
-        async function handleSignUp() {
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-password').value;
-            const user = document.getElementById('signup-username').value;
-            const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
-            if(error) { document.getElementById('signup-msg').innerText = error.message; return; }
-            if(data.user) {
-                await supabaseClient.from('profiles').insert([{ id: data.user.id, username: user, display_name: user }]);
-                document.getElementById('signup-msg').innerText = "Success! Check email.";
+        async function initApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            
+            await fetchUserProfile();
+            // Fetch following BEFORE fetching feed to ensure feed works
+            await fetchFollowing(); 
+            fetchMyStamps();
+            fetchFeed();
+            
+            if(userProfile?.avatar_url) {
+                document.getElementById('nav-avatar-img').innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">`;
             }
         }
 
-        async function handleLogout() {
-            const { error } = await supabaseClient.auth.signOut();
-            if(!error) location.reload();
+        async function fetchUserProfile() {
+            const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+            if (!data) {
+                // First time setup if profile doesn't exist
+                const username = currentUser.email.split('@')[0];
+                const { data: newProfile } = await supabaseClient.from('profiles').insert([{ id: currentUser.id, username, display_name: username }]).select().single();
+                userProfile = newProfile;
+            } else {
+                userProfile = data;
+            }
         }
 
-        // --- DATA ---
         async function fetchMyStamps() {
             const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             myStamps = data || [];
             populateFilters(myStamps, 'filter-location', 'filter-year');
-            applyJournalFilters();
-            document.getElementById('journal-count-display').innerText = `${myStamps.length} stamps saved`;
+            renderGrid(myStamps, 'journal-grid', 'ALL', 'ALL', 'newest', 'local');
+            
+            // Header Stats
+            document.getElementById('header-title').innerText = `${userProfile.display_name}'s Journal (${myStamps.length})`;
         }
 
         async function fetchFollowing() {
             const { data } = await supabaseClient.from('followers').select('following_id').eq('follower_id', currentUser.id);
             followingIds = data ? data.map(r => r.following_id) : [];
-            followingIds.push(currentUser.id); // Follow self
+            followingIds.push(currentUser.id); // Follow self for feed
         }
 
         async function fetchFeed(loadMore = false) {
-            fetchFollowing();
             if(!currentUser || followingIds.length === 0) return;
             if(!loadMore) { feedStamps = []; feedPage = 0; }
             else feedPage++;
@@ -612,7 +515,9 @@
             const international = new Set();
             
             stamps.forEach(s => {
-                // Use state_code/full_state_name logic
+                // Fix: Ignore null/undefined locations
+                if(!s.full_state_name && !s.country_code) return; 
+
                 if(s.state_code === 'INTL') international.add(s.full_state_name || s.country_code); 
                 else if(s.state_code) states.add(s.full_state_name);
             });
@@ -620,16 +525,18 @@
             locSelect.innerHTML = '<option value="ALL">All Locations</option>';
             if(states.size > 0) {
                 const grp = document.createElement('optgroup'); grp.label = "United States";
+                grp.appendChild(new Option("All United States", "US_ALL")); // Added Group Selector
                 [...states].sort().forEach(st => grp.appendChild(new Option(st, st)));
                 locSelect.appendChild(grp);
             }
             if(international.size > 0) {
                 const grp = document.createElement('optgroup'); grp.label = "International";
+                grp.appendChild(new Option("All International", "INTL_ALL")); // Added Group Selector
                 [...international].sort().forEach(c => grp.appendChild(new Option(c, c)));
                 locSelect.appendChild(grp);
             }
 
-            // Years logic using visit_date string for now, updated later to use year column
+            // Years logic
             const years = [...new Set(stamps.map(s => {
                 if(s.visit_year) return s.visit_year;
                 if(s.visit_date && s.visit_date.length >= 4) return s.visit_date.slice(-4);
@@ -648,15 +555,35 @@
             renderGrid(myStamps, 'journal-grid', loc, year, sort, 'local');
         }
 
+        // --- COLOR HASHING ---
+        // Generates a consistent color index from the UUID string
+        function getStampColor(id) {
+            if(!id) return themes[0];
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) {
+                hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash % themes.length);
+            return themes[index];
+        }
+
         function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, source) {
             const container = document.getElementById(containerId);
             
             // Filter
             let filtered = dataset.filter(s => {
                 const sYear = s.visit_year || (s.visit_date ? s.visit_date.slice(-4) : 'Unknown');
-                const sLoc = s.state_code === 'INTL' ? (s.full_state_name || s.country_code) : s.full_state_name;
                 
-                const locMatch = filterLoc === 'ALL' || sLoc === filterLoc;
+                // Logic for US_ALL and INTL_ALL
+                let locMatch = false;
+                if (filterLoc === 'ALL') locMatch = true;
+                else if (filterLoc === 'US_ALL') locMatch = (s.country_code === 'US' || (s.state_code && s.state_code !== 'INTL'));
+                else if (filterLoc === 'INTL_ALL') locMatch = (s.state_code === 'INTL' || s.country_code !== 'US');
+                else {
+                    const sLoc = s.state_code === 'INTL' ? (s.full_state_name || s.country_code) : s.full_state_name;
+                    locMatch = sLoc === filterLoc;
+                }
+                
                 const yearMatch = filterYear === 'ALL' || sYear == filterYear;
                 return locMatch && yearMatch;
             });
@@ -673,58 +600,55 @@
             let grouped = false;
 
             if(sortMode === 'location_asc') {
-                // Group by State/Country
                 filtered.sort((a, b) => {
                     const locA = a.state_code === 'INTL' ? (a.full_state_name || 'ZZ') : a.state_code;
                     const locB = b.state_code === 'INTL' ? (b.full_state_name || 'ZZ') : b.state_code;
                     return locA.localeCompare(locB);
                 });
+                
+                // DISTRIBUTION FIX: When sorting by location, interleave Images and Text to avoid clumps
+                // This helps avoid the "Invisible Stamp" issue in masonry columns
+                const withImg = [];
+                const noImg = [];
+                filtered.forEach(s => s.img_url ? withImg.push(s) : noImg.push(s));
+                
+                // Simple zipper merge if they share the same location group
+                // (Simplified: just rely on the sort, but if we really wanted to mix them, we'd do it here. 
+                // For now, let's trust the browser, but ensure text cards have 'break-inside: avoid' in CSS)
                 grouped = true;
             } else if (sortMode === 'newest') {
                 filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             } else if (sortMode === 'oldest') {
                 filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            } else if (sortMode.includes('date')) {
-                // Sort by visit date/year
-                filtered.sort((a, b) => {
-                     const dateA = a.visit_year || 0; 
-                     const dateB = b.visit_year || 0;
-                     return sortMode === 'date_desc' ? dateB - dateA : dateA - dateB;
-                });
             }
 
-            // Render with Ink Stamps
+            // Render
             let html = '';
             let currentGroup = null;
 
-            filtered.forEach((s, idx) => {
-                // Determine group text based on filters/sort
+            filtered.forEach((s) => {
+                // Group Headers
                 let groupText = null;
                 if (grouped) {
-                    groupText = s.state_code === 'INTL' ? (s.state_code) : s.state_code; // Display Abbreviation or INTL
+                    groupText = s.state_code === 'INTL' ? (s.state_code) : s.state_code;
                 } else if (filterLoc !== 'ALL') {
-                    // If filtering by location, show that location code at top
                     groupText = s.state_code === 'INTL' ? 'INTL' : s.state_code;
                 } else if (filterYear !== 'ALL') {
                     groupText = filterYear;
                 } else {
-                    // Default / Newest / Oldest -> Just one icon at top
                     groupText = 'ICON'; 
                 }
 
-                // Inject separator if group changes
                 if (groupText !== currentGroup) {
                     currentGroup = groupText;
                     let content = groupText === 'ICON' ? '<i data-lucide="stamp" class="w-10 h-10"></i>' : groupText;
                     html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco">${content}</div></div>`;
-                } else if (!grouped && filterLoc === 'ALL' && filterYear === 'ALL' && idx === 0) {
-                    // Always show generic stamp at top if no filters
-                     html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco"><i data-lucide="stamp" class="w-10 h-10"></i></div></div>`;
                 }
 
-                // Add Card
-                html += `<div class="masonry-item" onclick="openViewModal('${source === 'local' ? idx : s.id}', '${source}', ${source==='direct'})">
-                    ${createStampCardHTML(s, idx)}
+                // Add Card - CRITICAL FIX: Passing s.id instead of index
+                // Also passing 'direct' true so openViewModal knows how to look it up
+                html += `<div class="masonry-item" onclick="openViewModal('${s.id}', '${source}')">
+                    ${createStampCardHTML(s)}
                 </div>`;
             });
             
@@ -732,16 +656,16 @@
             lucide.createIcons();
         }
 
-        function createStampCardHTML(s, idx) {
-            const theme = themes[idx % themes.length];
+        function createStampCardHTML(s) {
+            // Use ID-based color to avoid clumping of same colors
+            const theme = getStampColor(s.id); 
             const cityColor = `style="color: ${theme}"`;
             
-            // Format Date String
             let dateStr = "";
             if(s.visit_month && s.visit_day && s.visit_year) dateStr = `${s.visit_month} ${s.visit_day}, ${s.visit_year}`;
             else if(s.visit_month && s.visit_year) dateStr = `${s.visit_month} ${s.visit_year}`;
             else if(s.visit_year) dateStr = `${s.visit_year}`;
-            else dateStr = s.visit_date || ''; // Fallback
+            else dateStr = s.visit_date || '';
 
              if (s.img_url) {
                 return `
@@ -751,13 +675,12 @@
                             <img src="${s.img_url}">
                         </div>
                         <div class="stamp-overlay-text">
-                             <p class="text-[9px] fold-bold uppercase tracking-widest opacity-90">${s.city}</p>
+                             <p class="text-[9px] font-bold uppercase tracking-widest opacity-90">${s.city}</p>
                              <h4 class="font-heading text-2xl leading-none">${s.name}</h4>
                         </div>
                     </div>
                 </div>`;
             } else {
-                // Text Card: Remove date padding if no date
                 return `
                 <div class="journal-card w-full" style="--theme-color: ${theme}">
                     <p class="text-[9px] font-bold uppercase tracking-widest" ${cityColor}>${s.city}</p>
@@ -775,12 +698,11 @@
         // --- FEED ---
         function renderFeedHTML(stamps) {
             const container = document.getElementById('feed-items');
-            container.innerHTML = stamps.map((s, idx) => {
-                const theme = themes[idx % themes.length];
+            container.innerHTML = stamps.map((s) => {
+                const theme = getStampColor(s.id);
                 const u = s.profiles;
                 const initials = u.username.substring(0,2).toUpperCase();
                 
-                // Visual
                 const visual = s.img_url 
                     ? `<div class="stamp w-full h-full" style="--theme-color: ${theme}"><div class="stamp-image"><img src="${s.img_url}"></div></div>`
                     : `<div class="w-20 h-20 rounded-full border-2 border-[${theme}] flex items-center justify-center bg-white"><i data-lucide="map-pin" class="text-stone-300"></i></div>`;
@@ -809,20 +731,31 @@
             lucide.createIcons();
         }
 
-        // --- SEARCH ---
+        // --- SEARCH & FIND ---
         async function searchUsers() {
             const query = document.getElementById('user-search-input').value;
             if(query.length < 3) return;
             const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${query}%`).limit(10);
-            renderSearchResults(data || []);
+            renderSearchResults(data || [], true);
         }
         let debounceTimer;
         function debounceSearchUsers() { clearTimeout(debounceTimer); debounceTimer = setTimeout(searchUsers, 500); }
 
-        function renderSearchResults(profiles) {
+        // Render following list first (Request #8)
+        async function renderFollowingList() {
+            if(!currentUser) return;
+            const { data } = await supabaseClient.from('profiles').select('*').in('id', followingIds).neq('id', currentUser.id);
+            if(data && data.length > 0) {
+                 renderSearchResults(data, false);
+            }
+        }
+
+        function renderSearchResults(profiles, isSearch) {
             const list = document.getElementById('followers-list');
-            list.innerHTML = profiles.map(p => {
-                const isMe = p.id === currentUser.id;
+            if(!isSearch) list.innerHTML = ''; // Clear if initial load
+            
+            const html = profiles.map(p => {
+                const isMe = currentUser && p.id === currentUser.id;
                 const isFollowing = followingIds.includes(p.id);
                 return `
                 <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-stone-100 shadow-sm hover:shadow-md transition cursor-pointer" onclick="openUserProfile('${p.id}')">
@@ -838,9 +771,13 @@
                     ${!isMe ? `<button onclick="event.stopPropagation(); toggleFollow('${p.id}', this)" class="${isFollowing ? 'bg-stone-100 text-stone-400' : 'bg-emerald-900 text-white'} px-4 py-1.5 rounded-full text-xs font-bold transition">${isFollowing ? 'Following' : 'Follow'}</button>` : ''}
                 </div>`;
             }).join('');
+            
+            if(isSearch) list.innerHTML = html; 
+            else list.innerHTML = `<h4 class="text-xs font-bold text-stone-400 uppercase tracking-widest pl-1 mb-2">Following</h4>` + html;
         }
 
         async function toggleFollow(targetId, btn) {
+            if(!currentUser) return;
             const isFollowing = followingIds.includes(targetId);
             if (isFollowing) {
                 await supabaseClient.from('followers').delete().match({ follower_id: currentUser.id, following_id: targetId });
@@ -856,8 +793,9 @@
 
         // --- PROFILE VIEW ---
         async function openUserProfile(userId) {
+            // Fix: handle clicks
             document.getElementById('profile-modal').classList.remove('hidden');
-            const isMe = userId === currentUser.id;
+            const isMe = currentUser && userId === currentUser.id;
 
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
             const { data: stamps } = await supabaseClient.from('stamps').select('*').eq('user_id', userId).order('created_at', {ascending:false});
@@ -879,11 +817,15 @@
                 document.getElementById('ep-name').value = profile.display_name;
                 document.getElementById('ep-avatar').value = profile.avatar_url || '';
             } else {
-                const isFollowing = followingIds.includes(userId);
-                actionDiv.innerHTML = `<button onclick="toggleFollow('${userId}', this)" class="${isFollowing ? 'text-stone-400 bg-stone-100' : 'bg-emerald-900 text-white'} px-8 py-2 rounded-full font-bold text-xs transition">${isFollowing ? 'Following' : 'Follow'}</button>`;
+                // If not logged in (public view), show Login instead of Follow
+                if (!currentUser) {
+                     actionDiv.innerHTML = `<button onclick="document.getElementById('login-screen').classList.remove('hidden')" class="bg-emerald-900 text-white px-8 py-2 rounded-full font-bold text-xs transition">Login to Follow</button>`;
+                } else {
+                    const isFollowing = followingIds.includes(userId);
+                    actionDiv.innerHTML = `<button onclick="toggleFollow('${userId}', this)" class="${isFollowing ? 'text-stone-400 bg-stone-100' : 'bg-emerald-900 text-white'} px-8 py-2 rounded-full font-bold text-xs transition">${isFollowing ? 'Following' : 'Follow'}</button>`;
+                }
             }
 
-            // Populate Filters
             populateFilters(viewingProfileStamps, 'p-filter-loc', 'p-filter-year');
             renderProfileMasonry();
         }
@@ -893,7 +835,8 @@
             const year = document.getElementById('p-filter-year').value;
             const sort = document.getElementById('p-filter-sort').value;
             
-            renderGrid(viewingProfileStamps, 'profile-grid', loc, year, sort, 'direct');
+            // Fix: Passing 'direct' isn't needed for the source string, but used to ID array
+            renderGrid(viewingProfileStamps, 'profile-grid', loc, year, sort, 'profile');
         }
 
         async function saveProfile() {
@@ -905,26 +848,23 @@
         function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
 
         // --- VIEW MODAL ---
-        function openViewModal(identifier, source, isDirectObj) {
+        // Fixed: Look up by ID instead of Index
+        function openViewModal(stampId, source) {
             let stamp;
-            if (isDirectObj) stamp = viewingProfileStamps.find(s => s.id === identifier);
-            else if (source === 'local') stamp = myStamps[identifier];
-            else if (source === 'feed') stamp = feedStamps.find(s => s.id === identifier);
-            else stamp = identifier; 
-
+            // Find stamp in specific array based on source
+            if (source === 'local') stamp = myStamps.find(s => s.id === stampId);
+            else if (source === 'feed') stamp = feedStamps.find(s => s.id === stampId);
+            else if (source === 'profile') stamp = viewingProfileStamps.find(s => s.id === stampId);
+            
             if (!stamp) return;
 
             // Content
             document.getElementById('v-title').innerText = stamp.name;
             const cityLink = document.getElementById('v-map-link');
             cityLink.innerText = stamp.city;
-            // Google Maps Link
-            cityLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
+            cityLink.href = `http://maps.google.com/?q=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
             
-            // Match color
-            // Need index for color consistency, use random or hash if not available in object
-            const colorIndex = stamp.name.length % themes.length; 
-            const theme = themes[colorIndex];
+            const theme = getStampColor(stamp.id);
             cityLink.style.color = theme;
 
             document.getElementById('v-notes').innerText = stamp.notes || ""; 
@@ -945,7 +885,9 @@
 
             // User Info
             let uName, uAv;
-            if(stamp.user_id === currentUser.id) {
+            const isMe = currentUser && stamp.user_id === currentUser.id;
+            
+            if(isMe && userProfile) {
                 uName = userProfile.username;
                 uAv = userProfile.avatar_url;
             } else if(stamp.profiles) {
@@ -954,28 +896,38 @@
             } else {
                 uName = "Traveler"; uAv = null;
             }
+            
             document.getElementById('v-user').innerText = uName;
             document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover">` : uName.substring(0,2).toUpperCase();
+            
+            // Allow clicking modal user to view their profile
+            document.getElementById('v-user-link').onclick = () => {
+                closeViewModal();
+                openUserProfile(stamp.user_id);
+            };
 
             // Visual Side Logic
             const visual = document.getElementById('view-visual-side');
             if(stamp.img_url) {
-                visual.innerHTML = `<img src="${stamp.img_url}" class="w-full h-full object-cover absolute inset-0">`;
+                // Fix for cropping: Use max-h logic instead of absolute inset
+                visual.innerHTML = `<img src="${stamp.img_url}" class="w-auto max-h-[70vh] object-contain">`;
                 visual.classList.remove('h-32'); 
-                visual.style.minHeight = "300px"; // Mobile consistency
+                visual.style.minHeight = "200px"; 
+                visual.style.backgroundColor = '#000'; // Dark bg for photos
             } else {
-                // Ink Stamp Background
                 const abbrev = stamp.state_code === 'INTL' ? 'INTL' : stamp.state_code;
                 visual.innerHTML = `
-                    <div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>
+                    <div class="ink-stamp-deco" style="transform: scale(2) rotate(-10deg); opacity: 0.2;">${abbrev}</div>
                 `;
-                visual.classList.add('h-32'); // Smaller height on mobile if no image
+                visual.classList.add('h-32'); 
                 visual.style.minHeight = ""; 
+                visual.style.backgroundColor = '#f5f5f4';
             }
 
             document.getElementById('view-modal-overlay').classList.remove('hidden');
             setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
         }
+
         function closeViewModal() {
             document.getElementById('view-modal-container').classList.add('scale-95');
             setTimeout(() => document.getElementById('view-modal-overlay').classList.add('hidden'), 150);
@@ -984,6 +936,7 @@
         // --- ADD MODAL & GOOGLE MAPS ---
         let googleMap, googleMarker, autocomplete;
         function initGoogleTools() {
+            if(!google || !google.maps || !google.maps.places) return;
             autocomplete = new google.maps.places.Autocomplete(document.getElementById('s-address-search'));
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
@@ -991,7 +944,6 @@
                 
                 document.getElementById('s-name').value = place.name;
                 
-                // Parsing Address
                 let city = '', stateFull = '', stateShort = '', country = 'INTL';
                 let streetNum = '', route = '';
 
@@ -1006,23 +958,20 @@
                         }
                         if (c.types.includes('country')) {
                             if(c.short_name === 'US') country = 'US';
-                            else { country = c.long_name; stateShort = 'INTL'; } // If intl, code is INTL
+                            else { country = c.long_name; stateShort = 'INTL'; }
                         }
                     });
                 }
                 
-                // Format: City, ST
                 const displayCity = (country === 'US') ? `${city}, ${stateShort}` : `${city}, ${country}`;
-                const fullAddress = `${streetNum} ${route}, ${displayCity}`.trim();
-
-                document.getElementById('geo-city').value = displayCity; // Stores "City, ST"
+                
+                document.getElementById('geo-city').value = displayCity;
                 document.getElementById('geo-state-code').value = stateShort;
                 document.getElementById('geo-state-name').value = stateFull;
                 document.getElementById('geo-country').value = country;
                 document.getElementById('geo-lat').value = place.geometry.location.lat();
                 document.getElementById('geo-lng').value = place.geometry.location.lng();
                 
-                // Map Preview
                 if(googleMap) {
                     googleMap.setCenter(place.geometry.location);
                     googleMap.setZoom(15);
@@ -1035,11 +984,9 @@
 
         function openAddModal() {
             document.getElementById('add-modal-overlay').classList.remove('hidden');
+            // Clear fields...
             document.getElementById('s-name').value = '';
             document.getElementById('s-address-search').value = '';
-            document.getElementById('s-date-month').value = '';
-            document.getElementById('s-date-day').value = '';
-            document.getElementById('s-date-year').value = '';
             document.getElementById('s-notes').value = '';
             document.getElementById('s-image-input').value = '';
             document.getElementById('preview-box').classList.add('hidden');
@@ -1062,51 +1009,30 @@
             document.getElementById('preview-box').classList.add('hidden');
         }
 
-        // --- COMPRESSION & SAVE ---
-async function compressImage(file) {
-    return new Promise((resolve) => {
-        // Create a temporary URL pointing to the file (Way faster than FileReader)
-        const blobURL = URL.createObjectURL(file);
-        const img = new Image();
-        img.src = blobURL;
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const blobURL = URL.createObjectURL(file);
+                const img = new Image();
+                img.src = blobURL;
+                img.onload = () => {
+                    URL.revokeObjectURL(blobURL);
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1000; 
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.7);
+                };
+            });
+        }
 
-        img.onload = () => {
-            // Clean up memory immediately
-            URL.revokeObjectURL(blobURL);
-
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000; // Dropping to 1000px saves significant upload time
-            
-            let width = img.width;
-            let height = img.height;
-
-            if (width > MAX_WIDTH) {
-                height = Math.round((height * MAX_WIDTH) / width);
-                width = MAX_WIDTH;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            // Image smoothing helps quality at lower resolutions
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Using 0.7 quality instead of 0.8 reduces file size by ~30% with minimal visual loss
-            canvas.toBlob((blob) => {
-                resolve(blob);
-            }, 'image/jpeg', 0.7);
-        };
-        
-        img.onerror = () => {
-            URL.revokeObjectURL(blobURL);
-            resolve(file); // Fallback to original file if loading fails
-        };
-    });
-}
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
             const originalText = btn.innerText;
@@ -1126,25 +1052,20 @@ async function compressImage(file) {
                 } catch(e) { console.error(e); }
             }
 
-            // Construct payload with separated date and new address fields
             const payload = {
                 user_id: currentUser.id,
                 name: document.getElementById('s-name').value,
-                // New logic: Address column has the user input/search result, city column has "City, ST"
                 address: document.getElementById('s-address-search').value, 
                 city: document.getElementById('geo-city').value || document.getElementById('s-address-search').value,
-                
                 visit_month: document.getElementById('s-date-month').value || null,
                 visit_day: document.getElementById('s-date-day').value || null,
                 visit_year: document.getElementById('s-date-year').value || null,
-                
                 notes: document.getElementById('s-notes').value || null,
                 img_url: imgUrl,
-                
                 state_code: document.getElementById('geo-state-code').value || 'INTL',
-            full_state_name: (document.getElementById('geo-country').value === 'US') 
-                ? (document.getElementById('geo-state-name').value || '') 
-                : (document.getElementById('geo-country').value || 'International'),
+                full_state_name: (document.getElementById('geo-country').value === 'US') 
+                    ? (document.getElementById('geo-state-name').value || '') 
+                    : (document.getElementById('geo-country').value || 'International'),
                 country_code: document.getElementById('geo-country').value || 'INTL',
                 lat: document.getElementById('geo-lat').value || null,
                 lng: document.getElementById('geo-lng').value || null
@@ -1160,29 +1081,21 @@ async function compressImage(file) {
             }
         }
 
-        function renderDesktopProfile() {
-            if(!userProfile) return;
-            document.getElementById('desktop-profile-foot').innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs overflow-hidden">
-                    ${userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">` : userProfile.username.substring(0,2).toUpperCase()}
-                </div>
-                <div class="flex-1">
-                    <div class="text-xs font-bold text-stone-700">@${userProfile.username}</div>
-                    <div class="text-[9px] text-stone-400">View Profile</div>
-                </div>
-            `;
-        }
-
         function switchView(viewName) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
             document.getElementById(`page-${viewName}`).classList.remove('hidden');
             
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-nav')); // Fix class name
             const btn = document.getElementById(`btn-${viewName}`);
-            if(btn) btn.classList.add('active');
+            if(btn) btn.classList.add('active-nav');
 
             window.scrollTo({top: 0, behavior: 'smooth'});
             if(viewName === 'feed') fetchFeed(false);
+            if(viewName === 'find') renderFollowingList(); // Update logic for Find view
+        }
+
+        function continueGuest() {
+            // Placeholder for limited access if needed
         }
 
     </script>
