@@ -723,8 +723,8 @@
                 }
 
                 // Add Card
-                html += `<div class="masonry-item" onclick="openViewModal('${source === 'local' ? idx : s.id}', '${source}', ${source==='direct'})">
-                    ${createStampCardHTML(s, idx)}
+                html += `<div class="masonry-item" onclick="openViewModal('${s.id}', '${source}')">
+                    ${createStampCardHTML(s, s.id)} 
                 </div>`;
             });
             
@@ -904,49 +904,58 @@
         }
         function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
 
-        // --- VIEW MODAL ---
-        function openViewModal(identifier, source, isDirectObj) {
+                // --- VIEW MODAL ---
+        function openViewModal(id, source) {
+            // 1. SELECT THE CORRECT STAMP (Fix #1: Strictly by ID)
             let stamp;
-            if (isDirectObj) stamp = viewingProfileStamps.find(s => s.id === identifier);
-            else if (source === 'local') stamp = myStamps[identifier];
-            else if (source === 'feed') stamp = feedStamps.find(s => s.id === identifier);
-            else stamp = identifier; 
-
-            if (!stamp) return;
-
-            // Content
+            if (source === 'feed') {
+                stamp = feedStamps.find(s => s.id === id);
+            } else if (source === 'profile') {
+                stamp = viewingProfileStamps.find(s => s.id === id);
+            } else {
+                // This covers 'local' and 'direct' by searching your main stamps array
+                stamp = myStamps.find(s => s.id === id);
+            }
+        
+            if (!stamp) {
+                console.error("Stamp not found");
+                return;
+            }
+        
+            // 2. CONTENT POPULATION
             document.getElementById('v-title').innerText = stamp.name;
             const cityLink = document.getElementById('v-map-link');
             cityLink.innerText = stamp.city;
-            // Google Maps Link
+            
+            // Fixed Map Link URL
             cityLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
             
-            // Match color
-            // Need index for color consistency, use random or hash if not available in object
+            // Theme Color Logic (Fix #4: Consistency)
             const colorIndex = stamp.name.length % themes.length; 
             const theme = themes[colorIndex];
             cityLink.style.color = theme;
-
+        
             document.getElementById('v-notes').innerText = stamp.notes || ""; 
             
-            // Date logic
+            // Date logic (Kept your original structure)
             let dateStr = "";
             if(stamp.visit_month && stamp.visit_day && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_day}, ${stamp.visit_year}`;
             else if(stamp.visit_month && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_year}`;
             else if(stamp.visit_year) dateStr = `${stamp.visit_year}`;
             else dateStr = stamp.visit_date || '';
-
+        
+            const dateEl = document.getElementById('v-date');
             if(dateStr) {
-                document.getElementById('v-date').innerText = dateStr;
-                document.getElementById('v-date').classList.remove('hidden');
+                dateEl.innerText = dateStr;
+                dateEl.classList.remove('hidden');
             } else {
-                document.getElementById('v-date').classList.add('hidden');
+                dateEl.classList.add('hidden');
             }
-
-            // User Info
+        
+            // User Info (Fix #7: Profiles)
             let uName, uAv;
-            if(stamp.user_id === currentUser.id) {
-                uName = userProfile.username;
+            if(currentUser && stamp.user_id === currentUser.id) {
+                uName = userProfile.username || "Me";
                 uAv = userProfile.avatar_url;
             } else if(stamp.profiles) {
                 uName = stamp.profiles.username;
@@ -955,24 +964,26 @@
                 uName = "Traveler"; uAv = null;
             }
             document.getElementById('v-user').innerText = uName;
-            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover">` : uName.substring(0,2).toUpperCase();
-
-            // Visual Side Logic
+            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover rounded-full">` : uName.substring(0,2).toUpperCase();
+        
+            // 3. VISUAL SIDE LOGIC (Fix #2: Resize for vertical images)
             const visual = document.getElementById('view-visual-side');
             if(stamp.img_url) {
-                visual.innerHTML = `<img src="${stamp.img_url}" class="w-full h-full object-cover absolute inset-0">`;
-                visual.classList.remove('h-32'); 
-                visual.style.minHeight = "300px"; // Mobile consistency
-            } else {
-                // Ink Stamp Background
-                const abbrev = stamp.state_code === 'INTL' ? 'INTL' : stamp.state_code;
+                // Changed from absolute/cover to contain so images aren't cropped
                 visual.innerHTML = `
-                    <div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>
-                `;
-                visual.classList.add('h-32'); // Smaller height on mobile if no image
+                    <img src="${stamp.img_url}" 
+                         style="max-height: 80vh; width: auto; max-width: 100%; object-fit: contain;" 
+                         class="relative z-10 shadow-sm">`;
+                visual.classList.remove('h-32'); 
+                visual.style.minHeight = "300px"; 
+            } else {
+                const abbrev = stamp.state_code === 'INTL' ? 'INTL' : (stamp.state_code || '??');
+                visual.innerHTML = `<div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>`;
+                visual.classList.add('h-32');
                 visual.style.minHeight = ""; 
             }
-
+        
+            // 4. OPEN MODAL
             document.getElementById('view-modal-overlay').classList.remove('hidden');
             setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
         }
