@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -577,36 +576,11 @@
             followingIds.push(currentUser.id); // Follow self
         }
 
-        async function loadFindPage() {
-    // Clear previous results
-    document.getElementById('followers-list').innerHTML = ''; 
-    document.getElementById('user-search-input').value = '';
-
-    // Fetch people I follow
-    if (followingIds.length > 0) {
-        const { data } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .in('id', followingIds.filter(id => id !== currentUser.id));
-
-        if (data) {
-            // You need a container for this in your HTML: <div id="following-list-container"></div>
-            // Or just prepend it to the results list
-            const html = `<h3 class="col-span-full font-bold text-stone-400 text-xs uppercase my-4">People you follow</h3>` 
-                         + renderProfileCards(data);
-            document.getElementById('followers-list').innerHTML = html;
-        }
-    }
-}
-
         async function fetchFeed(loadMore = false) {
-    // Fix #11: Wait for following list before fetching feed
-    if (followingIds.length === 0) await fetchFollowing();
-
-    if (!currentUser || followingIds.length === 0) {
-        document.getElementById('feed-items').innerHTML = `<div class="text-center mt-10">Follow people to see their stamps here!</div>`;
-        return;
-    }
+            fetchFollowing();
+            if(!currentUser || followingIds.length === 0) return;
+            if(!loadMore) { feedStamps = []; feedPage = 0; }
+            else feedPage++;
 
             const PAGE_SIZE = 10;
             const from = feedPage * PAGE_SIZE;
@@ -637,32 +611,23 @@
             const states = new Set();
             const international = new Set();
             
-                stamps.forEach(s => {
-            if (!s.state_code) return; // Skip nulls
-            if (s.state_code === 'INTL' || s.country_code !== 'US') {
-                international.add(s.full_state_name || s.country_code);
-            } else {
-                states.add(s.full_state_name);
-            }
-        });
+            stamps.forEach(s => {
+                // Use state_code/full_state_name logic
+                if(s.state_code === 'INTL') international.add(s.full_state_name || s.country_code); 
+                else if(s.state_code) states.add(s.full_state_name);
+            });
 
-        locSelect.innerHTML = '<option value="ALL">All Locations</option>';
-        
-        // Fix #9: Add Group Selectors
-        if (states.size > 0) locSelect.appendChild(new Option("All United States", "US_ALL"));
-        if (international.size > 0) locSelect.appendChild(new Option("All International", "INTL_ALL"));
-    
-        // Add individual items
-        if (states.size > 0) {
-            const grp = document.createElement('optgroup'); grp.label = "United States";
-            [...states].sort().forEach(st => grp.appendChild(new Option(st, st)));
-            locSelect.appendChild(grp);
-        }
-        if (international.size > 0) {
-            const grp = document.createElement('optgroup'); grp.label = "International";
-            [...international].sort().forEach(c => grp.appendChild(new Option(c, c)));
-            locSelect.appendChild(grp);
-        }
+            locSelect.innerHTML = '<option value="ALL">All Locations</option>';
+            if(states.size > 0) {
+                const grp = document.createElement('optgroup'); grp.label = "United States";
+                [...states].sort().forEach(st => grp.appendChild(new Option(st, st)));
+                locSelect.appendChild(grp);
+            }
+            if(international.size > 0) {
+                const grp = document.createElement('optgroup'); grp.label = "International";
+                [...international].sort().forEach(c => grp.appendChild(new Option(c, c)));
+                locSelect.appendChild(grp);
+            }
 
             // Years logic using visit_date string for now, updated later to use year column
             const years = [...new Set(stamps.map(s => {
@@ -683,72 +648,93 @@
             renderGrid(myStamps, 'journal-grid', loc, year, sort, 'local');
         }
 
-function getThemeColor(id) {
-    const colors = ['#059669', '#b91c1c', '#d97706', '#4338ca', '#be185d', '#0f766e'];
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-}
+        function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, source) {
+            const container = document.getElementById(containerId);
+            
+            // Filter
+            let filtered = dataset.filter(s => {
+                const sYear = s.visit_year || (s.visit_date ? s.visit_date.slice(-4) : 'Unknown');
+                const sLoc = s.state_code === 'INTL' ? (s.full_state_name || s.country_code) : s.full_state_name;
+                
+                const locMatch = filterLoc === 'ALL' || sLoc === filterLoc;
+                const yearMatch = filterYear === 'ALL' || sYear == filterYear;
+                return locMatch && yearMatch;
+            });
 
-function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, source) {
-    const container = document.getElementById(containerId);
-    
-    // 1. Filter Data
-    let filtered = dataset.filter(s => {
-        // Handle US vs International Logic (Fix #9)
-        const sLoc = s.state_code === 'INTL' ? (s.full_state_name || s.country_code) : s.full_state_name;
-        
-        let locMatch = false;
-        if (filterLoc === 'ALL') locMatch = true;
-        else if (filterLoc === 'US_ALL') locMatch = s.country_code === 'US';
-        else if (filterLoc === 'INTL_ALL') locMatch = s.country_code !== 'US';
-        else locMatch = sLoc === filterLoc; // Exact match
+            // If empty
+            if(filtered.length === 0) {
+                container.innerHTML = ''; 
+                if(containerId === 'journal-grid') document.getElementById('journal-empty').classList.remove('hidden');
+                return;
+            }
+            if(containerId === 'journal-grid') document.getElementById('journal-empty').classList.add('hidden');
 
-        // Handle Years
-        const sYear = s.visit_year || (s.visit_date ? s.visit_date.slice(-4) : 'Unknown');
-        const yearMatch = filterYear === 'ALL' || sYear == filterYear;
-        
-        return locMatch && yearMatch;
-    });
+            // Sorting
+            let grouped = false;
 
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center text-stone-400 mt-10">No stamps found.</div>';
-        return;
-    }
+            if(sortMode === 'location_asc') {
+                // Group by State/Country
+                filtered.sort((a, b) => {
+                    const locA = a.state_code === 'INTL' ? (a.full_state_name || 'ZZ') : a.state_code;
+                    const locB = b.state_code === 'INTL' ? (b.full_state_name || 'ZZ') : b.state_code;
+                    return locA.localeCompare(locB);
+                });
+                grouped = true;
+            } else if (sortMode === 'newest') {
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else if (sortMode === 'oldest') {
+                filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            } else if (sortMode.includes('date')) {
+                // Sort by visit date/year
+                filtered.sort((a, b) => {
+                     const dateA = a.visit_year || 0; 
+                     const dateB = b.visit_year || 0;
+                     return sortMode === 'date_desc' ? dateB - dateA : dateA - dateB;
+                });
+            }
 
-    // 2. Sort Data
-    if (sortMode === 'newest') filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    else if (sortMode === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    
-    // 3. Interleave Logic (Fix #3) - Mix Text and Images
-    const withImg = filtered.filter(s => s.img_url);
-    const noImg = filtered.filter(s => !s.img_url);
-    const result = [];
-    
-    // Zip them together so we don't get walls of text
-    let i = 0, j = 0;
-    while(i < withImg.length || j < noImg.length) {
-        if(i < withImg.length) result.push(withImg[i++]);
-        if(j < noImg.length) result.push(noImg[j++]);
-    }
+            // Render with Ink Stamps
+            let html = '';
+            let currentGroup = null;
 
-    // 4. Render
-    container.innerHTML = result.map(s => {
-        const theme = getThemeColor(s.id); // Fix #4 (Colors)
-        
-        // Pass the ID explicitly to fix Indexing Bug (Fix #1)
-        return `
-        <div class="masonry-item" onclick="openViewModal('${s.id}', '${source}')">
-            ${createStampCardHTML(s, theme)} 
-        </div>`;
-    }).join('');
-    
-    lucide.createIcons();
-}
+            filtered.forEach((s, idx) => {
+                // Determine group text based on filters/sort
+                let groupText = null;
+                if (grouped) {
+                    groupText = s.state_code === 'INTL' ? (s.state_code) : s.state_code; // Display Abbreviation or INTL
+                } else if (filterLoc !== 'ALL') {
+                    // If filtering by location, show that location code at top
+                    groupText = s.state_code === 'INTL' ? 'INTL' : s.state_code;
+                } else if (filterYear !== 'ALL') {
+                    groupText = filterYear;
+                } else {
+                    // Default / Newest / Oldest -> Just one icon at top
+                    groupText = 'ICON'; 
+                }
+
+                // Inject separator if group changes
+                if (groupText !== currentGroup) {
+                    currentGroup = groupText;
+                    let content = groupText === 'ICON' ? '<i data-lucide="stamp" class="w-10 h-10"></i>' : groupText;
+                    html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco">${content}</div></div>`;
+                } else if (!grouped && filterLoc === 'ALL' && filterYear === 'ALL' && idx === 0) {
+                    // Always show generic stamp at top if no filters
+                     html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco"><i data-lucide="stamp" class="w-10 h-10"></i></div></div>`;
+                }
+
+                // Add Card
+                html += `<div class="masonry-item" onclick="openViewModal('${source === 'local' ? idx : s.id}', '${source}', ${source==='direct'})">
+                    ${createStampCardHTML(s, idx)}
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
 
         function createStampCardHTML(s, idx) {
+            const theme = themes[idx % themes.length];
+            const cityColor = `style="color: ${theme}"`;
             
             // Format Date String
             let dateStr = "";
@@ -881,7 +867,6 @@ function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, sourc
             const initials = profile.username.substring(0,2).toUpperCase();
             document.getElementById('p-avatar-lg').innerHTML = profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : initials;
             document.getElementById('p-name').innerText = profile.display_name;
-            document.getElementById('profile-modal').classList.add('bg-stone-50');
             document.getElementById('p-username').innerText = `@${profile.username} • ${stamps.length} Stamps`;
 
             // Actions
@@ -901,7 +886,6 @@ function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, sourc
             // Populate Filters
             populateFilters(viewingProfileStamps, 'p-filter-loc', 'p-filter-year');
             renderProfileMasonry();
-            renderGrid(viewingProfileStamps, 'profile-grid', loc, year, sort, 'profile');
         }
 
         function renderProfileMasonry() {
@@ -1199,8 +1183,6 @@ async function compressImage(file) {
 
             window.scrollTo({top: 0, behavior: 'smooth'});
             if(viewName === 'feed') fetchFeed(false);
-
-                        if(viewName === 'find') loadFindPage();
         }
 
     </script>
