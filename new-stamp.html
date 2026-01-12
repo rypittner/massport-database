@@ -743,7 +743,19 @@
                          <p class="text-[9px] uppercase tracking-widest opacity-90">${s.city}</p>
                         <h4 class="font-heading text-2xl leading-none mb-1">${s.name}</h4>
                     </div>
-                </div>`;
+                </div>
+    <div class="stamp w-full flex flex-col" style="--theme-color: ${theme}">
+        
+        <div class="flex-1 overflow-hidden">
+            <img src="${s.img_url}" class="w-full h-full object-cover">
+        </div>
+        
+        <div class="p-3 flex flex-col gap-1" style="background-color: var(--theme-color); color: white;">
+             <p class="text-[9px] uppercase tracking-widest opacity-90">${s.city}</p>
+             <h4 class="font-heading text-xl md:text-2xl leading-tight">${s.name}</h4>
+        </div>
+        
+    </div>`;
             } else {
                 // Text Card: Remove date padding if no date
                 return `
