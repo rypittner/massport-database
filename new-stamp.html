@@ -30,6 +30,16 @@
 
         #view-modal-overlay{z-index:99999;}
 
+        .city-small-image{
+            background: rgba(255, 255, 255, 0.3);
+            border-radius:5px;
+            padding:3px;
+        }
+        .city-small{
+            background: rgba(var(--theme-color), 0.3);
+            border-radius:5px;
+            padding:3px;
+        }
 
         @media (min-width: 640px) { .masonry-grid { column-count: 2; width: 100%;} }
         @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
@@ -408,7 +418,7 @@
                         <span id="v-user" class="text-xs font-bold text-stone-400 uppercase tracking-wide"></span>
                     </div>
 
-                    <a id="v-map-link" href="#" target="_blank" class="block w-fit text-xs uppercase tracking-[0.2em] font-bold mb-2 hover:underline transition-all decoration-2 underline-offset-4" style="color: var(--theme-color);"></a>
+                    <a id="v-map-link" href="#" target="_blank" class="block w-fit text-xs uppercase tracking-[0.2em] font-bold mb-2 hover:underline transition-all decoration-2 underline-offset-4 city-small" style="color: var(--theme-color);"></a>
                     
                     <h3 id="v-title" class="text-3xl md:text-5xl font-heading leading-none text-stone-800"></h3>
                 </div>
@@ -771,7 +781,7 @@
                             <img src="${s.img_url}">
                         </div>
                         <div class="stamp-overlay-text">
-                             <p class="text-[9px] fold-bold uppercase tracking-widest opacity-90">${s.city}</p>
+                             <p class="text-[9px] fold-bold uppercase tracking-widest opacity-90 city-small-image">${s.city}</p>
                              <h4 class="font-heading text-2xl leading-none">${s.name}</h4>
                         </div>
                     </div>
@@ -780,7 +790,7 @@
                 // Text Card: Remove date padding if no date
                 return `
                 <div class="journal-card w-full" style="--theme-color: ${theme}">
-                    <p class="text-[9px] font-bold uppercase tracking-widest" ${cityColor}>${s.city}</p>
+                    <p class="text-[9px] font-bold uppercase tracking-widest city small" ${cityColor}>${s.city}</p>
                     <h4 class="font-heading text-2xl leading-tight text-stone-800 ${!s.notes && !dateStr ? 'mb-0' : ''}">${s.name}</h4>
                     ${s.notes ? `<p class="text-[13px] text-stone-500 italic line-clamp-4 leading-relaxed my-1">${s.notes}</p>` : ''}
                     ${dateStr ? `
