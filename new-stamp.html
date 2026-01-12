@@ -55,36 +55,34 @@
             
         }
         
-        .stamp-image { 
-            position: absolute; 
-            inset: 6% 7.689%;
-            overflow: hidden; 
-            background: white;
-            z-index: 1;
-            border: 4px solid var(--theme-color);
-        }
-        .stamp-image img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            opacity: 1;
-        }
-        
-        .stamp-overlay-text {
-            position: absolute;
-            bottom: 6%; left: 7.689%; right: 7.689%;
-            background-color: var(--theme-color);
-            background-color: white;
-            padding: 12px 10px;
-            color: white;
-            color: var(--theme-color);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            text-align: left;
-            gap: 4px;
-        }
+/* This wrapper handles the 'inset' padding once for both elements */
+.stamp-content-wrapper {
+    position: absolute;
+    inset: 6% 7.689%; /* This matches your original stamp border inset */
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+}
+
+.stamp-image { 
+    flex-grow: 1; /* This pushes the image to fill the remaining top space */
+    overflow: hidden; 
+    background: white;
+    border: 4px solid var(--theme-color);
+    border-bottom: none; /* Optional: prevents double border between image and text */
+}
+
+.stamp-overlay-text {
+    /* REMOVED: position absolute, bottom, left, right */
+    background-color: white;
+    padding: 12px 10px;
+    color: var(--theme-color);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 4px;
+    border: 4px solid var(--theme-color); /* Matches the image border */
+}
 
         /* --- Ink Stamp Decorative Item --- */
         .ink-stamp-deco {
@@ -744,18 +742,17 @@
                         <h4 class="font-heading text-2xl leading-none mb-1">${s.name}</h4>
                     </div>
                 </div>
-    <div class="stamp w-full flex flex-col" style="--theme-color: ${theme}">
-        
-        <div class="flex-1 overflow-hidden">
-            <img src="${s.img_url}" class="w-full h-full object-cover">
-        </div>
-        
-        <div class="p-3 flex flex-col gap-1" style="background-color: var(--theme-color); color: white;">
-             <p class="text-[9px] uppercase tracking-widest opacity-90">${s.city}</p>
-             <h4 class="font-heading text-xl md:text-2xl leading-tight">${s.name}</h4>
-        </div>
-        
-    </div>`;
+                <div class="stamp w-full" style="--theme-color: ${theme}">
+                    <div class="stamp-content-wrapper">
+                        <div class="stamp-image">
+                            <img src="${s.img_url}">
+                        </div>
+                        <div class="stamp-overlay-text">
+                             <p class="text-[9px] uppercase tracking-widest opacity-90">${s.city}</p>
+                             <h4 class="font-heading text-2xl leading-none">${s.name}</h4>
+                        </div>
+                    </div>
+                </div>`;
             } else {
                 // Text Card: Remove date padding if no date
                 return `
