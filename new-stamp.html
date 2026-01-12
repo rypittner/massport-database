@@ -62,26 +62,35 @@
     display: flex;
     flex-direction: column;
     z-index: 5;
+        border: 4px solid var(--theme-color);
 }
 
 .stamp-image { 
     flex-grow: 1; /* This pushes the image to fill the remaining top space */
     overflow: hidden; 
     background: white;
-    border: 4px solid var(--theme-color);
-    border-bottom: none; /* Optional: prevents double border between image and text */
+}
+
+        .stamp-image img {
+    width: 100%;
+    height: 100%;
+    /* 1. Fill the container without stretching */
+    object-fit: cover; 
+    /* 2. Keep the subject of the photo centered */
+    object-position: center;
+    /* 3. Prevents the image from being 'wider' than it is 'tall' relative to its original size */
+    aspect-ratio: auto; 
 }
 
 .stamp-overlay-text {
     /* REMOVED: position absolute, bottom, left, right */
-    background-color: white;
+    background-color: var(--theme-color);
     padding: 12px 10px;
-    color: var(--theme-color);
+    color: white;
     display: flex;
     flex-direction: column;
     text-align: left;
     gap: 4px;
-    border: 4px solid var(--theme-color); /* Matches the image border */
 }
 
         /* --- Ink Stamp Decorative Item --- */
