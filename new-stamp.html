@@ -40,6 +40,17 @@
         }
         .masonry-item:hover { transform: translateY(-2px) scale(1.01); }
 
+                #view-visual-side {
+            width: 100%;
+            height: auto !important; /* This is the "auto" fix */
+            min-height: 200px;       /* Keeps it from being too small */
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;  /* Removes the background color bars */
+        }
+
         /* --- Stamp Visuals (With Image) --- */
         .stamp {
             aspect-ratio: 39 / 50; 
