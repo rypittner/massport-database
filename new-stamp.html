@@ -1203,33 +1203,6 @@ async function compressImage(file) {
                         if(viewName === 'find') loadFindPage();
         }
 
-        window.onload = async () => {
-    initGoogleTools(); // Keep this
-
-    // Fix #6: Public Profile via Hash
-    if (window.location.hash.startsWith('#@')) {
-        const username = window.location.hash.substring(2);
-        
-        // Hide Auth Screen immediately
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('opacity-0');
-        
-        // Hide Private Nav Elements
-        document.querySelector('aside').style.display = 'none'; // Sidebar
-        document.getElementById('mobile-nav').style.display = 'none'; 
-        document.getElementById('fab-add').style.display = 'none';
-
-        // Load that profile
-        const { data } = await supabaseClient.from('profiles').select('id').eq('username', username).single();
-        if (data) {
-            openUserProfile(data.id);
-        }
-        return; // Stop here, don't check session
-    }
-
-    await checkSession();
-};
-
     </script>
 </body>
 </html>
