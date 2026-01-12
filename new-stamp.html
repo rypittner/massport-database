@@ -31,13 +31,11 @@
         @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
         @media (min-width: 1280px) { .masonry-grid { column-count: 4; width: 100%;} }
         
-        .masonry-item {
+        .stamp, .journal-card {
             break-inside: avoid;
-            margin-bottom: 1.5rem;
-            transition: transform 0.3s var(--ease-smooth);
-            position: relative;
+            transition: transform 0.4s var(--ease-smooth);
         }
-        .masonry-item:hover { transform: translateY(-4px); }
+        .stamp:hover, .journal-card:hover { transform: translateY(-4px) scale(1.03);; }
 
         /* --- Stamp Visuals (With Image) --- */
         .stamp {
