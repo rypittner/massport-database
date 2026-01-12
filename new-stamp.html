@@ -906,19 +906,26 @@
 
                 // --- VIEW MODAL ---
         function openViewModal(id, source) {
-            // 1. SELECT THE CORRECT STAMP (Fix #1: Strictly by ID)
+            // 1. SELECT THE CORRECT STAMP (Improved string-matching)
             let stamp;
+            
+            // We use String(s.id) === String(id) to prevent type errors
             if (source === 'feed') {
-                stamp = feedStamps.find(s => s.id === id);
+                stamp = feedStamps.find(s => String(s.id) === String(id));
             } else if (source === 'profile') {
-                stamp = viewingProfileStamps.find(s => s.id === id);
+                stamp = viewingProfileStamps.find(s => String(s.id) === String(id));
             } else {
-                // This covers 'local' and 'direct' by searching your main stamps array
-                stamp = myStamps.find(s => s.id === id);
+                stamp = myStamps.find(s => String(s.id) === String(id));
+            }
+        
+            // EMERGENCY FALLBACK: Search every bucket if the source was wrong
+            if (!stamp) {
+                const all = [...myStamps, ...feedStamps, ...viewingProfileStamps];
+                stamp = all.find(s => String(s.id) === String(id));
             }
         
             if (!stamp) {
-                console.error("Stamp not found");
+                console.error("Stamp not found for ID:", id);
                 return;
             }
         
