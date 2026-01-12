@@ -35,7 +35,8 @@
             break-inside: avoid;
             margin-bottom: 1.4rem;
             position: relative;
-            transition: transform 0.4s var(--ease-smooth);
+            transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+            will-change: transform;
         }
         .masonry-item:hover { transform: translateY(-4px) scale(1.03); }
 
