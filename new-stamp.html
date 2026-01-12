@@ -26,6 +26,10 @@
             margin: 0 auto;
         }
 
+        #profile-modal{background:#f2eeea;}
+
+        #view-modal-overlay{z-index:99999;}
+
 
         @media (min-width: 640px) { .masonry-grid { column-count: 2; width: 100%;} }
         @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
@@ -421,7 +425,7 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="fixed inset-0 bg-white z-[110] hidden overflow-y-auto">
+    <div id="profile-modal" class="fixed inset-0 z-[110] hidden overflow-y-auto">
         <div class="max-w-6xl mx-auto p-4 md:p-12 min-h-screen">
             <button onclick="closeProfileModal()" class="fixed top-6 right-6 p-2 bg-stone-100 rounded-full hover:bg-stone-200 z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
             
