@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Yrsa:wght@500;600;700&display=swap');
+
+        :root {
+            --theme-color: #4478A2;
+            background-color:#f2eeea;
+        }
+
+        /* Basic Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .stamp {
+            width: 100%;
+            aspect-ratio: 39 / 50;
+            background-image: url('https://raw.githubusercontent.com/rypittner/massport-database/main/stamp_bg.svg');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: relative;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.1));
+            cursor: pointer;
+        }
+
+        .stamp-content-wrapper {
+            position: absolute;
+            inset: 6% 7.689%;
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+            border: 4px solid var(--theme-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stamp-image {
+            flex-grow: 1;
+            position: relative;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .stamp-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .h-year {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--theme-color);
+        }
+
+        .stamp-overlay-text {
+            background-color: var(--theme-color);
+            padding: 12px 10px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* Controlled spacing between city and church */
+        }
+
+        .h-city {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 100px;
+            padding: 2px 8px;
+            width: fit-content;
+            backdrop-filter: blur(8px);
+            margin-bottom:5px;
+        }
+        .h-city-journal{
+            background: color-mix(in srgb, var(--theme-color), transparent 80%);
+            border: 1px solid var(--theme-color);
+            color: var(--theme-color);
+            }
+
+        .h-church {
+            font-family: 'Yrsa', serif;
+            font-size: 1.4rem;
+            line-height: 1.1;
+        }
+        
+        .stamp-journal {
+            background: white;
+            border: 1px solid #eaddd7;
+            border-top: 5px solid var(--theme-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; /* Tighter gap */
+        }
+        
+        .h-note{
+        	font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stamp">
+        <div class="stamp-content-wrapper">
+            <div class="stamp-image">
+                <img src="https://images.unsplash.com/photo-1548625361-195fe5795df5?auto=format&fit=crop&w=800" alt="Church Image">
+                <div class="h-year">SEPTEMBER 9, 2025</div>
+            </div>
+            <div class="stamp-overlay-text">
+                <div class="h-city">Tucson, AZ</div>
+                <div class="h-church">St. Thomas the Apostle Catholic Church</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stamp-journal">
+      <div class="h-city h-city-journal">Tucson</div>
+      <div class="h-church">Name of Church</div>
+      <div class="h-note">Notes about this church if they exist but they might not</div>
+      <div class="h-year">AUGUST 26, 2025</div>
+    </div>
+
+</body>
+</html>
