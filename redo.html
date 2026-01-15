@@ -2,453 +2,581 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Journal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MassPort App</title>
     
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhkXIYU0gQZA8yYcCOWlfyjgfS33SISrg&libraries=places&callback=initGoogleTools" async defer></script>
 
     <style>
-        /* --- CSS VARIABLES & RESET --- */
-        :root {
-            --bg-color: #fcfaf8;
-            --text-main: #2d2a26;
-            --text-light: #787572;
-            --border-color: #e5e5e5;
-            --white: #ffffff;
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --font-heading: "Georgia", serif; /* Changed to serif for 'journal' feel */
-            
-            /* Themes */
-            --theme-1: #e76f51; /* Burnt Orange */
-            --theme-2: #264653; /* Deep Teal */
-            --theme-3: #e9c46a; /* Gold */
-            --theme-4: #2a9d8f; /* Emerald */
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
-        body { font-family: var(--font-main); background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Yrsa:wght@500;600;700&display=swap');
         
-        /* --- UTILITIES --- */
-        .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
-        .gap-2 { gap: 0.5rem; }
-        .gap-4 { gap: 1rem; }
-        .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .cursor-pointer { cursor: pointer; }
-        .text-center { text-align: center; }
-        
-        /* --- AUTH SCREEN --- */
-        #auth-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; padding: 20px;
-        }
-        .auth-box {
-            background: var(--white); border: 1px solid var(--border-color);
-            padding: 40px; border-radius: 16px; width: 100%; max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center;
-        }
-        .input-field {
-            width: 100%; padding: 12px; margin-bottom: 12px;
-            border: 1px solid var(--border-color); border-radius: 8px;
-            font-size: 14px; background: #fafafa;
-        }
-        .btn-primary {
-            background: var(--text-main); color: var(--white);
-            padding: 12px 24px; border-radius: 50px; border: none;
-            font-weight: 600; cursor: pointer; width: 100%;
-            transition: opacity 0.2s;
-        }
-        .btn-primary:hover { opacity: 0.9; }
+        :root { --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1); }
+        body { font-family: 'Inter', sans-serif; background-color: #f2eeea; color: #2d2d2d; overflow-x: hidden; }
+        h1, h2, h3, .font-heading { font-family: 'Yrsa', serif; }
 
-        /* --- APP LAYOUT --- */
-        .app-layout { display: flex; min-height: 100vh; }
-        
-        /* Sidebar (Desktop) / Bottom Nav (Mobile) */
-        #sidebar {
-            width: 250px; border-right: 1px solid var(--border-color);
-            padding: 24px; position: sticky; top: 0; height: 100vh;
-            background: var(--bg-color); display: flex; flex-direction: column;
-        }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px; color: var(--text-light);
-            text-decoration: none; border-radius: 8px;
-            margin-bottom: 4px; transition: background 0.1s;
-        }
-        .nav-item:hover, .nav-item.active { background: #efebe9; color: var(--text-main); }
-        .nav-item i { width: 20px; }
-
-        #mobile-nav {
-            display: none; position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--white); border-top: 1px solid var(--border-color);
-            padding: 12px; justify-content: space-around; z-index: 100;
-        }
-
-        /* --- MAIN CONTENT AREA --- */
-        .main-content { flex: 1; padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
-        
-        /* Header */
-        .header-controls {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 24px; flex-wrap: wrap; gap: 10px;
-        }
-        .filter-select {
-            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);
-            background: var(--white); font-size: 13px; color: var(--text-main);
-        }
-
-        /* --- MASONRY GRID --- */
+        /* --- Masonry Layout --- */
         .masonry-grid {
-            column-count: 3; column-gap: 20px;
+            column-count: 1;
+            column-gap: 1.5rem;
+            width: 90%;
+            margin: 0 auto;
         }
+
+        #profile-modal{background:#f2eeea;}
+
+        #view-modal-overlay{z-index:99999;}
+
+        .city-small {
+            /* This allows the hex code to work with transparency */
+            background: color-mix(in srgb, var(--theme-color), transparent 70%);
+            border-radius: 999px;
+            padding: 2px 10px;
+            display: inline-block;
+            width: fit-content;
+        }
+        
+        .city-small-image {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            padding: 2px 10px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; width: 100%;} }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; width: 100%;} }
+        @media (min-width: 1280px) { .masonry-grid { column-count: 4; width: 100%;} }
+        
         .masonry-item {
-            break-inside: avoid; margin-bottom: 20px;
+            break-inside: avoid;
+            margin-bottom: 1.4rem;
             position: relative;
+            transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+            will-change: transform;
         }
+        .masonry-item:hover { transform: translateY(-2px) scale(1.01); }
 
-        /* --- STAMP CARDS --- */
-        .stamp-card {
-            background: var(--white); border-radius: 12px;
-            overflow: hidden; border: 1px solid var(--border-color);
-            transition: transform 0.2s; cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-        .stamp-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-
-        /* Image Stamp Specifics */
-        .stamp-image-container {
-            width: 100%; height: auto; position: relative;
-        }
-        .stamp-image-container img {
-            width: 100%; display: block; object-fit: cover;
-        }
-        
-        /* Text Journal Specifics */
-        .journal-content { padding: 20px; position: relative; }
-        
-        /* Typography */
-        .stamp-title {
-            font-family: var(--font-heading); font-size: 18px;
-            margin-bottom: 4px; line-height: 1.2;
-        }
-        .stamp-date {
-            font-size: 11px; color: #999; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            margin-top: 12px; display: block;
-        }
-        .stamp-notes {
-            font-size: 13px; color: var(--text-light);
-            line-height: 1.5; margin-top: 8px;
-            display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
-        }
-
-        /* --- CITY PILLS (New Logic) --- */
-        .city-pill {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; padding: 4px 10px; border-radius: 20px;
-            display: inline-block; margin-bottom: 8px;
-        }
-        
-        /* Pill for Image Stamps (Overlaid) */
-        .pill-overlay {
-            position: absolute; top: 12px; left: 12px; z-index: 10;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(4px);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        /* Pill for Text Stamps (Inline) */
-        .pill-inline {
-            background: var(--theme-light); /* Set via inline style in JS */
-            color: var(--theme-color);      /* Set via inline style in JS */
-            border: 1px solid var(--theme-color);
-        }
-
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
-        }
-        .modal-box {
-            background: var(--white); width: 90%; max-width: 900px;
-            height: 80vh; max-height: 700px; border-radius: 16px;
-            overflow: hidden; display: flex; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        #view-visual-side {
+            height: auto !important; /* This is the "auto" fix */
+            min-height: 200px;       /* Keeps it from being too small */
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .modal-left {
-            flex: 1.5; background: #000; position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        /* Fix for Image Filling Space (Request 4) */
-        .modal-left img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-        .modal-right {
-            flex: 1; padding: 40px; overflow-y: auto; position: relative;
-            display: flex; flex-direction: column;
-        }
-        .close-icon-btn {
-            position: absolute; top: 20px; right: 20px; z-index: 20;
-            background: rgba(0,0,0,0.3); border-radius: 50%;
-            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-            color: white; cursor: pointer; transition: background 0.2s;
-        }
-        .close-icon-btn:hover { background: rgba(0,0,0,0.6); }
 
-        /* Add Stamp Modal specific */
-        .modal-form-box { max-width: 500px; height: auto; max-height: 90vh; flex-direction: column; }
-        .form-group { margin-bottom: 16px; }
-        .form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; display: block; }
-
-        /* --- PROFILES & LISTS --- */
-        .profile-header { text-align: center; margin-bottom: 30px; }
-        .avatar-large { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; display: block; background: #eee; }
-        .user-list-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px; background: var(--white); border: 1px solid var(--border-color);
-            border-radius: 12px; margin-bottom: 10px; transition: 0.2s;
+        #view-visual-side img {
+            width: 100%;
+            height: 100%;           /* Fill the container height */
+            object-fit: cover;      /* Fills the space without strips */
+            display: block;
         }
-        .user-list-item:hover { transform: scale(1.01); }
-        .follow-btn { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
-        .btn-following { background: #f0f0f0; color: #888; }
-        .btn-follow { background: var(--text-main); color: white; }
 
-        /* --- RESPONSIVE --- */
-        @media (max-width: 768px) {
-            #sidebar { display: none; }
-            #mobile-nav { display: flex; }
-            .app-layout { padding-bottom: 60px; } /* Space for mobile nav */
-            .masonry-grid { column-count: 1; }
-            .modal-box { flex-direction: column; height: 90vh; }
-            .modal-left { flex: 1; max-height: 40%; }
-            .modal-right { flex: 1; }
-            .header-controls { flex-direction: column; align-items: stretch; }
+        /* --- Stamp Visuals (With Image) --- */
+        .stamp {
+            aspect-ratio: 39 / 50; 
+            background-image: url('https://raw.githubusercontent.com/rypittner/massport-database/main/stamp_bg.svg');
+            background-size: 100% 100%;
+            stroke: #eaddd7;
+            stroke-width: 2px;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer; 
+            position: relative; 
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.1));
+            overflow: hidden;
+            
         }
         
-        /* Z-Index fix for desktop profile click (Request 9) */
-        #desktop-profile-foot {
-            margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
-            z-index: 50; position: relative; 
+/* This wrapper handles the 'inset' padding once for both elements */
+.stamp-content-wrapper {
+    position: absolute;
+    inset: 6% 7.689%; /* This matches your original stamp border inset */
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+        border: 4px solid var(--theme-color);
+    border-radius:2px;
+}
+
+.stamp-image { 
+    flex-grow: 1; /* This pushes the image to fill the remaining top space */
+    overflow: hidden; 
+    background: white;
+}
+
+        .stamp-image img {
+    width: 100%;
+    height: 100%;
+    /* 1. Fill the container without stretching */
+    object-fit: cover; 
+    /* 2. Keep the subject of the photo centered */
+    object-position: center;
+    /* 3. Prevents the image from being 'wider' than it is 'tall' relative to its original size */
+    aspect-ratio: auto; 
+}
+
+.stamp-overlay-text {
+    /* REMOVED: position absolute, bottom, left, right */
+    background-color: var(--theme-color);
+    padding: 12px 10px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 4px;
+}
+
+        /* --- Ink Stamp Decorative Item --- */
+        .ink-stamp-deco {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            aspect-ratio: 1/1;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border: 2px dashed #383533;
+            border-radius: 50%;
+            color: #383533;
+            font-family: 'Yrsa', serif;
+            font-weight: 700;
+            font-size: 4rem;
+            text-transform: uppercase;
+            opacity: 0.3;
         }
+
+            @media (max-width:639px){     
+                .ink-stamp-deco {
+                width: 50%;
+                }
+                .journal-header{font-size: 12pt;}
+            }
+
+        /* --- Text-Only Journal Card --- */
+        .journal-card {
+            background: white;
+            border: 1px solid #eaddd7;
+            border-top: 5px solid var(--theme-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; /* Tighter gap */
+        }
+        .journal-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+
+        /* --- Feed Card --- */
+        .feed-container-card {
+            display: flex;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #f1eeed;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 200px;
+        }
+        .feed-container-card:hover { transform: translateY(-2px); border-color: #e5e7eb; box-shadow: 0 10px 20px rgba(0,0,0,0.04); }
+        
+        .feed-left-visual {
+            width: 35%;
+            min-width: 120px;
+            background: #f8f6f5;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- Nav & Utilities --- */
+        .nav-btn {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: #a8a29e; /* stone-400 */
+        }
+        .nav-btn.active {
+            color: #065f46; /* emerald-800 */
+        }
+        .nav-btn.active svg {
+            stroke-width: 2.5px;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Sticky Header Mobile */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(242, 238, 234, 0.85);
+            backdrop-filter: blur(8px);
+            padding-bottom: 1rem;
+            padding-top: 1rem;
+            margin-top: -1rem;
+        }
+        
     </style>
 </head>
-<body>
+<body class="md:pl-64 pb-24 md:pb-0">
 
-    <div id="auth-container">
-        <div class="auth-box">
-            <h1 style="font-family: var(--font-heading); margin-bottom: 10px;">Travel Journal</h1>
-            <p style="color: var(--text-light); margin-bottom: 24px;">Log your journeys.</p>
-            <input type="text" id="signup-username" class="input-field" placeholder="Username (for signup)">
-            <input type="email" id="signup-email" class="input-field" placeholder="Email">
-            <input type="password" id="signup-password" class="input-field" placeholder="Password">
-            <button onclick="handleSignUp()" class="btn-primary" style="margin-bottom: 10px;">Sign Up</button>
-            <button onclick="handleLogin()" class="btn-primary" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">Log In</button>
-            <p id="signup-msg" style="margin-top: 10px; font-size: 12px; color: red;"></p>
-        </div>
-    </div>
-
-    <div id="app-container" class="app-layout hidden">
+    <nav class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-stone-100 md:top-0 md:left-0 md:w-64 md:h-full md:border-t-0 md:border-r z-50 flex md:flex-col p-2 md:p-6 justify-between">
         
-        <div id="sidebar">
-            <h2 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 30px;">Journal.</h2>
-            <a href="#" onclick="switchView('journal')" class="nav-item active" id="btn-journal"><i data-lucide="book"></i> My Journal</a>
-            <a href="#" onclick="switchView('feed')" class="nav-item" id="btn-feed"><i data-lucide="compass"></i> Feed</a>
-            <a href="#" onclick="switchView('search')" class="nav-item" id="btn-search"><i data-lucide="search"></i> Find</a>
+        <div class="hidden md:block mb-8 px-2 pt-4">
+            <h1 class="text-3xl font-heading text-emerald-900">MassPort</h1>
+            <p class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Sanctuary Journal</p>
+        </div>
+
+        <div class="flex flex-1 justify-around md:justify-start md:flex-col gap-1 md:gap-2 items-center md:items-stretch">
             
-            <button onclick="openAddModal()" class="btn-primary" style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i data-lucide="plus" style="width: 16px;"></i> New Stamp
+            <button onclick="switchView('journal')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-journal">
+                <i data-lucide="scroll" class="w-6 h-6 md:w-5 md:h-5"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Journal</span>
+            </button>
+            
+            <button onclick="switchView('feed')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-feed">
+                <i data-lucide="flame" class="w-6 h-6 md:w-5 md:h-5"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Recent</span>
+            </button>
+            
+            <button onclick="openAddModal()" class="md:hidden -mt-8 bg-emerald-900 text-white p-4 rounded-full shadow-lg transform transition active:scale-95 border-4 border-white">
+                <i data-lucide="plus" class="w-7 h-7"></i>
             </button>
 
-            <div id="desktop-profile-foot" onclick="openUserProfile(currentUser.id)">
-                </div>
-        </div>
-
-        <div id="mobile-nav">
-            <a href="#" onclick="switchView('journal')" style="color: var(--text-main);"><i data-lucide="book"></i></a>
-            <a href="#" onclick="openAddModal()" style="background: var(--text-main); color: white; padding: 10px; border-radius: 50%; transform: translateY(-20px); box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i data-lucide="plus"></i></a>
-            <a href="#" onclick="switchView('feed')" style="color: var(--text-main);"><i data-lucide="compass"></i></a>
-        </div>
-
-        <div class="main-content">
+            <button onclick="switchView('community')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-community">
+                <i data-lucide="users" class="w-6 h-6 md:w-5 md:h-5"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Find</span>
+            </button>
             
-            <div id="page-journal" class="page-view">
-                <div class="header-controls">
-                    <h1 style="font-family: var(--font-heading);">My Travels</h1>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="filter-location" class="filter-select" onchange="applyJournalFilters()"></select>
-                        <select id="filter-year" class="filter-select" onchange="applyJournalFilters()"></select>
-                    </div>
-                </div>
-                <div id="journal-count-display" style="margin-bottom: 10px; font-size: 12px; color: var(--text-light);"></div>
-                <div id="journal-grid" class="masonry-grid"></div>
-                <div id="journal-empty" class="hidden text-center" style="margin-top: 40px; color: var(--text-light);">No stamps yet. Add one!</div>
-            </div>
-
-            <div id="page-feed" class="page-view hidden">
-                <h1 style="font-family: var(--font-heading); margin-bottom: 20px;">Explorer Feed</h1>
-                <div id="feed-items" class="masonry-grid"></div>
-                <button id="feed-load-more" onclick="fetchFeed(true)" class="hidden btn-primary" style="margin: 20px auto; display: block; width: auto;">Load More</button>
-            </div>
-
-            <div id="page-search" class="page-view hidden">
-                <h1 style="font-family: var(--font-heading); margin-bottom: 20px;">Find Travelers</h1>
-                <input type="text" id="user-search-input" onkeyup="debounceSearchUsers()" placeholder="Search username..." class="input-field" style="padding: 16px; font-size: 16px;">
-                <div id="search-results-list" style="margin-top: 20px;"></div>
-                
-                <div style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 15px;">Following</h3>
-                    <div id="following-list-display"></div>
-                </div>
-            </div>
-
-            <div id="page-profile-view" class="page-view hidden">
-                <div class="profile-header">
-                    <div id="pp-avatar"></div>
-                    <h2 id="pp-name" style="font-family: var(--font-heading); font-size: 28px; margin-top: 10px;"></h2>
-                    <p id="pp-username" style="color: var(--text-light); margin-bottom: 15px;"></p>
-                    <div id="pp-actions"></div>
-                </div>
-                
-                <div class="header-controls" style="justify-content: center;">
-                    <select id="pp-filter-loc" class="filter-select" onchange="renderPublicProfileGrid()"></select>
-                </div>
-                
-                <div id="pp-grid" class="masonry-grid"></div>
-            </div>
-
-        </div>
-    </div>
-
-    <div id="add-modal-overlay" class="modal-overlay hidden">
-        <div class="modal-box modal-form-box">
-            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-family: var(--font-heading);">New Stamp</h3>
-                <button onclick="closeAddModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto;">
-                <div class="form-group">
-                    <label class="form-label">Location</label>
-                    <input id="s-address-search" type="text" class="input-field" placeholder="Search City, Place...">
-                    <div id="map-preview" style="height: 100px; width: 100%; background: #eee; border-radius: 8px; margin-top: 8px;"></div>
-                    <input type="hidden" id="geo-city"><input type="hidden" id="geo-state-code">
-                    <input type="hidden" id="geo-state-name"><input type="hidden" id="geo-country">
-                    <input type="hidden" id="geo-lat"><input type="hidden" id="geo-lng">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Title</label>
-                    <input id="s-name" type="text" class="input-field" placeholder="e.g. Morning Coffee">
-                </div>
-
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label class="form-label">Date</label>
-                        <div style="display: flex; gap: 5px;">
-                            <input id="s-date-month" type="text" class="input-field" placeholder="Month">
-                            <input id="s-date-day" type="text" class="input-field" placeholder="Day">
-                            <input id="s-date-year" type="text" class="input-field" placeholder="Year">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Photo (Optional)</label>
-                    <input id="s-image-input" type="file" accept="image/*" class="input-field" onchange="previewImage()">
-                    <div id="preview-box" class="hidden" style="margin-top: 10px;">
-                        <img id="img-preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <textarea id="s-notes" class="input-field" rows="3" placeholder="Write a memory..."></textarea>
-                </div>
-                
-                <button id="save-btn" onclick="saveStamp()" class="btn-primary">Save Stamp</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-modal-overlay" class="modal-overlay hidden" onclick="closeViewModal(event)">
-        <div id="view-modal-box" class="modal-box" onclick="event.stopPropagation()">
-            <div onclick="closeViewModal()" class="close-icon-btn"><i data-lucide="x" style="width: 18px;"></i></div>
+            <button onclick="switchView('map')" class="nav-btn group p-3 flex flex-col items-center md:items-start md:flex-row md:gap-4 transition-all rounded-xl hover:bg-stone-50" id="btn-map">
+                <i data-lucide="map" class="w-6 h-6 md:w-5 md:h-5"></i>
+                <span class="hidden md:block text-sm font-medium group-hover:text-emerald-900">Map</span>
+            </button>
             
-            <div id="view-left" class="modal-left">
+            <button onclick="openAddModal()" class="hidden md:flex mt-6 bg-emerald-900 text-white p-3 rounded-xl gap-3 items-center justify-center hover:bg-emerald-800 transition shadow-sm">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i><span>Add Stamp</span>
+            </button>
+        </div>
+
+        <div id="desktop-profile-foot" class="hidden md:flex items-center gap-3 mt-auto p-2 border-t border-stone-100 pt-4 cursor-pointer hover:bg-stone-50 rounded-lg transition" onclick="openProfileModal()">
+            </div>
+    </nav>
+
+    <main class="p-4 md:p-12 max-w-7xl mx-auto min-h-screen">
+        
+        <div id="auth-wall" class="hidden fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-5xl font-heading text-emerald-900 mb-4">MassPort</h1>
+            <p class="mb-8 text-stone-500">Sign in to view your sacred journal.</p>
+            <div class="space-y-4 w-full max-w-xs">
+                <button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="w-full bg-emerald-900 text-white py-3 rounded-lg font-bold">Log In</button>
+                <button onclick="document.getElementById('signup-modal').classList.remove('hidden')" class="w-full border border-emerald-900 text-emerald-900 py-3 rounded-lg font-bold">Create Account</button>
+            </div>
+        </div>
+
+        <section id="page-journal" class="page-view animate-in fade-in duration-500">
+            
+            <header class="sticky-header flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 md:gap-6">
+                <div class="flex items-baseline justify-between md:block">
+                    <h2 class="text-4xl md:text-5xl font-heading text-stone-800 journal-header">My Stamps</h2>
+                    <p class="text-stone-400 mt-2 text-sm" id="journal-count-display">Loading...</p>
                 </div>
-            <div id="view-right" class="modal-right">
+                <div class=" flex flex-nowrap items-center gap-2 md:gap-3">
+                    <select id="filter-location" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition shadow-sm">
+                        <option value="ALL">All Locations</option>
+                        </select>
+                    <select id="filter-year" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-white border border-stone-200 px-4 py-2 rounded-full text-xs text-stone-600 font-semibold outline-none cursor-pointer hover:border-emerald-500 transition shadow-sm">
+                        <option value="ALL">Years</option>
+                    </select>
+                    <select id="filter-sort" onchange="applyJournalFilters()" class="flex-1 md:flex-none bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full text-xs text-emerald-700 font-semibold outline-none cursor-pointer">
+                        <option value="location_asc">Sort by:</option>
+                        <option value="newest">Newest Added</option>
+                        <option value="oldest">Oldest Added</option>
+                        <option value="date_desc">Recent Visit</option>
+                        <option value="date_asc">Oldest Visit</option>
+                    </select>
+                </div>
+            </header>
+
+            <div class="masonry-grid" id="journal-grid">
+                </div>
+            
+            <div id="journal-empty" class="hidden text-center py-20 text-stone-400">
+                <i data-lucide="book-open" class="mx-auto w-12 h-12 mb-4 opacity-30"></i>
+                <p>No stamps found. Add your first memory.</p>
+            </div>
+        </section>
+
+        <section id="page-feed" class="page-view hidden max-w-3xl mx-auto animate-in fade-in duration-500">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-heading text-stone-800">Pilgrimage Feed</h2>
+            </div>
+            <div id="feed-items" class="space-y-6">
+                <div class="text-center py-10"><p class="text-stone-400">Loading feed...</p></div>
+            </div>
+            <div class="mt-8 text-center hidden" id="feed-load-more">
+                <button onclick="fetchFeed(true)" class="bg-stone-100 text-stone-500 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200">Load More</button>
+            </div>
+        </section>
+
+        <section id="page-community" class="page-view hidden max-w-2xl mx-auto animate-in fade-in duration-500">
+            <h2 class="text-4xl font-heading mb-6">Discovery</h2>
+            <div class="bg-white border rounded-2xl p-2 flex items-center mb-8 shadow-sm focus-within:ring-2 ring-emerald-100 transition-all">
+                <i data-lucide="search" class="mx-3 text-stone-400"></i>
+                <input type="text" id="user-search-input" placeholder="Find travelers by username..." class="w-full py-3 outline-none text-sm" onkeyup="debounceSearchUsers()">
+            </div>
+            
+            <h3 class="font-bold text-stone-400 text-xs uppercase tracking-widest mb-4">Results</h3>
+            <div id="followers-list" class="space-y-4"></div>
+        </section>
+
+        <section id="page-map" class="page-view hidden animate-in fade-in duration-500">
+            <h2 class="text-4xl font-heading mb-6">Sanctuary Map</h2>
+            <div class="w-full aspect-[4/3] md:aspect-video bg-[#e5e7eb] rounded-[2.5rem] flex flex-col items-center justify-center border-4 border-white shadow-xl relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#065f46 2px, transparent 2px); background-size: 40px 40px;"></div>
+                <i data-lucide="map-pin" class="text-emerald-800 w-12 h-12 mb-4 animate-bounce"></i>
+                <p class="text-stone-500 font-medium">Map View Coming Soon</p>
+                <button onclick="switchView('journal')" class="mt-4 text-emerald-700 text-sm font-bold underline">Back to Journal</button>
+            </div>
+        </section>
+    </main>
+
+    <div id="add-modal-overlay" class="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+            <h3 class="text-2xl font-heading mb-6 text-emerald-900" id="modal-title-text">Add New Entry</h3>
+            
+            <input type="hidden" id="edit-id">
+            <input type="hidden" id="geo-city">
+            <input type="hidden" id="geo-state-code">
+            <input type="hidden" id="geo-state-name">
+            <input type="hidden" id="geo-country">
+            <input type="hidden" id="geo-lat">
+            <input type="hidden" id="geo-lng">
+
+            <div class="space-y-4">
                 <div>
-                    <div id="v-pill-container" style="margin-bottom: 12px;"></div>
-                    
-                    <h2 id="v-title" style="font-family: var(--font-heading); font-size: 32px; line-height: 1.1; margin-bottom: 10px;"></h2>
-                    
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;">
-                        <div id="v-user-avatar" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: #eee;"></div>
-                        <span id="v-user-name" style="font-size: 12px; font-weight: bold;"></span>
-                        <span id="v-date" style="font-size: 12px; color: #999;"></span>
-                    </div>
+                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Location Search</label>
+                    <input id="s-address-search" type="text" placeholder="Search Google Maps..." class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                </div>
+                
+                <div id="map-preview" class="w-full h-32 bg-stone-100 rounded-lg overflow-hidden"></div>
 
-                    <p id="v-notes" style="font-size: 15px; line-height: 1.6; color: var(--text-main); white-space: pre-wrap;"></p>
+                <div>
+                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Place Name</label>
+                    <input id="s-name" type="text" placeholder="e.g. Notre Dame" class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Date Visited (Optional)</label>
+                    <div class="flex gap-2">
+                        <select id="s-date-month" class="w-1/2 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                            <option value="">Month</option>
+                            <option value="January">January</option><option value="February">February</option><option value="March">March</option>
+                            <option value="April">April</option><option value="May">May</option><option value="June">June</option>
+                            <option value="July">July</option><option value="August">August</option><option value="September">September</option>
+                            <option value="October">October</option><option value="November">November</option><option value="December">December</option>
+                        </select>
+                        <input id="s-date-day" type="number" min="1" max="31" placeholder="Day" class="w-1/4 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                        <input id="s-date-year" type="number" min="1900" max="2100" placeholder="Year" class="w-1/4 p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Notes</label>
+                    <textarea id="s-notes" rows="3" placeholder="Your reflection..." class="w-full p-3 bg-stone-50 rounded-lg border border-stone-200 outline-none focus:border-emerald-500 text-sm"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Photo (Optional)</label>
+                    <input type="file" id="s-image-input" accept="image/*" class="w-full text-xs text-stone-500" onchange="previewImage()">
+                    <div id="preview-box" class="mt-2 hidden">
+                        <img id="img-preview" class="w-full h-40 object-cover rounded-lg">
+                        <button onclick="clearImage()" class="text-xs text-red-500 mt-1 underline">Remove Image</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="saveStamp()" id="save-btn" class="flex-1 bg-emerald-900 text-white py-3 rounded-xl font-bold hover:bg-emerald-800 transition">Save Stamp</button>
+                    <button onclick="closeAddModal()" class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-100 transition">Cancel</button>
                 </div>
             </div>
+        </div>
+    </div>
+    
+
+    <div id="view-modal-overlay" class="fixed inset-0 bg-stone-900/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 md:p-10" onclick="closeViewModal()">
+        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-y-auto md:overflow-hidden flex flex-col md:flex-row shadow-2xl transition-all scale-95" id="view-modal-container" onclick="event.stopPropagation()">
+            <div id="view-visual-side" class="w-full md:w-1/2 h-64 md:h-auto bg-[#f0edea] relative flex items-center justify-center overflow-hidden">
+                </div>
+            
+            <div class="w-full md:w-1/2 p-6 md:p-12 flex flex-col bg-white">
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div id="v-avatar" class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-bold overflow-hidden border border-emerald-50"></div>
+                        <span id="v-user" class="text-xs font-bold text-stone-400 uppercase tracking-wide"></span>
+                    </div>
+
+                    <a id="v-map-link" href="#" target="_blank" class="block w-fit text-xs uppercase tracking-[0.2em] font-bold mb-2 hover:underline transition-all decoration-2 underline-offset-4 city-small" style="color: var(--theme-color);"></a>
+                    
+                    <h3 id="v-title" class="text-3xl md:text-5xl font-heading leading-none text-stone-800"></h3>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto no-scrollbar mb-6">
+                    <p id="v-notes" class="text-stone-600 leading-relaxed italic text-lg md:text-xl font-serif"></p>
+                </div>
+                
+                <div class="mt-auto pt-6 border-t border-stone-100 flex items-center justify-between">
+                    <span id="v-date" class="text-stone-400 text-xs font-bold uppercase tracking-widest"></span>
+                    <button onclick="closeViewModal()" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors text-stone-600">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="fixed inset-0 z-[110] hidden overflow-y-auto">
+        <div class="max-w-6xl mx-auto p-4 md:p-12 min-h-screen">
+            <button onclick="closeProfileModal()" class="fixed top-6 right-6 p-2 bg-stone-100 rounded-full hover:bg-stone-200 z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
+            
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-12 mt-10 md:mt-0">
+                <div id="p-avatar-lg" class="w-32 h-32 rounded-full bg-emerald-800 text-white text-4xl font-heading flex items-center justify-center border-4 border-emerald-50 shadow-xl overflow-hidden shrink-0"></div>
+                
+                <div class="text-center md:text-left flex-1">
+                    <h2 id="p-name" class="text-4xl md:text-5xl font-heading mb-2 text-stone-800"></h2>
+                    <p id="p-username" class="text-stone-400 text-sm font-bold uppercase tracking-widest mb-6"></p>
+                    
+                    <div id="p-actions" class="flex justify-center md:justify-start gap-3"></div>
+                </div>
+            </div>
+
+            <div class="border-t border-stone-100 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
+                    <h3 class="text-2xl font-heading pl-2 border-l-4 border-emerald-900">Pilgrim's Log</h3>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <select id="p-filter-loc" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none"><option value="ALL">All Places</option></select>
+                        <select id="p-filter-year" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none"><option value="ALL">All Years</option></select>
+                        <select id="p-filter-sort" onchange="renderProfileMasonry()" class="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-500 outline-none">
+                            <option value="location_asc">Sort by Location</option>
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="masonry-grid" id="profile-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-profile-modal" class="fixed inset-0 bg-stone-900/50 z-[150] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <h3 class="text-xl font-heading mb-4">Edit Profile</h3>
+            <div class="space-y-4">
+                <input id="ep-name" type="text" placeholder="Display Name" class="w-full p-3 border rounded-lg text-sm">
+                
+                <label class="block text-xs font-bold text-stone-400">Profile Picture URL</label>
+                <input id="ep-avatar" type="text" placeholder="https://..." class="w-full p-3 border rounded-lg text-sm">
+                
+                <button onclick="saveProfile()" class="w-full bg-emerald-900 text-white py-3 rounded-lg font-bold mt-2">Save Changes</button>
+                <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="w-full text-xs text-stone-400 mt-2 hover:underline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-sm">
+            <h3 class="text-xl font-heading mb-4">Welcome Back</h3>
+            <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-3 border rounded">
+            <input id="login-password" type="password" placeholder="Password" class="w-full p-3 mb-4 border rounded">
+            <button onclick="handleLogin()" class="w-full bg-emerald-900 text-white py-3 rounded font-bold">Log In</button>
+            <p id="login-msg" class="text-red-500 text-xs mt-2"></p>
+            <button onclick="document.getElementById('login-modal').classList.add('hidden')" class="mt-4 text-xs text-stone-400 underline w-full text-center">Cancel</button>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-sm">
+            <h3 class="text-xl font-heading mb-4">Join the Journey</h3>
+            <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 mb-3 border rounded">
+            <input id="signup-username" type="text" placeholder="Username" class="w-full p-3 mb-3 border rounded">
+            <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 mb-4 border rounded">
+            <button onclick="handleSignUp()" class="w-full bg-emerald-900 text-white py-3 rounded font-bold">Sign Up</button>
+            <p id="signup-msg" class="text-xs mt-2"></p>
+            <button onclick="document.getElementById('signup-modal').classList.add('hidden')" class="mt-4 text-xs text-stone-400 underline w-full text-center">Cancel</button>
         </div>
     </div>
 
     <script>
-        // CONFIG
+        // --- CONFIGURATION ---
         const SUPABASE_URL = 'https://ujyoxnrfchzyduhtcpaz.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqeW94bnJmY2h6eWR1aHRjcGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzQ3MzUsImV4cCI6MjA4Mjg1MDczNX0.AWdu8ScAz8MqfzqKlcuxtNUncYq3m5pu59EMhef0-9M';
         const IMGBB_API_KEY = '7dd3553ba2a58dca14721122d652e484';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // Themes
-        const themes = ['var(--theme-1)', 'var(--theme-2)', 'var(--theme-3)', 'var(--theme-4)'];
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const themes = ['#4478A2','#C65265','#D78143','#297381','#89974F','#DAAD60','#757498','#AA7876','#D7A995','#6E917A'];
 
-        // STATE
+        // --- STATE ---
         let currentUser = null;
         let userProfile = null;
         let myStamps = [];
         let feedStamps = [];
-        let viewingProfileStamps = [];
-        let followingIds = [];
         let feedPage = 0;
+        let followingIds = [];
+        let viewingProfileStamps = [];
 
-        // INIT
+        // --- INIT ---
         window.addEventListener('load', async () => {
             lucide.createIcons();
-            
-            // Request 5: Check URL Hash for Public Profile
-            if(window.location.hash && window.location.hash.length > 1) {
-                const username = window.location.hash.substring(1); // Remove #
-                await loadPublicProfile(username);
-                return; // Stop normal auth flow
-            }
-
-            // Normal Flow
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if(session) {
-                currentUser = session.user;
-                await loadUserData();
-            } else {
-                document.getElementById('auth-container').classList.remove('hidden');
+            handleAuthState(session);
+
+            supabaseClient.auth.onAuthStateChange((_event, session) => handleAuthState(session));
+            
+            if(window.location.hash) {
+                const handle = window.location.hash.substring(1).replace('@','');
+                findUserByHandle(handle);
             }
         });
 
+        async function findUserByHandle(handle) {
+            const { data } = await supabaseClient.from('profiles').select('id').eq('username', handle).single();
+            if(data) openUserProfile(data.id);
+        }
+
+        // --- AUTH ---
+        async function handleAuthState(session) {
+            if (session?.user) {
+                currentUser = session.user;
+                document.getElementById('auth-wall').classList.add('hidden');
+                
+                let { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+                if(!profile) {
+                    const { data: newP } = await supabaseClient.from('profiles').insert([{ id: currentUser.id, username: currentUser.email.split('@')[0], display_name: 'Traveler' }]).select().single();
+                    profile = newP;
+                }
+                userProfile = profile;
+                renderDesktopProfile();
+                await Promise.all([fetchFollowing(), fetchMyStamps()]);
+                fetchFeed(false);
+            } else {
+                currentUser = null;
+                document.getElementById('auth-wall').classList.remove('hidden');
+            }
+        }
+
         async function handleLogin() {
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-password').value;
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-            if(error) alert(error.message);
+            if (error) document.getElementById('login-msg').innerText = error.message;
             else location.reload();
         }
 
@@ -464,41 +592,12 @@
             }
         }
 
-        async function loadUserData() {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-
-            // Fetch Profile
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-            userProfile = profile;
-            
-            // Fetch Following first (for feed)
-            await fetchFollowing();
-            
-            renderDesktopProfile();
-            fetchMyStamps();
-            initGoogleTools();
+        async function handleLogout() {
+            const { error } = await supabaseClient.auth.signOut();
+            if(!error) location.reload();
         }
 
-        // --- PUBLIC PROFILE LOGIC (Request 5) ---
-        async function loadPublicProfile(username) {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            // Hide sidebar if not logged in
-            if(!currentUser) document.getElementById('sidebar').classList.add('hidden');
-            
-            // Get User ID from Username
-            const { data: profiles } = await supabaseClient.from('profiles').select('*').eq('username', username);
-            if(profiles && profiles.length > 0) {
-                const targetUser = profiles[0];
-                openUserProfile(targetUser.id, true); // Pass true for 'publicMode'
-            } else {
-                alert('User not found');
-                document.getElementById('auth-container').classList.remove('hidden');
-            }
-        }
-
-        // --- DATA FETCHING ---
+        // --- DATA ---
         async function fetchMyStamps() {
             const { data } = await supabaseClient.from('stamps').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             myStamps = data || [];
@@ -514,12 +613,8 @@
         }
 
         async function fetchFeed(loadMore = false) {
-            // Request 7: Fix Feed. Ensure followingIds exists.
-            if(!followingIds || followingIds.length === 0) {
-                 if(currentUser) followingIds = [currentUser.id];
-                 else return;
-            }
-
+            fetchFollowing();
+            if(!currentUser || followingIds.length === 0) return;
             if(!loadMore) { feedStamps = []; feedPage = 0; }
             else feedPage++;
 
@@ -536,14 +631,15 @@
 
             if(data && data.length > 0) {
                 feedStamps = [...feedStamps, ...data];
-                renderGrid(feedStamps, 'feed-items');
+                renderFeedHTML(feedStamps);
                 document.getElementById('feed-load-more').classList.remove('hidden');
             } else {
-                if(feedPage === 0) document.getElementById('feed-items').innerHTML = `<p class="text-center" style="color:var(--text-light); padding: 40px;">No activity yet.</p>`;
+                document.getElementById('feed-load-more').classList.add('hidden');
+                if(feedPage === 0) document.getElementById('feed-items').innerHTML = `<p class="text-center text-stone-400 mt-10">Your feed is quiet. Follow others or add a stamp.</p>`;
             }
         }
 
-        // --- FILTERS (Request 6) ---
+        // --- FILTERING & GROUPING LOGIC ---
         function populateFilters(stamps, locId, yearId) {
             const locSelect = document.getElementById(locId);
             const yearSelect = document.getElementById(yearId);
@@ -552,29 +648,30 @@
             const international = new Set();
             
             stamps.forEach(s => {
-                if(s.state_code === 'INTL') {
-                    if(s.country_code) international.add(s.country_code); // Avoid null
-                }
-                else if(s.state_code) states.add(s.state_code);
+                // Use state_code/full_state_name logic
+                if(s.state_code === 'INTL') international.add(s.full_state_name || s.country_code); 
+                else if(s.state_code) states.add(s.full_state_name);
             });
 
-            // Request 6: Add US and INTL parents
             locSelect.innerHTML = '<option value="ALL">All Locations</option>';
-            
             if(states.size > 0) {
-                locSelect.add(new Option("United States (All)", "US_ALL")); // Parent
-                const grp = document.createElement('optgroup'); grp.label = "States";
+                const grp = document.createElement('optgroup'); grp.label = "United States";
                 [...states].sort().forEach(st => grp.appendChild(new Option(st, st)));
                 locSelect.appendChild(grp);
             }
             if(international.size > 0) {
-                locSelect.add(new Option("International (All)", "INTL_ALL")); // Parent
-                const grp = document.createElement('optgroup'); grp.label = "Countries";
+                const grp = document.createElement('optgroup'); grp.label = "International";
                 [...international].sort().forEach(c => grp.appendChild(new Option(c, c)));
                 locSelect.appendChild(grp);
             }
 
-            const years = [...new Set(stamps.map(s => s.visit_year || 'Unknown'))].sort().reverse();
+            // Years logic using visit_date string for now, updated later to use year column
+            const years = [...new Set(stamps.map(s => {
+                if(s.visit_year) return s.visit_year;
+                if(s.visit_date && s.visit_date.length >= 4) return s.visit_date.slice(-4);
+                return 'Unknown';
+            }))].sort().reverse();
+            
             yearSelect.innerHTML = '<option value="ALL">All Years</option>';
             years.forEach(y => yearSelect.add(new Option(y, y)));
         }
@@ -582,299 +679,566 @@
         function applyJournalFilters() {
             const loc = document.getElementById('filter-location').value;
             const year = document.getElementById('filter-year').value;
+            const sort = document.getElementById('filter-sort').value;
             
-            let filtered = myStamps.filter(s => {
-                const sYear = s.visit_year || 'Unknown';
-                let locMatch = false;
+            renderGrid(myStamps, 'journal-grid', loc, year, sort, 'local');
+        }
 
-                // Request 6: Handle Parent Logic
-                if(loc === 'ALL') locMatch = true;
-                else if(loc === 'US_ALL') locMatch = (s.country_code === 'US');
-                else if(loc === 'INTL_ALL') locMatch = (s.country_code !== 'US');
-                else {
-                    // Specific State or Country
-                    const sLoc = s.state_code === 'INTL' ? s.country_code : s.state_code;
-                    locMatch = (sLoc === loc);
-                }
-
-                const yearMatch = year === 'ALL' || String(sYear) === year;
+        function renderGrid(dataset, containerId, filterLoc, filterYear, sortMode, source) {
+            const container = document.getElementById(containerId);
+            
+            // Filter
+            let filtered = dataset.filter(s => {
+                const sYear = s.visit_year || (s.visit_date ? s.visit_date.slice(-4) : 'Unknown');
+                const sLoc = s.state_code === 'INTL' ? (s.full_state_name || s.country_code) : s.full_state_name;
+                
+                const locMatch = filterLoc === 'ALL' || sLoc === filterLoc;
+                const yearMatch = filterYear === 'ALL' || sYear == filterYear;
                 return locMatch && yearMatch;
             });
 
+            // If empty
             if(filtered.length === 0) {
-                document.getElementById('journal-grid').innerHTML = '';
-                document.getElementById('journal-empty').classList.remove('hidden');
+                container.innerHTML = ''; 
+                if(containerId === 'journal-grid') document.getElementById('journal-empty').classList.remove('hidden');
+                return;
+            }
+            if(containerId === 'journal-grid') document.getElementById('journal-empty').classList.add('hidden');
+
+            // Sorting
+            let grouped = false;
+
+            if(sortMode === 'location_asc') {
+                // Group by State/Country
+                filtered.sort((a, b) => {
+                    const locA = a.state_code === 'INTL' ? (a.full_state_name || 'ZZ') : a.state_code;
+                    const locB = b.state_code === 'INTL' ? (b.full_state_name || 'ZZ') : b.state_code;
+                    return locA.localeCompare(locB);
+                });
+                grouped = true;
+            } else if (sortMode === 'newest') {
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else if (sortMode === 'oldest') {
+                filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            } else if (sortMode.includes('date')) {
+                // Sort by visit date/year
+                filtered.sort((a, b) => {
+                     const dateA = a.visit_year || 0; 
+                     const dateB = b.visit_year || 0;
+                     return sortMode === 'date_desc' ? dateB - dateA : dateA - dateB;
+                });
+            }
+
+            // Render with Ink Stamps
+            let html = '';
+            let currentGroup = null;
+
+            filtered.forEach((s, idx) => {
+                // Determine group text based on filters/sort
+                let groupText = null;
+                if (grouped) {
+                    groupText = s.state_code === 'INTL' ? (s.state_code) : s.state_code; // Display Abbreviation or INTL
+                } else if (filterLoc !== 'ALL') {
+                    // If filtering by location, show that location code at top
+                    groupText = s.state_code === 'INTL' ? 'INTL' : s.state_code;
+                } else if (filterYear !== 'ALL') {
+                    groupText = filterYear;
+                } else {
+                    // Default / Newest / Oldest -> Just one icon at top
+                    groupText = 'ICON'; 
+                }
+
+                // Inject separator if group changes
+                if (groupText !== currentGroup) {
+                    currentGroup = groupText;
+                    let content = groupText === 'ICON' ? '<i data-lucide="stamp" class="w-10 h-10"></i>' : groupText;
+                    html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco">${content}</div></div>`;
+                } else if (!grouped && filterLoc === 'ALL' && filterYear === 'ALL' && idx === 0) {
+                    // Always show generic stamp at top if no filters
+                     html += `<div class="masonry-item w-full flex justify-center pt-4 pb-2"><div class="ink-stamp-deco"><i data-lucide="stamp" class="w-10 h-10"></i></div></div>`;
+                }
+
+                // Add Card
+                html += `<div class="masonry-item" onclick="openViewModal('${s.id}', '${source}')">
+                    ${createStampCardHTML(s, s.id)} 
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function createStampCardHTML(s, idx) {
+            const theme = themes[idx % themes.length];
+            const cityColor = `style="color: ${theme}"`;
+            
+            // Format Date String
+            let dateStr = "";
+            if(s.visit_month && s.visit_day && s.visit_year) dateStr = `${s.visit_month} ${s.visit_day}, ${s.visit_year}`;
+            else if(s.visit_month && s.visit_year) dateStr = `${s.visit_month} ${s.visit_year}`;
+            else if(s.visit_year) dateStr = `${s.visit_year}`;
+            else dateStr = s.visit_date || ''; // Fallback
+
+             if (s.img_url) {
+                return `
+                <div class="stamp w-full" style="--theme-color: ${theme}">
+                    <div class="stamp-content-wrapper">
+                        <div class="stamp-image">
+                            <img src="${s.img_url}">
+                        </div>
+                        <div class="stamp-overlay-text">
+                             <p class="text-[9px] fold-bold uppercase tracking-widest opacity-90 city-small-image">${s.city}</p>
+                             <h4 class="font-heading text-2xl leading-none">${s.name}</h4>
+                        </div>
+                    </div>
+                </div>`;
             } else {
-                document.getElementById('journal-empty').classList.add('hidden');
-                renderGrid(filtered, 'journal-grid');
+                // Text Card: Remove date padding if no date
+                return `
+                <div class="journal-card w-full" style="--theme-color: ${theme}">
+                    <p class="text-[9px] font-bold uppercase tracking-widest city small" ${cityColor}>${s.city}</p>
+                    <h4 class="font-heading text-2xl leading-tight text-stone-800 ${!s.notes && !dateStr ? 'mb-0' : ''}">${s.name}</h4>
+                    ${s.notes ? `<p class="text-[13px] text-stone-500 italic line-clamp-4 leading-relaxed my-1">${s.notes}</p>` : ''}
+                    ${dateStr ? `
+                    <div class="flex items-center justify-between pt-2 mt-auto">
+                        <span class="text-[9px] text-stone-300 font-bold">${dateStr}</span>
+                        <i data-lucide="feather" class="w-3 h-3 text-stone-200"></i>
+                    </div>` : ''}
+                </div>`;
             }
         }
 
-        // --- RENDER GRID (Request 3, 8) ---
-        function renderGrid(dataset, containerId) {
-            const container = document.getElementById(containerId);
-            // Request 3: Visual variety based on index % 3 for 3 columns
-            // This ensures 1, 2, 3 rotation
-            container.innerHTML = dataset.map((s, idx) => {
-                // Determine color
-                const colorIdx = idx % 3; // 0, 1, 2
-                // We have 4 themes, let's map 3 columns to first 3 themes or rotate all 4
-                // User asked: "rotate through columns".
-                // Simple approach: just rotate theme index
-                const themeVar = themes[idx % themes.length];
+        // --- FEED ---
+        function renderFeedHTML(stamps) {
+            const container = document.getElementById('feed-items');
+            container.innerHTML = stamps.map((s, idx) => {
+                const theme = themes[idx % themes.length];
+                const u = s.profiles;
+                const initials = u.username.substring(0,2).toUpperCase();
                 
-                // Color Helper for Text Stamps (light opacity bg, solid border)
-                // We'll generate inline styles
-                
-                let visual = '';
-                let pillHTML = '';
-
-                // Request 8: Pill Styling
-                if(s.img_url) {
-                    // Image Stamp
-                    visual = `<div class="stamp-image-container"><img src="${s.img_url}"></div>`;
-                    pillHTML = `<div class="city-pill pill-overlay">${s.city}</div>`;
-                } else {
-                    // Text Stamp
-                    // Calculate darker/lighter versions using CSS opacity tricks in style
-                    // Using inline styles for dynamic theme application
-                    pillHTML = `<div class="city-pill pill-inline" style="--theme-color: ${themeVar}; --theme-light: color-mix(in srgb, ${themeVar} 10%, white);">${s.city}</div>`;
-                }
+                // Visual
+                const visual = s.img_url 
+                    ? `<div class="stamp w-full h-full" style="--theme-color: ${theme}"><div class="stamp-image"><img src="${s.img_url}"></div></div>`
+                    : `<div class="w-20 h-20 rounded-full border-2 border-[${theme}] flex items-center justify-center bg-white"><i data-lucide="map-pin" class="text-stone-300"></i></div>`;
 
                 return `
-                <div class="masonry-item" onclick="openViewModal('${s.id}', '${themeVar}')">
-                    <div class="stamp-card">
-                        ${s.img_url ? pillHTML : ''} ${visual}
-                        <div class="journal-content" style="border-top: ${s.img_url ? 'none' : `4px solid ${themeVar}`}">
-                            ${!s.img_url ? pillHTML : ''} <h3 class="stamp-title" style="margin-top: ${s.img_url ? '0' : '10px'}">${s.name}</h3>
-                            ${s.notes ? `<p class="stamp-notes">${s.notes}</p>` : ''}
-                            <span class="stamp-date">${s.visit_year || ''}</span>
+                <div class="feed-container-card" onclick="openViewModal('${s.id}', 'feed')">
+                    <div class="feed-left-visual">
+                        ${visual}
+                    </div>
+                    <div class="p-4 md:p-6 flex-1 flex flex-col justify-center border-l border-stone-50">
+                        <div class="flex items-center gap-2 mb-2 cursor-pointer group" onclick="event.stopPropagation(); openUserProfile('${s.user_id}')">
+                            <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 overflow-hidden border border-white shadow-sm">
+                                ${u.avatar_url ? `<img src="${u.avatar_url}" class="w-full h-full object-cover">` : initials}
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-stone-800 group-hover:text-emerald-700 transition">${u.username}</div>
+                                <div class="text-[9px] text-stone-400">added a memory</div>
+                            </div>
                         </div>
+                        <h3 class="font-heading text-xl text-stone-800 mb-1 leading-none">${s.name}</h3>
+                        <p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color: ${theme}">${s.city}</p>
+                        ${s.notes ? `<p class="text-stone-500 text-xs italic line-clamp-2">"${s.notes}"</p>` : ''}
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        // --- VIEW MODAL (Request 2, 3, 4, 8) ---
-        function openViewModal(id, themeVar) {
-            // Find stamp in any list
-            const all = [...myStamps, ...feedStamps, ...viewingProfileStamps];
-            const stamp = all.find(s => String(s.id) === String(id));
-            if(!stamp) return;
-
-            // Request 3: Set Modal Theme
-            const rightSide = document.getElementById('view-right');
-            // We can set a border or something to indicate theme, or use it for the pill
-
-            // Populate Text
-            document.getElementById('v-title').innerText = stamp.name;
-            document.getElementById('v-title').style.color = themeVar; // Theme the title
-            document.getElementById('v-notes').innerText = stamp.notes || '';
-            document.getElementById('v-date').innerText = `${stamp.visit_month || ''} ${stamp.visit_year || ''}`;
-            
-            // User
-            const uName = stamp.profiles ? stamp.profiles.username : (userProfile ? userProfile.username : 'User');
-            document.getElementById('v-user-name').innerText = `@${uName}`;
-
-            // Request 8: Pill in Modal
-            const pillContainer = document.getElementById('v-pill-container');
-            if(stamp.img_url) {
-                // If image exists, maybe show standard pill? Or styled?
-                // User asked: "same should happen inside the modal"
-                // Let's use the Inline style for readability in the white modal
-                pillContainer.innerHTML = `<div class="city-pill pill-inline" style="--theme-color: ${themeVar}; --theme-light: color-mix(in srgb, ${themeVar} 10%, white);">${stamp.city}</div>`;
-            } else {
-                pillContainer.innerHTML = `<div class="city-pill pill-inline" style="--theme-color: ${themeVar}; --theme-light: color-mix(in srgb, ${themeVar} 10%, white);">${stamp.city}</div>`;
-            }
-
-            // Left Side (Visual)
-            const left = document.getElementById('view-left');
-            if(stamp.img_url) {
-                // Request 4: Image fills whole space
-                left.innerHTML = `<img src="${stamp.img_url}">`;
-                left.style.background = "#000";
-            } else {
-                // Decorative text stamp
-                left.innerHTML = `<div style="color: white; font-size: 80px; opacity: 0.2; transform: rotate(-10deg); font-weight: bold;">${stamp.state_code || 'GEO'}</div>`;
-                left.style.background = themeVar;
-            }
-
-            document.getElementById('view-modal-overlay').classList.remove('hidden');
-        }
-
-        function closeViewModal(e) {
-            // Close if clicking overlay or explicitly called
-            if(!e || e.target.id === 'view-modal-overlay') {
-                document.getElementById('view-modal-overlay').classList.add('hidden');
-            }
-        }
-
-        // --- PROFILES ---
-        async function openUserProfile(userId, publicMode = false) {
-            switchView('profile-view');
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
-            const { data: stamps } = await supabaseClient.from('stamps').select('*').eq('user_id', userId).order('created_at', {ascending:false});
-            viewingProfileStamps = stamps || [];
-
-            // Render Header
-            document.getElementById('pp-name').innerText = profile.display_name;
-            document.getElementById('pp-username').innerText = `@${profile.username} • ${stamps.length} Stamps`;
-            
-            // Actions (Follow/Edit) - Hide if public view and not logged in
-            const actionDiv = document.getElementById('pp-actions');
-            actionDiv.innerHTML = ''; // Clear
-
-            if(currentUser) {
-                if(currentUser.id === userId) {
-                    actionDiv.innerHTML = `<button onclick="supabaseClient.auth.signOut().then(()=>location.reload())" class="btn-primary" style="background:#eee; color:#333;">Log Out</button>`;
-                } else {
-                    // Check follow status
-                    const isFollowing = followingIds.includes(userId);
-                    actionDiv.innerHTML = `<button onclick="toggleFollow('${userId}')" class="btn-primary">${isFollowing ? 'Unfollow' : 'Follow'}</button>`;
-                }
-            }
-
-            // Avatar
-            const avDiv = document.getElementById('pp-avatar');
-            avDiv.innerHTML = profile.avatar_url 
-                ? `<img src="${profile.avatar_url}" class="avatar-large">` 
-                : `<div class="avatar-large" style="display:flex;align-items:center;justify-content:center;font-size:30px;">${profile.username.substring(0,2).toUpperCase()}</div>`;
-
-            // Filter logic reused
-            populateFilters(viewingProfileStamps, 'pp-filter-loc', 'filter-year'); // hidden year filter hack
-            renderGrid(viewingProfileStamps, 'pp-grid');
-        }
-
-        function renderPublicProfileGrid() {
-            const loc = document.getElementById('pp-filter-loc').value;
-            let filtered = viewingProfileStamps;
-            if(loc !== 'ALL') {
-                 // Reuse parent logic simply
-                 if(loc === 'US_ALL') filtered = filtered.filter(s => s.country_code === 'US');
-                 else if(loc === 'INTL_ALL') filtered = filtered.filter(s => s.country_code !== 'US');
-                 else filtered = filtered.filter(s => (s.state_code === 'INTL' ? s.country_code : s.state_code) === loc);
-            }
-            renderGrid(filtered, 'pp-grid');
-        }
-
-        // --- SEARCH & FOLLOWING (Request 10) ---
+        // --- SEARCH ---
         async function searchUsers() {
-            const q = document.getElementById('user-search-input').value;
-            if(q.length < 2) return;
-            const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${q}%`).limit(5);
-            const list = document.getElementById('search-results-list');
-            list.innerHTML = (data||[]).map(p => `
-                <div class="user-list-item" onclick="openUserProfile('${p.id}')">
-                    <span style="font-weight:bold;">${p.display_name}</span>
-                    <span style="color:#999; font-size:12px;">@${p.username}</span>
-                </div>
-            `).join('');
+            const query = document.getElementById('user-search-input').value;
+            if(query.length < 3) return;
+            const { data } = await supabaseClient.from('profiles').select('*').ilike('username', `%${query}%`).limit(10);
+            renderSearchResults(data || []);
         }
         let debounceTimer;
         function debounceSearchUsers() { clearTimeout(debounceTimer); debounceTimer = setTimeout(searchUsers, 500); }
 
-        async function fetchFollowingList() {
-            // Request 10: Show following list
-            if(!followingIds || followingIds.length <= 1) return; // 1 is self
-            const realFollowing = followingIds.filter(id => id !== currentUser.id);
-            if(realFollowing.length === 0) return;
-
-            const { data } = await supabaseClient.from('profiles').select('*').in('id', realFollowing);
-            const container = document.getElementById('following-list-display');
-            container.innerHTML = (data||[]).map(p => `
-                <div class="user-list-item" onclick="openUserProfile('${p.id}')">
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <div style="width:30px; height:30px; background:#eee; border-radius:50%; overflow:hidden;">
-                            ${p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+        function renderSearchResults(profiles) {
+            const list = document.getElementById('followers-list');
+            list.innerHTML = profiles.map(p => {
+                const isMe = p.id === currentUser.id;
+                const isFollowing = followingIds.includes(p.id);
+                return `
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-stone-100 shadow-sm hover:shadow-md transition cursor-pointer" onclick="openUserProfile('${p.id}')">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-stone-100 overflow-hidden">
+                             ${p.avatar_url ? `<img src="${p.avatar_url}" class="w-full h-full object-cover">` : ''}
                         </div>
                         <div>
-                            <div style="font-weight:bold; font-size:13px;">${p.display_name}</div>
-                            <div style="color:#999; font-size:11px;">@${p.username}</div>
+                            <h4 class="font-bold text-stone-800 text-sm">${p.display_name || p.username}</h4>
+                            <p class="text-[10px] text-stone-400 uppercase tracking-widest">@${p.username}</p>
                         </div>
                     </div>
-                    <button class="follow-btn btn-following">Following</button>
-                </div>
-            `).join('');
+                    ${!isMe ? `<button onclick="event.stopPropagation(); toggleFollow('${p.id}', this)" class="${isFollowing ? 'bg-stone-100 text-stone-400' : 'bg-emerald-900 text-white'} px-4 py-1.5 rounded-full text-xs font-bold transition">${isFollowing ? 'Following' : 'Follow'}</button>` : ''}
+                </div>`;
+            }).join('');
         }
 
-        // --- ADD STAMP LOGIC ---
-        function openAddModal() { document.getElementById('add-modal-overlay').classList.remove('hidden'); initGoogleTools(); }
-        function closeAddModal() { document.getElementById('add-modal-overlay').classList.add('hidden'); }
+        async function toggleFollow(targetId, btn) {
+            const isFollowing = followingIds.includes(targetId);
+            if (isFollowing) {
+                await supabaseClient.from('followers').delete().match({ follower_id: currentUser.id, following_id: targetId });
+                followingIds = followingIds.filter(id => id !== targetId);
+                btn.innerText = "Follow"; btn.className = "bg-emerald-900 text-white px-4 py-1.5 rounded-full text-xs font-bold transition";
+            } else {
+                await supabaseClient.from('followers').insert([{ follower_id: currentUser.id, following_id: targetId }]);
+                followingIds.push(targetId);
+                btn.innerText = "Following"; btn.className = "bg-stone-100 text-stone-400 px-4 py-1.5 rounded-full text-xs font-bold transition";
+            }
+            fetchFeed(false);
+        }
+
+        // --- PROFILE VIEW ---
+        async function openUserProfile(userId) {
+            document.getElementById('profile-modal').classList.remove('hidden');
+            const isMe = userId === currentUser.id;
+
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+            const { data: stamps } = await supabaseClient.from('stamps').select('*').eq('user_id', userId).order('created_at', {ascending:false});
+            viewingProfileStamps = stamps || [];
+
+            // Header
+            const initials = profile.username.substring(0,2).toUpperCase();
+            document.getElementById('p-avatar-lg').innerHTML = profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : initials;
+            document.getElementById('p-name').innerText = profile.display_name;
+            document.getElementById('p-username').innerText = `@${profile.username} • ${stamps.length} Stamps`;
+
+            // Actions
+            const actionDiv = document.getElementById('p-actions');
+            if(isMe) {
+                actionDiv.innerHTML = `
+                    <button onclick="document.getElementById('edit-profile-modal').classList.remove('hidden')" class="px-6 py-2 rounded-full border border-stone-200 text-stone-600 font-bold text-xs hover:bg-stone-50">Edit Profile</button>
+                    <button onclick="handleLogout()" class="px-6 py-2 rounded-full border border-stone-200 text-red-400 font-bold text-xs hover:bg-stone-50">Log Out</button>
+                `;
+                document.getElementById('ep-name').value = profile.display_name;
+                document.getElementById('ep-avatar').value = profile.avatar_url || '';
+            } else {
+                const isFollowing = followingIds.includes(userId);
+                actionDiv.innerHTML = `<button onclick="toggleFollow('${userId}', this)" class="${isFollowing ? 'text-stone-400 bg-stone-100' : 'bg-emerald-900 text-white'} px-8 py-2 rounded-full font-bold text-xs transition">${isFollowing ? 'Following' : 'Follow'}</button>`;
+            }
+
+            // Populate Filters
+            populateFilters(viewingProfileStamps, 'p-filter-loc', 'p-filter-year');
+            renderProfileMasonry();
+        }
+
+        function renderProfileMasonry() {
+            const loc = document.getElementById('p-filter-loc').value;
+            const year = document.getElementById('p-filter-year').value;
+            const sort = document.getElementById('p-filter-sort').value;
+            
+            renderGrid(viewingProfileStamps, 'profile-grid', loc, year, sort, 'direct');
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('ep-name').value;
+            const av = document.getElementById('ep-avatar').value;
+            await supabaseClient.from('profiles').update({ display_name: name, avatar_url: av }).eq('id', currentUser.id);
+            location.reload();
+        }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+                // --- VIEW MODAL ---
+        function openViewModal(id, source) {
+            // 1. SELECT THE CORRECT STAMP (Improved string-matching)
+            let stamp;
+            
+            // We use String(s.id) === String(id) to prevent type errors
+            if (source === 'feed') {
+                stamp = feedStamps.find(s => String(s.id) === String(id));
+            } else if (source === 'profile') {
+                stamp = viewingProfileStamps.find(s => String(s.id) === String(id));
+            } else {
+                stamp = myStamps.find(s => String(s.id) === String(id));
+            }
         
+            // EMERGENCY FALLBACK: Search every bucket if the source was wrong
+            if (!stamp) {
+                const all = [...myStamps, ...feedStamps, ...viewingProfileStamps];
+                stamp = all.find(s => String(s.id) === String(id));
+            }
+        
+            if (!stamp) {
+                console.error("Stamp not found for ID:", id);
+                return;
+            }
+        
+            // 2. CONTENT POPULATION
+            document.getElementById('v-title').innerText = stamp.name;
+            const cityLink = document.getElementById('v-map-link');
+            cityLink.innerText = stamp.city;
+            
+            // Fixed Map Link URL
+            cityLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stamp.name + ', ' + stamp.city)}`;
+            
+            // Theme Color Logic (Fix #4: Consistency)
+            const colorIndex = stamp.name.length % themes.length; 
+            const theme = themes[colorIndex];
+            cityLink.style.color = theme;
+        
+            document.getElementById('v-notes').innerText = stamp.notes || ""; 
+            
+            // Date logic (Kept your original structure)
+            let dateStr = "";
+            if(stamp.visit_month && stamp.visit_day && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_day}, ${stamp.visit_year}`;
+            else if(stamp.visit_month && stamp.visit_year) dateStr = `${stamp.visit_month} ${stamp.visit_year}`;
+            else if(stamp.visit_year) dateStr = `${stamp.visit_year}`;
+            else dateStr = stamp.visit_date || '';
+        
+            const dateEl = document.getElementById('v-date');
+            if(dateStr) {
+                dateEl.innerText = dateStr;
+                dateEl.classList.remove('hidden');
+            } else {
+                dateEl.classList.add('hidden');
+            }
+        
+            // User Info (Fix #7: Profiles)
+            let uName, uAv;
+            if(currentUser && stamp.user_id === currentUser.id) {
+                uName = userProfile.username || "Me";
+                uAv = userProfile.avatar_url;
+            } else if(stamp.profiles) {
+                uName = stamp.profiles.username;
+                uAv = stamp.profiles.avatar_url;
+            } else {
+                uName = "Traveler"; uAv = null;
+            }
+            document.getElementById('v-user').innerText = uName;
+            document.getElementById('v-avatar').innerHTML = uAv ? `<img src="${uAv}" class="w-full h-full object-cover rounded-full">` : uName.substring(0,2).toUpperCase();
+        
+            // 3. VISUAL SIDE LOGIC (Fix #2: Resize for vertical images)
+            const visual = document.getElementById('view-visual-side');
+            if(stamp.img_url) {
+                // Changed from absolute/cover to contain so images aren't cropped
+                visual.innerHTML = `
+                    <img src="${stamp.img_url}" 
+                         style="max-height: 80vh; width: auto; max-width: 100%; object-fit: contain;" 
+                         class="relative z-10 shadow-sm">`;
+                visual.classList.remove('h-32'); 
+                visual.style.minHeight = "300px"; 
+            } else {
+                const abbrev = stamp.state_code === 'INTL' ? 'INTL' : (stamp.state_code || '??');
+                visual.innerHTML = `<div class="ink-stamp-deco" style="transform: scale(1.5) rotate(-10deg); opacity: 0.15;">${abbrev}</div>`;
+                visual.classList.add('h-32');
+                visual.style.minHeight = ""; 
+            }
+        
+            // 4. OPEN MODAL
+            document.getElementById('view-modal-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('view-modal-container').classList.remove('scale-95'), 10);
+        }
+        function closeViewModal() {
+            document.getElementById('view-modal-container').classList.add('scale-95');
+            setTimeout(() => document.getElementById('view-modal-overlay').classList.add('hidden'), 150);
+        }
+
+        // --- ADD MODAL & GOOGLE MAPS ---
+        let googleMap, googleMarker, autocomplete;
+        function initGoogleTools() {
+            autocomplete = new google.maps.places.Autocomplete(document.getElementById('s-address-search'));
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
+                
+                document.getElementById('s-name').value = place.name;
+                
+                // Parsing Address
+                let city = '', stateFull = '', stateShort = '', country = 'INTL';
+                let streetNum = '', route = '';
+
+                if (place.address_components) {
+                    place.address_components.forEach(c => {
+                        if (c.types.includes('street_number')) streetNum = c.long_name;
+                        if (c.types.includes('route')) route = c.long_name;
+                        if (c.types.includes('locality')) city = c.long_name;
+                        if (c.types.includes('administrative_area_level_1')) {
+                            stateFull = c.long_name;
+                            stateShort = c.short_name;
+                        }
+                        if (c.types.includes('country')) {
+                            if(c.short_name === 'US') country = 'US';
+                            else { country = c.long_name; stateShort = 'INTL'; } // If intl, code is INTL
+                        }
+                    });
+                }
+                
+                // Format: City, ST
+                const displayCity = (country === 'US') ? `${city}, ${stateShort}` : `${city}, ${country}`;
+                const fullAddress = `${streetNum} ${route}, ${displayCity}`.trim();
+
+                document.getElementById('geo-city').value = displayCity; // Stores "City, ST"
+                document.getElementById('geo-state-code').value = stateShort;
+                document.getElementById('geo-state-name').value = stateFull;
+                document.getElementById('geo-country').value = country;
+                document.getElementById('geo-lat').value = place.geometry.location.lat();
+                document.getElementById('geo-lng').value = place.geometry.location.lng();
+                
+                // Map Preview
+                if(googleMap) {
+                    googleMap.setCenter(place.geometry.location);
+                    googleMap.setZoom(15);
+                    googleMarker.setPosition(place.geometry.location);
+                }
+            });
+            googleMap = new google.maps.Map(document.getElementById('map-preview'), { center: { lat: 0, lng: 0 }, zoom: 2, disableDefaultUI: true });
+            googleMarker = new google.maps.Marker({ map: googleMap });
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal-overlay').classList.remove('hidden');
+            document.getElementById('s-name').value = '';
+            document.getElementById('s-address-search').value = '';
+            document.getElementById('s-date-month').value = '';
+            document.getElementById('s-date-day').value = '';
+            document.getElementById('s-date-year').value = '';
+            document.getElementById('s-notes').value = '';
+            document.getElementById('s-image-input').value = '';
+            document.getElementById('preview-box').classList.add('hidden');
+        }
+        function closeAddModal() { document.getElementById('add-modal-overlay').classList.add('hidden'); }
+
+        function previewImage() {
+            const file = document.getElementById('s-image-input').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('img-preview').src = e.target.result;
+                    document.getElementById('preview-box').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        function clearImage() {
+            document.getElementById('s-image-input').value = '';
+            document.getElementById('preview-box').classList.add('hidden');
+        }
+
+        // --- COMPRESSION & SAVE ---
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        // Create a temporary URL pointing to the file (Way faster than FileReader)
+        const blobURL = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = blobURL;
+
+        img.onload = () => {
+            // Clean up memory immediately
+            URL.revokeObjectURL(blobURL);
+
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1000; // Dropping to 1000px saves significant upload time
+            
+            let width = img.width;
+            let height = img.height;
+
+            if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            // Image smoothing helps quality at lower resolutions
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Using 0.7 quality instead of 0.8 reduces file size by ~30% with minimal visual loss
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/jpeg', 0.7);
+        };
+        
+        img.onerror = () => {
+            URL.revokeObjectURL(blobURL);
+            resolve(file); // Fallback to original file if loading fails
+        };
+    });
+}
         async function saveStamp() {
             const btn = document.getElementById('save-btn');
-            btn.innerText = 'Saving...';
-            // ... (Keep existing compression/upload logic exact same as before) ...
-            // Simplified for brevity in this response, assume logic from previous turn
-            // BUT ensure we call fetchMyStamps() after.
-            // Placeholder:
-            alert("This part uses your existing save logic!");
-            closeAddModal();
-        }
+            const originalText = btn.innerText;
+            btn.innerText = "Compressing & Uploading...";
+            btn.disabled = true;
 
-        // --- NAVIGATION ---
-        function switchView(view) {
-            document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`page-${view}`).classList.remove('hidden');
-            
-            if(view === 'search') fetchFollowingList(); // Request 10 trigger
-            if(view === 'feed') fetchFeed(false);
+            let imgUrl = null;
+            const file = document.getElementById('s-image-input').files[0];
+
+            if(file) {
+                try {
+                    const compressed = await compressImage(file);
+                    const fd = new FormData(); fd.append('image', compressed);
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
+                    const json = await res.json();
+                    if(json.data) imgUrl = json.data.url;
+                } catch(e) { console.error(e); }
+            }
+
+            // Construct payload with separated date and new address fields
+            const payload = {
+                user_id: currentUser.id,
+                name: document.getElementById('s-name').value,
+                // New logic: Address column has the user input/search result, city column has "City, ST"
+                address: document.getElementById('s-address-search').value, 
+                city: document.getElementById('geo-city').value || document.getElementById('s-address-search').value,
+                
+                visit_month: document.getElementById('s-date-month').value || null,
+                visit_day: document.getElementById('s-date-day').value || null,
+                visit_year: document.getElementById('s-date-year').value || null,
+                
+                notes: document.getElementById('s-notes').value || null,
+                img_url: imgUrl,
+                
+                state_code: document.getElementById('geo-state-code').value || 'INTL',
+            full_state_name: (document.getElementById('geo-country').value === 'US') 
+                ? (document.getElementById('geo-state-name').value || '') 
+                : (document.getElementById('geo-country').value || 'International'),
+                country_code: document.getElementById('geo-country').value || 'INTL',
+                lat: document.getElementById('geo-lat').value || null,
+                lng: document.getElementById('geo-lng').value || null
+            };
+
+            const { error } = await supabaseClient.from('stamps').insert([payload]);
+            if(error) { alert("Error: " + error.message); btn.innerText = originalText; btn.disabled = false; }
+            else {
+                closeAddModal();
+                fetchMyStamps();
+                btn.innerText = "Save Stamp";
+                btn.disabled = false;
+            }
         }
 
         function renderDesktopProfile() {
             if(!userProfile) return;
             document.getElementById('desktop-profile-foot').innerHTML = `
-                <img src="${userProfile.avatar_url || ''}" style="width:32px; height:32px; border-radius:50%; background:#ccc;">
-                <div>
-                    <div style="font-weight:bold; font-size:12px;">${userProfile.display_name}</div>
-                    <div style="font-size:10px; color:#999;">View Profile</div>
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs overflow-hidden">
+                    ${userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">` : userProfile.username.substring(0,2).toUpperCase()}
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-stone-700">@${userProfile.username}</div>
+                    <div class="text-[9px] text-stone-400">View Profile</div>
                 </div>
             `;
         }
-        
-        // --- GOOGLE MAPS ---
-        function initGoogleTools() {
-            const input = document.getElementById('s-address-search');
-            if(!input) return;
-            const autocomplete = new google.maps.places.Autocomplete(input);
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace();
-                if(!place.geometry) return;
-                
-                // Parse Place
-                document.getElementById('s-name').value = place.name;
-                document.getElementById('geo-lat').value = place.geometry.location.lat();
-                document.getElementById('geo-lng').value = place.geometry.location.lng();
-                
-                // Address parsing
-                let city = '', country = 'INTL', state = '';
-                place.address_components.forEach(c => {
-                    if(c.types.includes('locality')) city = c.long_name;
-                    if(c.types.includes('country')) country = c.short_name;
-                    if(c.types.includes('administrative_area_level_1')) state = c.short_name;
-                });
-                
-                document.getElementById('geo-city').value = city;
-                document.getElementById('geo-country').value = country;
-                document.getElementById('geo-state-code').value = (country === 'US') ? state : 'INTL';
 
-                // Map Preview
-                const mapDiv = document.getElementById('map-preview');
-                mapDiv.innerHTML = '';
-                const map = new google.maps.Map(mapDiv, { center: place.geometry.location, zoom: 14, disableDefaultUI: true });
-                new google.maps.Marker({ position: place.geometry.location, map: map });
-            });
+        function switchView(viewName) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${viewName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`btn-${viewName}`);
+            if(btn) btn.classList.add('active');
+
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            if(viewName === 'feed') fetchFeed(false);
         }
-        
-        function previewImage() {
-            const file = document.getElementById('s-image-input').files[0];
-            if(file) {
-                const url = URL.createObjectURL(file);
-                document.getElementById('img-preview').src = url;
-                document.getElementById('preview-box').classList.remove('hidden');
-            }
-        }
+
     </script>
 </body>
 </html>
